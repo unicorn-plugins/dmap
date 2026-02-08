@@ -15,20 +15,6 @@
 
 ---
 
-## MUST 규칙
-
-| # | 규칙 |
-|---|------|
-| 1 | 런타임은 표준의 추상 선언을 해석만 함 — 표준을 변경하지 않음 |
-| 2 | 매핑 테이블에 없는 추상 선언은 런타임 기본값으로 처리 |
-| 3 | 에이전트 스폰 시 반드시 AGENT.md + config.yaml + tools.yaml + budget.yaml 4파일 로드 |
-| 4 | forbidden_actions를 action_mapping으로 변환하여 해당 도구 제외 |
-| 5 | handoff/escalation 조건 확인하여 후처리 수행 |
-
-[Top](#runtime-표준)
-
----
-
 ## 런타임 유형
 
 | 런타임 | 제공자 | 특징 |
@@ -49,20 +35,19 @@
 ```
 ① 에이전트 패키지 로드
    ├── AGENT.md       → 프롬프트
-   ├── config.yaml    → 역량·제약·핸드오프
-   ├── tools.yaml     → 필요 도구 선언
-   └── budget.yaml    → 실행 예산
+   ├── agentcard.yaml → 역량·제약·핸드오프
+   └── tools.yaml     → 필요 도구 선언
 
 ② Gateway의 runtime-mapping.yaml 참조
-   ├── tier: HIGH           → model: claude-opus-4-6
+   ├── tier: HIGH           → model + budget 매핑
    ├── tools.yaml 선언       → 실제 도구 해석
    └── forbidden_actions     → 제외할 도구 목록
 
 ③ 실행 컨텍스트 조립
-   ├── model    = 매핑된 모델
+   ├── model    = 티어에서 매핑된 모델
    ├── prompt   = AGENT.md 내용
    ├── tools    = 매핑된 도구 - 금지 도구
-   └── budget   = budget.yaml 예산
+   └── budget   = 티어에서 매핑된 예산
 
 ④ 에이전트 스폰 및 실행
    ├── 허용된 도구만 사용 가능
@@ -86,13 +71,14 @@
 
 | 단계 | 런타임 책임 | 참조 파일 |
 |------|------------|----------|
-| **프롬프트 주입** | AGENT.md를 읽어 프롬프트로 주입 | `AGENT.md` |
-| **모델 결정** | tier를 실제 모델로 매핑 | `config.yaml` → `runtime-mapping.yaml` |
+| **프롬프트 조립·주입** | AGENT.md + agentcard.yaml + tools.yaml을 합쳐 프롬프트로 주입 | `AGENT.md`, `agentcard.yaml`, `tools.yaml` |
+| **모델·예산 결정** | tier를 실제 모델 + 예산으로 매핑 | `agentcard.yaml` → `runtime-mapping.yaml` |
+| **도구 참조 해석** | AGENT.md의 `{tool:name}`을 tools.yaml에서 확인 | `AGENT.md` → `tools.yaml` |
 | **도구 매핑** | 추상 도구를 실제 도구로 변환 | `tools.yaml` → `runtime-mapping.yaml` |
-| **도구 필터링** | forbidden_actions를 실제 도구로 변환 후 제외 | `config.yaml` → `runtime-mapping.yaml` |
-| **예산 적용** | 토큰, 파일 수, 타임아웃 제한 적용 | `budget.yaml` |
-| **핸드오프 처리** | 실행 결과에 따라 다른 에이전트로 위임 | `config.yaml` |
-| **에스컬레이션** | 역량 초과 시 상위 티어 에이전트로 위임 | `config.yaml` |
+| **도구 필터링** | forbidden_actions를 실제 도구로 변환 후 제외 | `agentcard.yaml` → `runtime-mapping.yaml` |
+| **예산 적용** | 티어에서 매핑된 예산(토큰, 타임아웃 등) 적용 | `runtime-mapping.yaml` |
+| **핸드오프 처리** | 실행 결과에 따라 다른 에이전트로 위임 | `agentcard.yaml` |
+| **에스컬레이션** | 역량 초과 시 상위 티어 에이전트로 위임 | `agentcard.yaml` |
 
 > **원칙**:
 > - 런타임은 플러그인 표준의 추상 선언을 **해석만** 함 — 표준을 변경하지 않음
@@ -145,9 +131,9 @@ LLM 기반 런타임(Claude Code 등)은 코드로 매핑을 파싱하는 것이
 ```
 
 **핵심 스킬 내 매핑 해석 가이드 (무거움):**
-- 에이전트 스폰 시 `runtime-mapping.yaml`의 `tier_mapping`을 참조하여 모델 결정
+- 에이전트 스폰 시 `runtime-mapping.yaml`의 `tier_mapping`을 참조하여 모델 + 예산 결정
 - 에이전트에 도구 할당 시 `tool_mapping`을 참조하여 실제 도구 해석
-- `config.yaml`의 `forbidden_actions`를 `action_mapping`으로 변환하여 도구 제외
+- `agentcard.yaml`의 `forbidden_actions`를 `action_mapping`으로 변환하여 도구 제외
 
 이 패턴은 모든 플러그인 매핑을 항상 로드하지 않고, 필요한 플러그인만 선택적으로 참조하여
 토큰 소비를 최소화함.
@@ -161,13 +147,29 @@ LLM 기반 런타임(Claude Code 등)은 코드로 매핑을 파싱하는 것이
 
 ---
 
+## MUST 규칙
+
+| # | 규칙 |
+|---|------|
+| 1 | 런타임은 표준의 추상 선언을 해석만 함 — 표준을 변경하지 않음 |
+| 2 | 매핑 테이블에 없는 추상 선언은 런타임 기본값으로 처리 |
+| 3 | 에이전트 스폰 시 반드시 AGENT.md + agentcard.yaml + tools.yaml 3파일 로드 |
+| 4 | forbidden_actions를 action_mapping으로 변환하여 해당 도구 제외 |
+| 5 | handoff/escalation 조건 확인하여 후처리 수행 |
+| 6 | AGENT.md의 `{tool:name}` 참조를 tools.yaml → runtime-mapping.yaml 순서로 실제 도구에 해석 |
+
+[Top](#runtime-표준)
+
+---
+
 ## 검증 체크리스트
 
-- [ ] 에이전트 패키지 4파일(AGENT.md, config.yaml, tools.yaml, budget.yaml) 로드 가능
-- [ ] runtime-mapping.yaml의 tier_mapping으로 모델 결정 가능
+- [ ] 에이전트 패키지 3파일(AGENT.md, agentcard.yaml, tools.yaml) 로드 가능
+- [ ] runtime-mapping.yaml의 tier_mapping으로 모델 + 예산 결정 가능
 - [ ] tool_mapping으로 추상 도구→실제 도구 변환 가능
 - [ ] action_mapping으로 forbidden_actions→실제 도구 제외 가능
 - [ ] handoff 조건에 따른 에이전트 간 위임 처리 가능
 - [ ] escalation 조건에 따른 상위 티어 위임 처리 가능
+- [ ] AGENT.md의 `{tool:name}` 참조가 tools.yaml → runtime-mapping.yaml로 해석 가능
 
 [Top](#runtime-표준)

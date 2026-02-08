@@ -1,7 +1,7 @@
 # Gateway 표준
 
 > **교차 참조**: 아래 상황에서 추가 문서를 로드할 것.
-> - 에이전트의 config.yaml/tools.yaml 작성이 필요하면 → `standards/plugin-standard-agent.md`
+> - 에이전트의 agentcard.yaml/tools.yaml 작성이 필요하면 → `standards/plugin-standard-agent.md`
 > - 런타임 실행 흐름 확인이 필요하면 → `standards/plugin-standard-runtime.md`
 > - 전체 아키텍처 확인이 필요하면 → `standards/plugin-standard.md`
 
@@ -14,31 +14,6 @@ Gateway는 플러그인의 도구 인프라 계층으로, 추상 선언(config/t
 > **직결형 스킬 참고**: 직결형 스킬(Setup, Utility)은 Agent 계층을 거치지 않고
 > Gateway의 builtin 도구(Read, Write, Bash 등)를 직접 사용함.
 > runtime-mapping.yaml의 매핑(tier/tool/action)은 위임형 스킬의 에이전트 스폰 시에만 적용됨.
-
-[Top](#gateway-표준)
-
----
-
-## MUST 규칙
-
-| # | 규칙 |
-|---|------|
-| 1 | install.yaml + runtime-mapping.yaml 필수 포함 |
-| 2 | runtime-mapping.yaml에 tier_mapping, tool_mapping, action_mapping 3영역 구성 |
-| 3 | tier_mapping에 default 전역 기본값 포함 (HIGH/MEDIUM/LOW) |
-| 4 | setup 스킬이 install.yaml을 참조하여 설치 수행 |
-| 5 | MCP 서버 config는 런타임 중립적 JSON 포맷 |
-
-[Top](#gateway-표준)
-
----
-
-## MUST NOT 규칙
-
-| # | 금지 사항 |
-|---|----------|
-| 1 | install.yaml에 설치 명령을 직접 포함 (데이터만, 실행은 setup 스킬) |
-| 2 | builtin 도구(Read, Write, Bash)를 tool_mapping에 포함 (런타임 내장 처리) |
 
 [Top](#gateway-표준)
 
@@ -62,7 +37,7 @@ gateway/
 
 | 디렉토리/파일 | 필수 | 역할 |
 |--------------|:----:|------|
-| `install.yaml` | ✅ | 설치 매니페스트. 런타임이 플러그인 설치 시 읽어 도구 인프라를 구성 |
+| `install.yaml` | ✅ | 설치 매니페스트. Setup 스킬이 읽어 도구 인프라를 구성 |
 | `runtime-mapping.yaml` | ✅ | 추상 선언 → 실제 도구 매핑. 런타임이 에이전트 실행 시 참조 |
 | `mcp/` | 선택 | MCP 서버 연결 설정 (JSON). 외부 도구 제공 |
 | `lsp/` | 선택 | LSP 서버 연결 설정 (JSON). 코드 분석 도구 제공 |
@@ -74,7 +49,7 @@ gateway/
 
 ## install.yaml 표준
 
-플러그인 설치 시 런타임이 읽는 **설치 매니페스트**.
+Setup 스킬 수행 시 읽는 **설치 매니페스트**.
 필요한 MCP 서버, LSP 서버, 커스텀 도구의 설치 정보를 선언함.
 
 > **표준이 정의하는 것**: 설치 대상의 포맷, 시점, 검증 방법
@@ -83,7 +58,7 @@ gateway/
 ### 설치 시점
 
 ```
-사용자 → 플러그인 설치 명령 → 런타임이 install.yaml 읽기 → 도구 인프라 구성
+사용자 → Setup 스킬 실행 → install.yaml 읽기 → 도구 인프라 구성
 ```
 
 ### 표준 포맷
@@ -94,11 +69,13 @@ gateway/
 # ─────────────────────────────────────────────
 mcp_servers:
   - name: context7                     # 서버 식별자
+    description: "라이브러리 공식 문서 검색 및 코드 예시 제공"
     config: mcp/context7.json          # 연결 설정 파일 (gateway/ 기준 상대 경로)
     scope: user                        # 설치 범위 (user / project)
     required: true                     # 필수 여부
 
   - name: playwright
+    description: "브라우저 자동화 및 E2E 테스트"
     config: mcp/playwright.json
     scope: user
     required: false                    # 선택 — 없어도 플러그인 동작
@@ -108,6 +85,7 @@ mcp_servers:
 # ─────────────────────────────────────────────
 lsp_servers:
   - name: typescript-language-server
+    description: "TypeScript/JavaScript 코드 분석, 진단, 리팩토링"
     install: "npm install -g typescript-language-server"
     check: "typescript-language-server --version"
     required: true
@@ -117,6 +95,7 @@ lsp_servers:
 # ─────────────────────────────────────────────
 custom_tools:
   - name: complexity
+    description: "코드 복잡도 분석 (순환 복잡도, 인지 복잡도)"
     source: tools/complexity.py        # gateway/ 기준 상대 경로
     required: false
 ```
@@ -126,14 +105,17 @@ custom_tools:
 | 영역 | 필드 | 필수 | 설명 |
 |------|------|:----:|------|
 | **mcp_servers** | `name` | ✅ | 서버 식별자 |
+| | `description` | 선택 | 서버의 목적·용도 설명. Setup 스킬이 설치 시 참고 |
 | | `config` | ✅ | 연결 설정 파일 경로 (JSON) |
 | | `scope` | 권장 | 설치 범위: `user`(전역) / `project`(프로젝트) |
 | | `required` | 권장 | `true`: 필수, `false`: 없어도 동작 |
 | **lsp_servers** | `name` | ✅ | 서버 식별자 |
+| | `description` | 선택 | 서버의 목적·용도 설명. Setup 스킬이 설치 시 참고 |
 | | `install` | ✅ | 설치 명령 (런타임이 실행) |
 | | `check` | 권장 | 설치 검증 명령 (성공 시 이미 설치됨) |
 | | `required` | 권장 | 필수 여부 |
 | **custom_tools** | `name` | ✅ | 도구 식별자 |
+| | `description` | 선택 | 도구의 목적·용도 설명. Setup 스킬이 설치 시 참고 |
 | | `source` | ✅ | 소스 파일 경로 (gateway/ 기준) |
 | | `required` | 권장 | 필수 여부 |
 
@@ -207,19 +189,30 @@ my-plugin/
 
 ```yaml
 # ─────────────────────────────────────────────
-# 티어 → 모델 매핑
-#   config.yaml의 tier 값을 실제 모델에 매핑
+# 티어 → LLM 모델 매핑
+#   agentcard.yaml의 tier 값을 실제 모델 + 실행 예산에 매핑
 #   전역 기본값(default) + 에이전트별 예외
 # ─────────────────────────────────────────────
 tier_mapping:
   default:                             # 전역 기본값
-    HIGH: "claude-opus-4-6"
-    MEDIUM: "claude-sonnet-4-5"
-    LOW: "claude-haiku-4-5"
+    HEAVY:
+      model: "claude-opus-4-6"
+      budget: { max_tokens: 65536, timeout_seconds: 900 }
+    HIGH:
+      model: "claude-opus-4-6"
+      budget: { max_tokens: 32768, timeout_seconds: 600 }
+    MEDIUM:
+      model: "claude-sonnet-4-5"
+      budget: { max_tokens: 16384, timeout_seconds: 300 }
+    LOW:
+      model: "claude-haiku-4-5"
+      budget: { max_tokens: 4096, timeout_seconds: 120 }
   designer:                            # 에이전트별 예외
-    HIGH: "claude-sonnet-4-5"          # 디자인은 sonnet으로 충분
+    HIGH:
+      model: "claude-sonnet-4-5"       # 디자인은 sonnet으로 충분
   scientist:
-    HIGH: "claude-opus-4-6"            # 분석은 반드시 opus
+    HIGH:
+      model: "claude-opus-4-6"         # 분석은 반드시 opus
 
 # ─────────────────────────────────────────────
 # 추상 도구명 → 실제 도구 매핑
@@ -264,7 +257,7 @@ tool_mapping:
 
 # ─────────────────────────────────────────────
 # 액션 카테고리 → 실제 도구 매핑
-#   config.yaml의 forbidden_actions를 실제 도구에 매핑
+#   agentcard.yaml의 forbidden_actions를 실제 도구에 매핑
 # ─────────────────────────────────────────────
 action_mapping:
   file_write: ["Write", "Edit"]
@@ -280,17 +273,18 @@ action_mapping:
 **기본 규칙**:
 - `default`는 전역 기본값. 에이전트명으로 예외 매핑 추가 가능
 - 에이전트별 매핑이 있으면 default보다 우선 적용
-- 런타임 환경에 따라 다른 리소스로 교체 가능 — 티어는 LLM 모델에 한정되지 않음
+- 각 티어는 `model` + `budget`을 함께 정의 — 에이전트 패키지에 예산 파일 불필요
+- 에이전트별 예외에서 `budget` 생략 시 default의 해당 티어 budget 적용
+- 티어는 LLM 모델 등급 선언 — Gateway가 실제 모델명으로 매핑
 
-**도메인별 티어 매핑 예시**:
+**Anthropic 모델 매핑 예시**:
 
-| 도메인 | HIGH | MEDIUM | LOW |
-|--------|------|--------|-----|
-| LLM | claude-opus-4-6 | claude-sonnet-4-5 | claude-haiku-4-5 |
-| OpenAI | gpt-4o | gpt-4o-mini | gpt-3.5-turbo |
-| 클라우드 | 8vCPU / 32GB | 4vCPU / 16GB | 2vCPU / 8GB |
-| 처리 | GPU 클러스터 | 멀티코어 CPU | 싱글코어 CPU |
-| 서비스 | 시니어 전문가 | 일반 담당자 | 자동 응답 봇 |
+| 티어 | 모델 |
+|------|------|
+| HEAVY | claude-opus-4-6 (대규모 예산) |
+| HIGH | claude-opus-4-6 |
+| MEDIUM | claude-sonnet-4-5 |
+| LOW | claude-haiku-4-5 |
 
 ### 작성 가이드: tool_mapping
 
@@ -327,8 +321,8 @@ action_mapping:
 ```
 Plugin Layer (추상)              Gateway (구체)
 ─────────────────────           ─────────────────────
-config.yaml                     runtime-mapping.yaml
-  tier: HIGH          ──매핑──→   HIGH: claude-opus-4-6
+agentcard.yaml                     runtime-mapping.yaml
+  tier: HIGH          ──매핑──→   HIGH: { model: claude-opus-4-6, budget: {...} }
   forbidden: file_write ──매핑──→   file_write: [Write, Edit]
 
 tools.yaml                      runtime-mapping.yaml
@@ -338,7 +332,7 @@ tools.yaml                      runtime-mapping.yaml
 
 실행 흐름
 ─────────
-① 런타임이 에이전트의 config.yaml/tools.yaml 읽기
+① 런타임이 에이전트의 agentcard.yaml/tools.yaml 읽기
 ② runtime-mapping.yaml 참조하여 구체 도구로 변환
 ③ 변환된 도구를 에이전트에게 제공
 ④ 에이전트가 실제 도구를 사용하여 작업 수행
@@ -356,6 +350,7 @@ tools.yaml                      runtime-mapping.yaml
 # MCP 서버
 mcp_servers:
   - name: <서버명>
+    description: "<서버 목적·용도>"   # 선택
     config: mcp/<서버명>.json
     scope: user                    # user | project
     required: true                 # true | false
@@ -363,6 +358,7 @@ mcp_servers:
 # LSP 서버
 lsp_servers:
   - name: <서버명>
+    description: "<서버 목적·용도>"   # 선택
     install: "<설치 명령>"
     check: "<검증 명령>"
     required: true
@@ -370,6 +366,7 @@ lsp_servers:
 # 커스텀 도구
 custom_tools:
   - name: <도구명>
+    description: "<도구 목적·용도>"   # 선택
     source: tools/<파일명>
     required: false
 ```
@@ -377,12 +374,21 @@ custom_tools:
 ### runtime-mapping.yaml 템플릿
 
 ```yaml
-# 티어 매핑
+# 티어 매핑 (모델 + 예산)
 tier_mapping:
   default:
-    HIGH: "claude-opus-4-6"
-    MEDIUM: "claude-sonnet-4-5"
-    LOW: "claude-haiku-4-5"
+    HEAVY:
+      model: "claude-opus-4-6"
+      budget: { max_tokens: 65536, timeout_seconds: 900 }
+    HIGH:
+      model: "claude-opus-4-6"
+      budget: { max_tokens: 32768, timeout_seconds: 600 }
+    MEDIUM:
+      model: "claude-sonnet-4-5"
+      budget: { max_tokens: 16384, timeout_seconds: 300 }
+    LOW:
+      model: "claude-haiku-4-5"
+      budget: { max_tokens: 4096, timeout_seconds: 120 }
 
 # 도구 매핑
 tool_mapping:
@@ -410,11 +416,36 @@ action_mapping:
 
 ---
 
+## MUST 규칙
+
+| # | 규칙 |
+|---|------|
+| 1 | install.yaml + runtime-mapping.yaml 필수 포함 |
+| 2 | runtime-mapping.yaml에 tier_mapping, tool_mapping, action_mapping 3영역 구성 |
+| 3 | tier_mapping에 default 전역 기본값 포함 (HEAVY/HIGH/MEDIUM/LOW), 각 티어에 model + budget 정의 |
+| 4 | setup 스킬이 install.yaml을 참조하여 설치 수행 |
+| 5 | MCP 서버 config는 런타임 중립적 JSON 포맷 |
+
+[Top](#gateway-표준)
+
+---
+
+## MUST NOT 규칙
+
+| # | 금지 사항 |
+|---|----------|
+| 1 | install.yaml에 설치 명령을 직접 포함 (데이터만, 실행은 setup 스킬) |
+| 2 | builtin 도구(Read, Write, Bash)를 tool_mapping에 포함 (런타임 내장 처리) |
+
+[Top](#gateway-표준)
+
+---
+
 ## 검증 체크리스트
 
 - [ ] install.yaml 존재
 - [ ] runtime-mapping.yaml 존재
-- [ ] tier_mapping에 default 섹션 포함 (HIGH/MEDIUM/LOW)
+- [ ] tier_mapping에 default 섹션 포함 (HEAVY/HIGH/MEDIUM/LOW), 각 티어에 model + budget 정의
 - [ ] 에이전트의 tools.yaml 선언이 tool_mapping에 매핑됨
 - [ ] 에이전트의 forbidden_actions가 action_mapping에 매핑됨
 - [ ] required: true 항목의 설치 실패 시 중단 로직 확인

@@ -8,7 +8,6 @@
 ## 목차
 
 - [한 줄 정의](#한-줄-정의)
-- [MUST 규칙](#must-규칙)
 - [배포 가능 플러그인 요건](#배포-가능-플러그인-요건)
 - [배포 방식](#배포-방식)
 - [마켓플레이스 배포](#마켓플레이스-배포)
@@ -19,6 +18,7 @@
 - [로컬 경로 배포](#로컬-경로-배포)
 - [설치 흐름](#설치-흐름)
 - [README 작성 표준](#readme-작성-표준)
+- [MUST 규칙](#must-규칙)
 - [검증 체크리스트](#검증-체크리스트)
 
 ---
@@ -26,21 +26,6 @@
 ## 한 줄 정의
 
 플러그인 배포는 마켓플레이스 등록(영구) 또는 로컬 경로 지정(세션 단위) 방식으로 이루어지며, 배포 전 필수 요건 충족과 매니페스트 검증이 필요함.
-
-[Top](#배포-표준)
-
----
-
-## MUST 규칙
-
-| # | 규칙 |
-|---|------|
-| 1 | `.claude-plugin/plugin.json` 필수 (name 필드 필수) |
-| 2 | 배포 시 `.claude-plugin/marketplace.json` 필수 |
-| 3 | setup 스킬 반드시 포함 (`skills/setup/SKILL.md`) |
-| 4 | `claude plugin validate`로 사전 검증 통과 |
-| 5 | author 필드는 객체 형식 `{ "name": "...", "email": "..." }` (문자열 불가) |
-| 6 | README.md에 Quick Start 3단계 이내 포함 |
 
 [Top](#배포-표준)
 
@@ -580,6 +565,21 @@ README는 상세 문서의 진입점 역할. 관련 문서를 모아서 안내:
 | 12 | Credits | 선택 | 영감 프로젝트 4개 |
 | 13 | Star History | 선택 | 성장 그래프 |
 | 14 | Support/Sponsor | 선택 | GitHub Sponsors 링크 |
+
+[Top](#배포-표준)
+
+---
+
+## MUST 규칙
+
+| # | 규칙 |
+|---|------|
+| 1 | `.claude-plugin/plugin.json` 필수 (name 필드 필수) |
+| 2 | 배포 시 `.claude-plugin/marketplace.json` 필수 |
+| 3 | setup 스킬 반드시 포함 (`skills/setup/SKILL.md`) |
+| 4 | `claude plugin validate`로 사전 검증 통과 |
+| 5 | author 필드는 객체 형식 `{ "name": "...", "email": "..." }` (문자열 불가) |
+| 6 | README.md에 Quick Start 3단계 이내 포함 |
 
 [Top](#배포-표준)
 

@@ -2,6 +2,7 @@
 
 > **교차 참조**: 아래 상황에서 추가 문서를 로드할 것.
 > - 에이전트를 함께 작성해야 하면 → `standards/plugin-standard-agent.md`
+> - 에이전트 이름 규칙(표준 식별자, FQN)이 필요하면 → `standards/plugin-standard-agent.md`의 "에이전트 이름 규칙"
 > - Gateway 매핑이 필요하면 → `standards/plugin-standard-gateway.md`
 > - 전체 아키텍처 확인이 필요하면 → `standards/plugin-standard.md`
 
@@ -11,34 +12,6 @@
 
 SKILL.md는 사용자 요청을 라우팅하고 에이전트 워크플로우를 오케스트레이션(위임형)하거나
 Gateway 도구를 직접 사용(직결형)하는 Controller+UseCase 레이어의 프롬프트 지시문임.
-
-[Top](#skill-표준)
-
----
-
-## MUST 규칙
-
-| # | 규칙 | 근거 |
-|---|------|------|
-| 1 | YAML Frontmatter(name, description) + Markdown Content 구조 유지 | 메타데이터/프롬프트 분리 |
-| 2 | H1 타이틀 + 목표 + 활성화 조건 공통 골격 포함 | 스킬 간 일관성 |
-| 3 | 에이전트 위임 시 WHAT+제약만 명시, HOW는 에이전트에 맡김 | 에이전트 자율성 보장 |
-| 4 | 워크플로우에서 `→ Agent:` 마커 사용 시 5항목, `→ Skill:` 마커 사용 시 3항목 포함 | 위임 품질 보장 |
-| 5 | 라우팅/분기 로직은 상세히, 에이전트 위임은 간결하게 | 프롬프트 깊이 차등화 |
-| 6 | 섹션명 한글 표준명 사용 (목표, 활성화 조건, 워크플로우) | 스킬 간 일관성 |
-
-[Top](#skill-표준)
-
----
-
-## MUST NOT 규칙
-
-| # | 금지 사항 | 이유 |
-|---|----------|------|
-| 1 | 스킬이 직접 애플리케이션 코드 작성·수정·삭제 (직결형 스킬의 설정 파일·문서 작업은 예외) | 에이전트 역할 침범 |
-| 2 | 에이전트 위임 시 내부 사고 방식·단계별 절차 기술 | 에이전트 자율성 저해 |
-| 3 | `→ Agent:` 위임 시 5항목, `→ Skill:` 위임 시 3항목 외 추가 기술 | 간결 원칙 위반 |
-| 4 | 비표준 섹션명 사용 (Overview 대신 목표 사용) | 일관성 저해 |
 
 [Top](#skill-표준)
 
@@ -289,6 +262,53 @@ Gateway의 `runtime-mapping.yaml`을 참조하여 매핑을 해석하고 에이�
 
 ---
 
+## 에이전트 호출 규칙
+
+위임형 스킬이 `Task` 도구로 에이전트를 호출할 때의 규칙.
+
+### 에이전트 탐색·스폰 흐름
+
+```
+1. agents/{agent-name}/ 디렉토리에서 3파일 로드
+   ├── AGENT.md       → 프롬프트 본문
+   ├── agentcard.yaml → tier 확인 + 프롬프트에 첨부
+   └── tools.yaml     → 도구 해석 + 프롬프트에 첨부
+2. tier → runtime-mapping.yaml로 모델 매핑
+3. 프롬프트 조립: AGENT.md + agentcard.yaml + tools.yaml
+4. Task(subagent_type=FQN, model=매핑된모델, prompt=조립된 프롬프트) 호출
+```
+
+> **프롬프트 조립**: AGENT.md의 "참조" 섹션이 agentcard.yaml과 tools.yaml을 참조하도록 지시하므로,
+> 위임형 스킬은 3파일을 합쳐 하나의 프롬프트로 전달함. 에이전트는 자신의 역할·제약·도구를 모두 인식함.
+
+> **매핑 참조**: 위임형 스킬은 `gateway/runtime-mapping.yaml`을 참조하여 tier→모델 매핑을 수행함.
+> 에이전트는 runtime-mapping.yaml을 직접 참조하지 않음 — 인프라 매핑은 스킬(Controller)의 책임.
+
+### FQN (정규화된 이름)
+
+런타임이 `agents/` 디렉토리를 재귀 탐색하여 자동 생성하는 전체 이름.
+
+| 형식 | 예시 |
+|------|------|
+| `{plugin}:{디렉토리명}:{frontmatter-name}` | `abra:architect:architect` |
+
+### 호출 예시
+
+```python
+# 위임형 스킬에서 에이전트 호출 예시
+Task(
+    subagent_type="abra:architect:architect",
+    model="opus",        # tier: HIGH → runtime-mapping.yaml에서 매핑
+    prompt="시스템 아키텍처를 분석해주세요..."
+)
+```
+
+> **상세 규칙**: 에이전트 이름 규칙의 전체 내용은 → `standards/plugin-standard-agent.md`의 "에이전트 이름 규칙" 참조.
+
+[Top](#skill-표준)
+
+---
+
 ## 공통 필수 섹션
 
 모든 스킬이 포함해야 할 기본 골격:
@@ -420,10 +440,26 @@ setup 스킬은 `disable-model-invocation: true`로 설정하여 런타임이 �
 
 | 섹션 | 필수 | 설명 |
 |------|------|------|
+| `## 에이전트 호출 규칙` | ✅ | 에이전트 FQN, 프롬프트 조립, 모델·툴·금지액션 구체화 규칙 |
 | `## 품질 기준` | 권장 | 계획 품질 기준 (참조율, 실현 가능성 등) |
 | `## 판정 기준` | 권장 | 승인 / 수정 요청 / 반려 판정 기준 |
 | `## 계획 저장` | 권장 | 계획 파일 저장 위치 |
 | `## 외부 모델 검증` | 선택 | 외부 모델 크로스 검증 프로토콜 |
+
+#### 에이전트 호출 규칙 작성 가이드
+
+`## 에이전트 호출 규칙` 섹션에 다음 내용을 포함할 것:
+
+1. **에이전트 FQN 목록** — 이 스킬이 호출하는 에이전트의 FQN (`{plugin}:{agent}:{agent}`)
+2. **프롬프트 조립 절차**:
+   - `agents/{agent-name}/` 에서 3파일 로드 (AGENT.md + agentcard.yaml + tools.yaml)
+   - `gateway/runtime-mapping.yaml` 참조하여 구체화:
+     - **모델 구체화**: agentcard.yaml의 `tier` → `tier_mapping`에서 모델 결정
+     - **툴 구체화**: tools.yaml의 추상 도구 → `tool_mapping`에서 실제 도구 결정
+     - **금지액션 구체화**: agentcard.yaml의 `forbidden_actions` → `action_mapping`에서 제외할 실제 도구 결정
+     - **최종 도구** = (구체화된 도구) - (제외 도구)
+   - 3파일을 합쳐 하나의 프롬프트로 조립
+   - `Task(subagent_type=FQN, model=구체화된 모델, prompt=조립된 프롬프트)` 호출
 
 #### 워크플로우 작성 패턴
 
@@ -466,12 +502,28 @@ Planning 스킬은 요구사항의 명확도에 따라 세 가지 모드 중 하
 
 | 섹션 | 필수 | 설명 |
 |------|------|------|
+| `## 에이전트 호출 규칙` | ✅ | 에이전트 FQN, 프롬프트 조립, 모델·툴·금지액션 구체화 규칙 |
 | `## 완료 조건` | ✅ | 완료 조건 목록 (기능 동작, 검증 통과, 에러 0 등) |
 | `## 검증 프로토콜` | ✅ | 검증 절차 — 완료 전 검증자 승인 강제 |
 | `## 상태 정리` | ✅ | 상태 파일 정리 규칙 (완료 시 삭제) |
 | `## 취소` / `## 재개` | ✅ | 취소 및 재개 메커니즘 |
 | `## 출력 형식` | 권장 | 보고서/출력 텍스트 템플릿 (분석·리뷰 오케스트레이터용) |
 | `## 체크리스트` | 선택 | 카테고리별 `- [ ]` 형식 검토 항목 |
+
+#### 에이전트 호출 규칙 작성 가이드
+
+`## 에이전트 호출 규칙` 섹션에 다음 내용을 포함할 것:
+
+1. **에이전트 FQN 목록** — 이 스킬이 호출하는 에이전트의 FQN (`{plugin}:{agent}:{agent}`)
+2. **프롬프트 조립 절차**:
+   - `agents/{agent-name}/` 에서 3파일 로드 (AGENT.md + agentcard.yaml + tools.yaml)
+   - `gateway/runtime-mapping.yaml` 참조하여 구체화:
+     - **모델 구체화**: agentcard.yaml의 `tier` → `tier_mapping`에서 모델 결정
+     - **툴 구체화**: tools.yaml의 추상 도구 → `tool_mapping`에서 실제 도구 결정
+     - **금지액션 구체화**: agentcard.yaml의 `forbidden_actions` → `action_mapping`에서 제외할 실제 도구 결정
+     - **최종 도구** = (구체화된 도구) - (제외 도구)
+   - 3파일을 합쳐 하나의 프롬프트로 조립
+   - `Task(subagent_type=FQN, model=구체화된 모델, prompt=조립된 프롬프트)` 호출
 
 #### 워크플로우 작성 패턴
 
@@ -619,6 +671,26 @@ description: 워크플로우 조율 및 병렬 실행 관리
 
 "keyword" 키워드 감지 시 또는 `/my-orchestrator` 호출 시.
 
+## 에이전트 호출 규칙
+
+### 에이전트 FQN
+
+| 에이전트 | FQN |
+|----------|-----|
+| executor | `my-plugin:executor:executor` |
+| architect | `my-plugin:architect:architect` |
+
+### 프롬프트 조립
+
+1. `agents/{agent-name}/` 에서 3파일 로드 (AGENT.md + agentcard.yaml + tools.yaml)
+2. `gateway/runtime-mapping.yaml` 참조하여 구체화:
+   - **모델 구체화**: agentcard.yaml의 `tier` → `tier_mapping`에서 모델 결정
+   - **툴 구체화**: tools.yaml의 추상 도구 → `tool_mapping`에서 실제 도구 결정
+   - **금지액션 구체화**: agentcard.yaml의 `forbidden_actions` → `action_mapping`에서 제외할 실제 도구 결정
+   - **최종 도구** = (구체화된 도구) - (제외 도구)
+3. 프롬프트 조립: AGENT.md + agentcard.yaml + tools.yaml을 합쳐 하나의 프롬프트로 구성
+4. `Task(subagent_type=FQN, model=구체화된 모델, prompt=조립된 프롬프트)` 호출
+
 ## 워크플로우
 
 ### Phase 1: 초기화
@@ -667,6 +739,34 @@ description: 워크플로우 조율 및 병렬 실행 관리
 
 `resume-session` 도구로 재개 가능.
 ```
+
+[Top](#skill-표준)
+
+---
+
+## MUST 규칙
+
+| # | 규칙 | 근거 |
+|---|------|------|
+| 1 | YAML Frontmatter(name, description) + Markdown Content 구조 유지 | 메타데이터/프롬프트 분리 |
+| 2 | H1 타이틀 + 목표 + 활성화 조건 공통 골격 포함 | 스킬 간 일관성 |
+| 3 | 에이전트 위임 시 WHAT+제약만 명시, HOW는 에이전트에 맡김 | 에이전트 자율성 보장 |
+| 4 | 워크플로우에서 `→ Agent:` 마커 사용 시 5항목, `→ Skill:` 마커 사용 시 3항목 포함 | 위임 품질 보장 |
+| 5 | 라우팅/분기 로직은 상세히, 에이전트 위임은 간결하게 | 프롬프트 깊이 차등화 |
+| 6 | 섹션명 한글 표준명 사용 (목표, 활성화 조건, 워크플로우) | 스킬 간 일관성 |
+
+[Top](#skill-표준)
+
+---
+
+## MUST NOT 규칙
+
+| # | 금지 사항 | 이유 |
+|---|----------|------|
+| 1 | 스킬이 직접 애플리케이션 코드 작성·수정·삭제 (직결형 스킬의 설정 파일·문서 작업은 예외) | 에이전트 역할 침범 |
+| 2 | 에이전트 위임 시 내부 사고 방식·단계별 절차 기술 | 에이전트 자율성 저해 |
+| 3 | `→ Agent:` 위임 시 5항목, `→ Skill:` 위임 시 3항목 외 추가 기술 | 간결 원칙 위반 |
+| 4 | 비표준 섹션명 사용 (Overview 대신 목표 사용) | 일관성 저해 |
 
 [Top](#skill-표준)
 
