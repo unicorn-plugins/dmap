@@ -39,7 +39,7 @@
    └── tools.yaml     → 필요 도구 선언
 
 ② Gateway의 runtime-mapping.yaml 참조
-   ├── tier: HIGH           → model + budget 매핑
+   ├── tier: HIGH           → model 매핑
    ├── tools.yaml 선언       → 실제 도구 해석
    └── forbidden_actions     → 제외할 도구 목록
 
@@ -47,7 +47,6 @@
    ├── model    = 티어에서 매핑된 모델
    ├── prompt   = AGENT.md 내용
    ├── tools    = 매핑된 도구 - 금지 도구
-   └── budget   = 티어에서 매핑된 예산
 
 ④ 에이전트 스폰 및 실행
    ├── 허용된 도구만 사용 가능
@@ -72,7 +71,7 @@
 | 단계 | 런타임 책임 | 참조 파일 |
 |------|------------|----------|
 | **프롬프트 조립·주입** | AGENT.md + agentcard.yaml + tools.yaml을 합쳐 프롬프트로 주입 | `AGENT.md`, `agentcard.yaml`, `tools.yaml` |
-| **모델·예산 결정** | tier를 실제 모델 + 예산으로 매핑 | `agentcard.yaml` → `runtime-mapping.yaml` |
+| **모델 결정** | tier를 실제 모델로 매핑 | `agentcard.yaml` → `runtime-mapping.yaml` |
 | **도구 참조 해석** | AGENT.md의 `{tool:name}`을 tools.yaml에서 확인 | `AGENT.md` → `tools.yaml` |
 | **도구 매핑** | 추상 도구를 실제 도구로 변환 | `tools.yaml` → `runtime-mapping.yaml` |
 | **도구 필터링** | forbidden_actions를 실제 도구로 변환 후 제외 | `agentcard.yaml` → `runtime-mapping.yaml` |

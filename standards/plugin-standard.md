@@ -95,10 +95,11 @@ sequenceDiagram
     rect rgb(240, 255, 240)
     Note over S: ③ 최종 도구 = 구체화 도구 - 제외 도구
     Note over S: ④ 프롬프트 조립 (3파일 합치기)
+    Note over S: ⑤ 캐시 활용 — 공통 정적 → 에이전트별 정적 → 동적 순서 배치
     S->>A: Task(FQN, model=opus, prompt=조립된 프롬프트)
     end
 
-    Note over A: ⑤ 자율 실행 (최종 도구만 사용)
+    Note over A: ⑥ 자율 실행 (최종 도구만 사용)
     A-->>S: 실행 결과
     S-->>U: 결과 보고
 ```

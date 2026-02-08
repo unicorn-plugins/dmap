@@ -228,14 +228,14 @@ Gateway의 `runtime-mapping.yaml`을 참조하여 매핑을 해석하고 에이�
 - **MUST NOT DO**: 코드 수정 금지
 - **CONTEXT**: `src/` 디렉토리 대상
 
-### Step 3: 구현 → Agent: executor
+### Step 3: 구현 → Agent: executor (`/oh-my-claudecode:tdd` 활용)
 - **TASK**: Step 2의 분석 결과를 기반으로 기능 구현
 - **EXPECTED OUTCOME**: 컴파일 에러 없는 구현 코드
 - **MUST DO**: 기존 패턴과 일관성 유지
 - **MUST NOT DO**: 요청 범위 외 리팩터링 금지
 - **CONTEXT**: Step 2의 탐색 결과 참조
 
-### Step 4: QA 전환 → Skill: ultraqa
+### Step 4: QA 전환 → Skill: ultraqa (`/oh-my-claudecode:ultraqa` 활용)
 - **INTENT**: 구현 완료 후 QA 사이클 진입
 - **ARGS**: 구현된 파일 목록, 테스트 대상
 - **RETURN**: 모든 테스트 통과 시 완료
@@ -305,6 +305,48 @@ Task(
 
 > **상세 규칙**: 에이전트 이름 규칙의 전체 내용은 → `standards/plugin-standard-agent.md`의 "에이전트 이름 규칙" 참조.
 
+### 작성 가이드
+
+위임형 스킬(Planning, Orchestrator)의 `## 에이전트 호출 규칙` 섹션에 다음 내용을 포함할 것:
+
+1. **에이전트 FQN 목록** — 이 스킬이 호출하는 에이전트의 FQN (`{plugin}:{agent}:{agent}`)
+2. **프롬프트 조립 절차**:
+   - `agents/{agent-name}/` 에서 3파일 로드 (AGENT.md + agentcard.yaml + tools.yaml)
+   - `gateway/runtime-mapping.yaml` 참조하여 구체화:
+     - **모델 구체화**: agentcard.yaml의 `tier` → `tier_mapping`에서 모델 결정
+     - **툴 구체화**: tools.yaml의 추상 도구 → `tool_mapping`에서 실제 도구 결정
+     - **금지액션 구체화**: agentcard.yaml의 `forbidden_actions` → `action_mapping`에서 제외할 실제 도구 결정
+     - **최종 도구** = (구체화된 도구) - (제외 도구)
+   - 3파일을 합쳐 하나의 프롬프트로 조립
+   - **프롬프트 구성 순서**: 공통 정적(runtime-mapping) → 에이전트별 정적(3파일) → 동적(작업 지시)
+     순서로 배치 (런타임의 prefix 캐시 적중률 극대화)
+   - `Task(subagent_type=FQN, model=구체화된 모델, prompt=조립된 프롬프트)` 호출
+
+3. **오케스트레이션 스킬 활용** (워크플로우 단계별):
+
+위임형 스킬의 **워크플로우 섹션**에서 오케스트레이터 자신이 OMC 스킬을 활용하여
+검증된 방법론으로 서브에이전트들을 오케스트레이션함.
+서브에이전트 프롬프트에 스킬 명령을 주입하지 않음 (서브에이전트는 Skill 도구 미보유).
+
+| 워크플로우 단계 | 추천 스킬 | 효과 | 적용 |
+|----------------|----------|------|:----:|
+| 전략 계획 수립 | `/oh-my-claudecode:plan`, `/oh-my-claudecode:ralplan` | 체계적 계획 방법론 | **필수** |
+| 기능 구현 | `/oh-my-claudecode:tdd`, `/oh-my-claudecode:autopilot` | 품질 보장 워크플로우 | **필수** |
+| 빌드 오류 수정 | `/oh-my-claudecode:build-fix` | 최소 수정 원칙 | **필수** |
+| QA/검증 | `/oh-my-claudecode:ultraqa` | QA 순환 워크플로우 | **필수** |
+| 계획 검토 | `/oh-my-claudecode:review` | 비평 전문 워크플로우 | 선택 |
+| 심층 분석/디버깅 | `/oh-my-claudecode:analyze` | 체계적 분석 절차 | 선택 |
+| 코드베이스 탐색 | `/oh-my-claudecode:deepsearch` | 심층 검색 방법론 | 선택 |
+| 코드 리뷰 | `/oh-my-claudecode:code-review` | 종합 리뷰 체크리스트 | 선택 |
+| 보안 검토 | `/security-review` | 보안 감사 (네이티브 스킬) | 선택 |
+| 리서치/조사 | `/oh-my-claudecode:research` | 병렬 조사 방법론 | 선택 |
+
+> **적용 위치**: 스킬의 워크플로우 섹션에 명시.
+> 예: `### Phase 2: 계획 수립` → "이 단계는 `/oh-my-claudecode:ralplan`을 활용하여 수행"
+>
+> **필수 vs 선택**: 개발 계획·기능 구현·빌드 오류 수정·QA/검증은 반드시 오케스트레이션 스킬을 활용.
+> 그 외 단계는 에이전트 자체 워크플로우(AGENT.md)가 충분한지 판단하여 상황에 따라 적용.
+
 [Top](#skill-표준)
 
 ---
@@ -319,7 +361,7 @@ Task(
 | 2 | `[{스킬명} 활성화]` | 선택 | 스킬 시작 시 화면에 출력하는 메시지 |
 | 3 | `## 목표` | ✅ | 이 스킬이 달성하려는 핵심 목적 |
 | 4 | `## 활성화 조건` | 권장 | 이 스킬이 활성화되는 조건 · 상황 (자기 선언) |
-| 5 | `## 워크플로우` | 권장 | 워크플로우 / 단계별 접근법. 위임 시 `→ Agent:` 또는 `→ Skill:` 마커 사용 |
+| 5 | `## 워크플로우` | 권장 | 워크플로우 / 단계별 접근법. 위임 시 `→ Agent:` 또는 `→ Skill:` 마커 사용. <br>위임형 스킬은 필수 단계에 오케스트레이션 스킬 활용 명시 |
 
 ### 섹션명 통일 규칙
 
@@ -448,22 +490,12 @@ setup 스킬은 `disable-model-invocation: true`로 설정하여 런타임이 �
 
 #### 에이전트 호출 규칙 작성 가이드
 
-`## 에이전트 호출 규칙` 섹션에 다음 내용을 포함할 것:
-
-1. **에이전트 FQN 목록** — 이 스킬이 호출하는 에이전트의 FQN (`{plugin}:{agent}:{agent}`)
-2. **프롬프트 조립 절차**:
-   - `agents/{agent-name}/` 에서 3파일 로드 (AGENT.md + agentcard.yaml + tools.yaml)
-   - `gateway/runtime-mapping.yaml` 참조하여 구체화:
-     - **모델 구체화**: agentcard.yaml의 `tier` → `tier_mapping`에서 모델 결정
-     - **툴 구체화**: tools.yaml의 추상 도구 → `tool_mapping`에서 실제 도구 결정
-     - **금지액션 구체화**: agentcard.yaml의 `forbidden_actions` → `action_mapping`에서 제외할 실제 도구 결정
-     - **최종 도구** = (구체화된 도구) - (제외 도구)
-   - 3파일을 합쳐 하나의 프롬프트로 조립
-   - `Task(subagent_type=FQN, model=구체화된 모델, prompt=조립된 프롬프트)` 호출
+상위 "에이전트 호출 규칙 > 작성 가이드"를 따름.
 
 #### 워크플로우 작성 패턴
 
 Planning 스킬은 `## 워크플로우` 안에 `### Step N: {Name}` 패턴으로 번호 기반 순차 워크플로우를 정의함.
+각 Step에서 오케스트레이션 스킬 활용이 필요하면 명시함 (예: "이 단계는 `/oh-my-claudecode:ralplan`을 활용하여 수행").
 
 #### 계획 모드 (Planning Mode)
 
@@ -512,23 +544,13 @@ Planning 스킬은 요구사항의 명확도에 따라 세 가지 모드 중 하
 
 #### 에이전트 호출 규칙 작성 가이드
 
-`## 에이전트 호출 규칙` 섹션에 다음 내용을 포함할 것:
-
-1. **에이전트 FQN 목록** — 이 스킬이 호출하는 에이전트의 FQN (`{plugin}:{agent}:{agent}`)
-2. **프롬프트 조립 절차**:
-   - `agents/{agent-name}/` 에서 3파일 로드 (AGENT.md + agentcard.yaml + tools.yaml)
-   - `gateway/runtime-mapping.yaml` 참조하여 구체화:
-     - **모델 구체화**: agentcard.yaml의 `tier` → `tier_mapping`에서 모델 결정
-     - **툴 구체화**: tools.yaml의 추상 도구 → `tool_mapping`에서 실제 도구 결정
-     - **금지액션 구체화**: agentcard.yaml의 `forbidden_actions` → `action_mapping`에서 제외할 실제 도구 결정
-     - **최종 도구** = (구체화된 도구) - (제외 도구)
-   - 3파일을 합쳐 하나의 프롬프트로 조립
-   - `Task(subagent_type=FQN, model=구체화된 모델, prompt=조립된 프롬프트)` 호출
+상위 "에이전트 호출 규칙 > 작성 가이드"를 따름.
 
 #### 워크플로우 작성 패턴
 
 Orchestrator 스킬은 `## 워크플로우` 안에 `### Phase N: {Name}` 패턴으로 순차/병렬 단계를 정의함.
 각 Phase는 Goal → Agents → Output 구조를 따름.
+각 Phase에서 오케스트레이션 스킬 활용이 필요하면 명시함 (예: "이 Phase는 `/oh-my-claudecode:tdd`를 활용하여 수행").
 
 #### 특징
 
@@ -689,6 +711,7 @@ description: 워크플로우 조율 및 병렬 실행 관리
    - **금지액션 구체화**: agentcard.yaml의 `forbidden_actions` → `action_mapping`에서 제외할 실제 도구 결정
    - **최종 도구** = (구체화된 도구) - (제외 도구)
 3. 프롬프트 조립: AGENT.md + agentcard.yaml + tools.yaml을 합쳐 하나의 프롬프트로 구성
+   - **구성 순서**: 공통 정적(runtime-mapping) → 에이전트별 정적(3파일) → 동적(작업 지시)
 4. `Task(subagent_type=FQN, model=구체화된 모델, prompt=조립된 프롬프트)` 호출
 
 ## 워크플로우
@@ -697,7 +720,7 @@ description: 워크플로우 조율 및 병렬 실행 관리
 
 상태 파일 생성, 설정 로드.
 
-### Phase 2: 실행 → Agent: executor
+### Phase 2: 실행 → Agent: executor (`/oh-my-claudecode:tdd` 활용)
 
 - **TASK**: 기능 구현
 - **EXPECTED OUTCOME**: 컴파일 에러 없는 구현 코드
@@ -754,6 +777,8 @@ description: 워크플로우 조율 및 병렬 실행 관리
 | 4 | 워크플로우에서 `→ Agent:` 마커 사용 시 5항목, `→ Skill:` 마커 사용 시 3항목 포함 | 위임 품질 보장 |
 | 5 | 라우팅/분기 로직은 상세히, 에이전트 위임은 간결하게 | 프롬프트 깊이 차등화 |
 | 6 | 섹션명 한글 표준명 사용 (목표, 활성화 조건, 워크플로우) | 스킬 간 일관성 |
+| 7 | 위임형 스킬: 필수 단계(계획·구현·빌드 수정·QA)의 워크플로우에서 오케스트레이션 스킬 활용 명시 | 검증된 방법론 주입 |
+| 8 | 위임형 스킬: 프롬프트 구성 순서를 공통 정적 → 에이전트별 정적 → 동적 순서로 배치 | prefix 캐시 최적화 |
 
 [Top](#skill-표준)
 
@@ -791,5 +816,8 @@ description: 워크플로우 조율 및 병렬 실행 관리
 - [ ] commands/ 진입점 파일 작성 (슬래시 명령 노출 시)
 - [ ] 위임형 스킬(Planning, Orchestrator): 에이전트 호출 규칙 섹션 포함
 - [ ] Orchestrator 스킬: 완료 조건, 검증 프로토콜, 상태 정리, 취소/재개 섹션 포함
+- [ ] 위임형 스킬: 필수 단계(계획·구현·빌드 수정·QA)의 워크플로우에 오케스트레이션 스킬 활용이 명시되었는가
+- [ ] 위임형 스킬: 선택 단계에 대해 오케스트레이션 스킬 활용 여부를 판단 근거와 함께 결정했는가
+- [ ] 위임형 스킬: 프롬프트 구성 순서가 공통 정적 → 에이전트별 정적 → 동적 순서인가
 
 [Top](#skill-표준)
