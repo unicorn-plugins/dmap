@@ -2,7 +2,6 @@
 
 > **교차 참조**: 아래 상황에서 추가 문서를 로드할 것.
 > - 에이전트의 agentcard.yaml/tools.yaml 작성이 필요하면 → `standards/plugin-standard-agent.md`
-> - 런타임 실행 흐름 확인이 필요하면 → `standards/plugin-standard-runtime.md`
 > - 전체 아키텍처 확인이 필요하면 → `standards/plugin-standard.md`
 
 ---
@@ -229,23 +228,19 @@ my-plugin/
 ```yaml
 # ─────────────────────────────────────────────
 # 티어 → LLM 모델 매핑
-#   agentcard.yaml의 tier 값을 실제 모델 + 실행 예산에 매핑
+#   agentcard.yaml의 tier 값을 실제 모델에 매핑
 #   전역 기본값(default) + 에이전트별 예외
 # ─────────────────────────────────────────────
 tier_mapping:
   default:                             # 전역 기본값
     HEAVY:
       model: "claude-opus-4-6"
-      budget: { max_tokens: 65536, timeout_seconds: 900 }
     HIGH:
       model: "claude-opus-4-6"
-      budget: { max_tokens: 32768, timeout_seconds: 600 }
     MEDIUM:
       model: "claude-sonnet-4-5"
-      budget: { max_tokens: 16384, timeout_seconds: 300 }
     LOW:
       model: "claude-haiku-4-5"
-      budget: { max_tokens: 4096, timeout_seconds: 120 }
   designer:                            # 에이전트별 예외
     HIGH:
       model: "claude-sonnet-4-5"       # 디자인은 sonnet으로 충분
@@ -312,8 +307,7 @@ action_mapping:
 **기본 규칙**:
 - `default`는 전역 기본값. 에이전트명으로 예외 매핑 추가 가능
 - 에이전트별 매핑이 있으면 default보다 우선 적용
-- 각 티어는 `model` + `budget`을 함께 정의 — 에이전트 패키지에 예산 파일 불필요
-- 에이전트별 예외에서 `budget` 생략 시 default의 해당 티어 budget 적용
+- 각 티어는 `model`만 정의 — 예산(budget)은 런타임이 자체 관리
 - 티어는 LLM 모델 등급 선언 — Gateway가 실제 모델명으로 매핑
 - 모델명은 **작성 시점의 최신 버전**을 사용 — 신규 모델 출시 시 이 파일만 갱신하면 전체 에이전트에 반영
 
@@ -321,7 +315,7 @@ action_mapping:
 
 | 티어 | 모델 |
 |------|------|
-| HEAVY | claude-opus-4-6 (대규모 예산) |
+| HEAVY | claude-opus-4-6 |
 | HIGH | claude-opus-4-6 |
 | MEDIUM | claude-sonnet-4-5 |
 | LOW | claude-haiku-4-5 |
@@ -388,21 +382,17 @@ custom_tools:
 ### runtime-mapping.yaml 템플릿
 
 ```yaml
-# 티어 매핑 (모델 + 예산)
+# 티어 매핑 (모델만)
 tier_mapping:
   default:
     HEAVY:
       model: "claude-opus-4-6"
-      budget: { max_tokens: 65536, timeout_seconds: 900 }
     HIGH:
       model: "claude-opus-4-6"
-      budget: { max_tokens: 32768, timeout_seconds: 600 }
     MEDIUM:
       model: "claude-sonnet-4-5"
-      budget: { max_tokens: 16384, timeout_seconds: 300 }
     LOW:
       model: "claude-haiku-4-5"
-      budget: { max_tokens: 4096, timeout_seconds: 120 }
 
 # 도구 매핑
 tool_mapping:
@@ -436,7 +426,7 @@ action_mapping:
 |---|------|
 | 1 | install.yaml + runtime-mapping.yaml 필수 포함 |
 | 2 | runtime-mapping.yaml에 tier_mapping, tool_mapping, action_mapping 3영역 구성 |
-| 3 | tier_mapping에 default 전역 기본값 포함 (HEAVY/HIGH/MEDIUM/LOW), 각 티어에 model + budget 정의 |
+| 3 | tier_mapping에 default 전역 기본값 포함 (HEAVY/HIGH/MEDIUM/LOW), 각 티어에 model 정의 |
 | 4 | setup 스킬이 install.yaml을 참조하여 설치 수행 |
 | 5 | MCP 서버 config는 런타임 중립적 JSON 포맷 |
 
@@ -460,7 +450,7 @@ action_mapping:
 
 - [ ] install.yaml 존재
 - [ ] runtime-mapping.yaml 존재
-- [ ] tier_mapping에 default 섹션 포함 (HEAVY/HIGH/MEDIUM/LOW), 각 티어에 model + budget 정의
+- [ ] tier_mapping에 default 섹션 포함 (HEAVY/HIGH/MEDIUM/LOW), 각 티어에 model 정의
 - [ ] 에이전트의 tools.yaml 선언이 tool_mapping에 매핑됨
 - [ ] 에이전트의 forbidden_actions가 action_mapping에 매핑됨
 - [ ] required: true 항목의 설치 실패 시 중단 로직 확인

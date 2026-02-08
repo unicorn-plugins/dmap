@@ -1,8 +1,13 @@
 # DMAP 빌더 표준
 
 - [DMAP 빌더 표준](#dmap-빌더-표준)
+  - [DMAP 빌더란?](#dmap-빌더란)
+    - [정의](#정의)
+    - [핵심 가치](#핵심-가치)
+    - [기존 프레임워크와의 차별성](#기존-프레임워크와의-차별성)
   - [핵심 원칙](#핵심-원칙)
   - [5-Layer 아키텍처](#5-layer-아키텍처)
+    - [런타임 (Runtime)](#런타임-runtime)
   - [문서 참조 규칙](#문서-참조-규칙)
   - [핵심 규칙](#핵심-규칙)
     - [MUST 규칙](#must-규칙)
@@ -16,7 +21,56 @@
     - [네임스페이스 적용 방식](#네임스페이스-적용-방식)
     - [슬래시 명령 등록](#슬래시-명령-등록)
     - [충돌 해소 우선순위](#충돌-해소-우선순위)
+  - [배포](#배포)
+    - [marketplace.json](#marketplacejson)
+    - [README.md 필수 섹션](#readmemd-필수-섹션)
   - [빠른 참조](#빠른-참조)
+
+---
+
+## DMAP 빌더란?
+
+### 정의
+
+**DMAP (Declarative Multi-Agent Plugin)**은
+코드 없이 **Markdown(프롬프트)과 YAML(설정)만으로** 멀티에이전트 시스템을 정의하는 선언형 플러그인 아키텍처 표준임.
+
+소프트웨어 공학의 검증된 원칙(Clean Architecture)을 LLM 에이전트 오케스트레이션에 적용하여,
+런타임 중립적이고 도메인 무관한 플러그인을 구축할 수 있음.
+
+**DMAP 빌더**는 이 표준에 따라 플러그인을 생성하는 AI 에이전트(또는 도구)를 의미함.
+
+### 핵심 가치
+
+| 가치 | 설명 |
+|------|------|
+| **선언형 명세** | "어떻게 동작하는가"를 코딩하지 않고 "무엇을 할 수 있는가"를 선언 |
+| **런타임 중립** | `tier: HIGH` 같은 추상 선언 → 런타임(Claude Code, Codex CLI 등)이 구체 모델로 해석 |
+| **관심사 분리** | Skills(라우팅) → Agents(실행) → Gateway(도구 매핑)의 단방향 의존 |
+| **비개발자 접근성** | Markdown과 YAML만 알면 도메인 전문가도 에이전트 시스템 구축 가능 |
+| **도메인 범용** | 코드 생성, 교육, 문서화, 비즈니스 워크플로우 등 어떤 도메인에도 적용 가능 |
+
+### 기존 프레임워크와의 차별성
+
+| 비교 항목 | 기존 프레임워크 (LangChain, CrewAI, AutoGen 등) | **DMAP** |
+|-----------|:-----------------------------------------------:|:--------:|
+| **에이전트 정의** | Python/TypeScript SDK 코드 | Markdown + YAML |
+| **오케스트레이션** | 그래프/함수 호출 체인 코드 | 스킬 프롬프트(자연어) |
+| **런타임 종속성** | 특정 SDK에 강결합 | 런타임 중립 |
+| **아키텍처 원칙** | 없거나 프레임워크 의존 | Clean Architecture |
+| **도구 연결** | 코드에서 도구 객체 생성 | 추상 선언(tools.yaml) → Gateway 매핑 |
+| **티어 관리** | 없음 | 4-Tier(HEAVY/HIGH/MEDIUM/LOW) + 런타임 자동 매핑 |
+| **역할 제약** | if문으로 분기 | forbidden_actions 블랙리스트 선언 |
+| **이식성** | 낮음 (전체 재작성) | 높음 (runtime-mapping.yaml만 교체) |
+
+**패러다임 전환:**
+
+```
+기존:  Developer writes Python code  → Framework executes agents
+DMAP:  Anyone writes Markdown/YAML   → Any Runtime executes agents
+```
+
+[Top](#dmap-빌더-표준)
 
 ---
 
@@ -43,7 +97,7 @@
 | Controller + UseCase | Skills | 라우팅 + 오케스트레이션 | SKILL.md | [→ Skill 상세](plugin-standard-skill.md) |
 | Service | Agents | 전문가 자율 실행 | AGENT.md, agentcard.yaml, tools.yaml | [→ Agent 상세](plugin-standard-agent.md) |
 | Gateway | 도구 인프라 | 추상→구체 매핑 | runtime-mapping.yaml | [→ Gateway 상세](plugin-standard-gateway.md) |
-| Runtime | 실행 환경 | 매핑 해석 + 에이전트 스폰 | — | [→ Runtime 상세](plugin-standard-runtime.md) |
+| Runtime | 실행 환경 | 매핑 해석 + 에이전트 스폰 | — | 아래 [런타임](#런타임-runtime) 참조 |
 | Cross-cutting | Hooks (AOP) | 모든 계층의 이벤트 횡단적 가로챔 | hooks.json | — |
 
 **스킬 실행 경로:**
@@ -115,6 +169,33 @@ sequenceDiagram
 | LSP | diagnostics, hover, references | IDE 수준 언어 분석 |
 | Custom | AST grep, Python REPL, state, notepad | 플러그인 자체 확장 도구 |
 
+### 런타임 (Runtime)
+
+런타임은 에이전트를 스폰하고 실행하는 환경으로, Gateway의 매핑 테이블을 참조하여 추상 선언을 구체 구현으로 변환함.
+
+**런타임 유형:**
+
+| 런타임 | 제공자 | 특징 |
+|--------|--------|------|
+| Claude Code | Anthropic | CLI 기반, MCP/LSP 지원 |
+| Codex CLI | OpenAI | CLI 기반 에이전트 실행 |
+| Gemini CLI | Google | CLI 기반 에이전트 실행 |
+| Cursor, Windsurf | 3rd party | IDE 기반 에이전트 실행 |
+
+**매핑 해석 방식:**
+
+| 유형 | 해석 방식 | 예시 |
+|------|----------|------|
+| **LLM 런타임** | 프롬프트 기반 — 핵심 스킬이 매핑 참조 가이드를 포함 | Claude Code, Codex CLI |
+| **코드 런타임** | 프로그래밍 기반 — YAML을 파싱하여 자동 해석 | IDE 플러그인, 커스텀 런타임 |
+
+**런타임 자동 처리 (스킬이 제어 불가):**
+- **캐시 최적화**: prefix 캐싱, 일괄 로드, mtime/TTL 기반 무효화
+- **핸드오프/에스컬레이션**: agentcard.yaml의 조건에 따라 자동 처리
+
+> **원칙**: 런타임은 표준의 추상 선언을 **해석만** 함 — 표준을 변경하지 않음.
+> 매핑 테이블에 없는 추상 선언은 런타임 기본값으로 처리.
+
 [Top](#dmap-빌더-표준)
 
 ---
@@ -128,9 +209,7 @@ AI가 작업별로 로드할 문서를 정의함. 이미 로드한 문서는 재
 | 스킬 생성·수정 | `standards/plugin-standard-skill.md` | ~8,000 |
 | 에이전트 생성·수정 | `standards/plugin-standard-agent.md` | ~8,000 |
 | Gateway·도구 매핑 | `standards/plugin-standard-gateway.md` | ~6,000 |
-| 런타임 매핑·실행 흐름 | `standards/plugin-standard-runtime.md` | ~4,000 |
-| 배포·마켓플레이스 | `standards/plugin-standard-deployment.md` | ~6,000 |
-| 전체 플러그인 신규 생성 | 위 문서 전체를 순차 로드 | ~32,000 |
+| 전체 플러그인 신규 생성 | 위 문서 전체를 순차 로드 | ~22,000 |
 
 [Top](#dmap-빌더-표준)
 
@@ -232,6 +311,7 @@ my-plugin/
 ├── hooks/                      # 이벤트 핸들러 (선택, 자동 탐색)
 │   └── hooks.json              # Hook 이벤트 → 스크립트 매핑
 │
+├── README.md                   # 사용 가이드 (배포 시 필수)
 └── package.json                # NPM 패키지 (선택. NPM 배포 시에만 필요)
 ```
 
@@ -288,11 +368,52 @@ Use the Skill tool to invoke the `abra:setup` skill with all arguments passed th
 
 ---
 
+## 배포
+
+플러그인을 외부에 배포할 때 필요한 파일과 규칙.
+
+### marketplace.json
+
+`.claude-plugin/marketplace.json`에 마켓플레이스 메타데이터를 선언함.
+
+```json
+{
+  "displayName": "Abra - Code Quality Plugin",
+  "description": "코드 품질 분석 및 개선을 위한 멀티에이전트 플러그인",
+  "author": "unicorn-inc",
+  "license": "MIT",
+  "repository": "https://github.com/unicorn-inc/abra",
+  "keywords": ["code-quality", "analysis", "multi-agent"],
+  "categories": ["Developer Tools"]
+}
+```
+
+> **참고**: `name`과 `version`은 `plugin.json`에 이미 정의되어 있으므로 중복하지 않음.
+
+### README.md 필수 섹션
+
+배포 시 `README.md`에 다음 섹션을 포함:
+
+| 섹션 | 내용 |
+|------|------|
+| **개요** | 플러그인 목적, 주요 기능 요약 |
+| **설치** | setup 스킬 실행 방법 (`/{plugin}:setup`) |
+| **사용법** | 슬래시 명령 목록 + 간단한 사용 예시 |
+| **요구사항** | 필수 MCP/LSP 서버, 런타임 버전 등 |
+| **라이선스** | 라이선스 정보 |
+
+> **템플릿**: README.md 작성 시 `templates/README-plugin-template.md`를 참고할 것.
+> **예제**: 실제 작성 예시는 `sample/README.md`를 참고할 것.
+
+[Top](#dmap-빌더-표준)
+
+---
+
 ## 빠른 참조
 
 | 컴포넌트 | 필수 파일 | 선택 파일 |
 |----------|----------|----------|
-| 플러그인 | `.claude-plugin/plugin.json` | `marketplace.json` |
+| 플러그인 | `.claude-plugin/plugin.json` | `marketplace.json` (배포 시 필수) |
 | 스킬 | `SKILL.md` | `scripts/`, `references/`, `assets/` |
 | 에이전트 | `AGENT.md`, `agentcard.yaml` | `tools.yaml`, `references/`, `templates/` |
 | Gateway | `install.yaml`, `runtime-mapping.yaml` | `mcp/`, `lsp/`, `tools/` |
