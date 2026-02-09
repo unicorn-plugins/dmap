@@ -22,7 +22,12 @@
     - [슬래시 명령 등록](#슬래시-명령-등록)
     - [충돌 해소 우선순위](#충돌-해소-우선순위)
   - [배포](#배포)
+    - [plugin.json](#pluginjson)
     - [marketplace.json](#marketplacejson)
+      - [루트 레벨](#루트-레벨)
+      - [plugins 배열 항목](#plugins-배열-항목)
+      - [source 타입](#source-타입)
+      - [CLI 명령](#cli-명령)
     - [README.md 필수 섹션](#readmemd-필수-섹션)
   - [빠른 참조](#빠른-참조)
 
@@ -372,23 +377,177 @@ Use the Skill tool to invoke the `abra:setup` skill with all arguments passed th
 
 플러그인을 외부에 배포할 때 필요한 파일과 규칙.
 
-### marketplace.json
+### plugin.json
 
-`.claude-plugin/marketplace.json`에 마켓플레이스 메타데이터를 선언함.
+`.claude-plugin/plugin.json`에 플러그인 매니페스트를 선언함.
+파일이 없으면 Claude Code가 디렉토리 이름에서 `name`을 자동 추론함.
+
+| 항목 | 필수 | 설명 |
+|------|:----:|------|
+| `name` | 필수 | 플러그인 고유 식별자. kebab-case, 공백 불가. 예: `"abra"` |
+| `version` | 권고 | 시맨틱 버전. marketplace.json의 version보다 우선. 예: `"1.0.0"` |
+| `description` | 권고 | 플러그인 목적 설명. 한 줄 요약. 예: `"AI Agent 자동 생성 플러그인"` |
+| `author` | 권고 | 작성자 정보 객체. `name`(필수), `email`, `url` 포함 |
+| `homepage` | 선택 | 문서 URL. 예: `"https://github.com/cna-bootcamp/abra"` |
+| `repository` | 선택 | 소스 코드 URL. 예: `"https://github.com/cna-bootcamp/abra"` |
+| `license` | 권고 | SPDX 라이선스 식별자. 예: `"MIT"`, `"Apache-2.0"` |
+| `keywords` | 권고 | 검색용 태그 배열. 예: `["dify", "ai-agent", "automation"]` |
+| `commands` | 선택 | 추가 커맨드 파일/디렉토리 경로. `./`로 시작하는 상대 경로. 기본: `commands/` |
+| `agents` | 선택 | 추가 에이전트 파일 경로. 기본: `agents/` |
+| `skills` | 선택 | 추가 스킬 디렉토리 경로. 기본: `skills/` |
+| `hooks` | 선택 | Hook 설정 경로 또는 인라인 설정. 기본: `hooks/hooks.json` |
+| `mcpServers` | 선택 | MCP 서버 설정 경로 또는 인라인 설정. 기본: `.mcp.json` |
+| `lspServers` | 선택 | LSP 서버 설정 경로 또는 인라인 설정. 기본: `.lsp.json` |
+| `outputStyles` | 선택 | 출력 스타일 파일/디렉토리 경로 |
+
+> **경로 규칙**: 모든 경로는 `./`로 시작하는 상대 경로.
+> 커스텀 경로는 기본 디렉토리를 **대체하지 않고 Add**함.
+> `${CLAUDE_PLUGIN_ROOT}` 환경변수로 플러그인 루트 절대 경로 참조 가능.
+
+**예제** (`samples/abra/.claude-plugin/plugin.json`):
 
 ```json
 {
-  "displayName": "Abra - Code Quality Plugin",
-  "description": "코드 품질 분석 및 개선을 위한 멀티에이전트 플러그인",
-  "author": "unicorn-inc",
+  "name": "abra",
+  "version": "1.0.0",
+  "description": "자연어 한마디로 AI Agent를 자동 생성하는 DMAP 플러그인",
+  "author": {
+    "name": "Lee HaeKyung"
+  },
+  "repository": "https://github.com/cna-bootcamp/abra",
+  "homepage": "https://github.com/cna-bootcamp/abra",
   "license": "MIT",
-  "repository": "https://github.com/unicorn-inc/abra",
-  "keywords": ["code-quality", "analysis", "multi-agent"],
-  "categories": ["Developer Tools"]
+  "keywords": ["abra", "dmap", "plugin", "multi-agent", "orchestration", "automation"]
+}
+```
+  
+### marketplace.json
+
+`.claude-plugin/marketplace.json`에 마켓플레이스 카탈로그를 선언함.
+하나의 마켓플레이스에 여러 플러그인을 등록할 수 있음.
+
+**참조**: [Plugin Marketplaces](https://code.claude.com/docs/en/plugin-marketplaces)
+
+#### 루트 레벨
+
+| 항목 | 필수 | 설명 |
+|------|:----:|------|
+| `$schema` | 권고 | 스키마 참조 URL. `"https://anthropic.com/claude-code/marketplace.schema.json"` |
+| `name` | 필수 | 마켓플레이스 식별자. kebab-case, 공백 불가. 예: `"unicorn"` |
+| `description` | 선택 | 마켓플레이스 설명. 예: `"Unicorn Inc. 플러그인 모음집"` |
+| `owner` | 필수 | 관리자 정보 객체 |
+| `owner.name` | 필수 | 관리자 이름. 예: `"Unicorn Inc."` |
+| `owner.email` | 권고 | 연락처 이메일. 예: `"dev@unicorn-inc.com"` |
+| `plugins` | 필수 | 플러그인 목록 배열 |
+
+> **작성가이드**    
+> - **예약된 이름** (사용 불가): `claude-code-marketplace`, `claude-code-plugins`,  
+> `claude-plugins-official`, `anthropic-marketplace`, `anthropic-plugins`, `agent-skills`  
+> - $schema, name, owner.email만 작성. name은 plugin이름과 동일하게 작성    
+
+#### plugins 배열 항목
+| 항목 | 필수 | 설명 |
+|------|:----:|------|
+| `name` | 필수 | 플러그인 식별자. kebab-case. 예: `"abra"` |
+| `source` | 필수 | 플러그인 소스 경로 또는 객체. 상대 경로: `"./"`  GitHub: `{"source":"github","repo":"owner/repo","ref":"v1.0","sha":"..."}` |
+| `version` | 선택 | 플러그인 버전. plugin.json의 version이 우선. 예: `"1.0.0"` |
+| `description` | 선택 | 플러그인 설명 |
+| `author` | 선택 | 작성자 정보 객체. `name`(필수), `email`(선택) |
+| `homepage` | 선택 | 문서 URL |
+| `repository` | 선택 | 소스 코드 URL |
+| `license` | 선택 | SPDX 라이선스 식별자 |
+| `keywords` | 선택 | 검색용 태그 배열 |
+| `category` | 권고 | 플러그인 카테고리. 예: `"productivity"`, `"development"` |
+| `tags` | 선택 | 추가 태그 배열 |
+| `strict` | 선택 | 병합 동작 (기본: `true`). `true`: marketplace 항목이 plugin.json과 병합. `false`: marketplace 항목이 전체 정의 |
+
+> **작성가이드**: name, source, category 만 작성 
+  
+#### source 타입
+
+| 타입 | 형식 | 설명 |
+|------|------|------|
+| 상대 경로 | 문자열 | 마켓플레이스 루트 기준 상대 경로 |
+| GitHub | 객체 | GitHub 저장소에서 가져옴. `sha` 필수 |
+| Git URL | 객체 | 임의 Git URL에서 가져옴. `sha` 필수 |
+
+> **작성가이드**: 상대경로로 작성하고 값은 `"./"`
+   
+**상대 경로** — `"./"`: 루트 자체가 플러그인 (1:1 구조), `"./plugins/abra"`: 하위 디렉토리 (1:N 구조)
+
+```json
+// 1:1 구조 (마켓플레이스 = 플러그인)
+{ "source": "./" }
+
+// 1:N 구조 (마켓플레이스 아래 여러 플러그인)
+{ "source": "./plugins/abra" }
+```
+
+**GitHub** — `repo`: `owner/repo` 형식, `ref`: 브랜치·태그·커밋, `sha`: 커밋 해시
+
+```json
+{
+  "source": {
+    "source": "github",
+    "repo": "cna-bootcamp/abra",
+    "ref": "v1.0.0",
+    "sha": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0"
+  }
 }
 ```
 
-> **참고**: `name`과 `version`은 `plugin.json`에 이미 정의되어 있으므로 중복하지 않음.
+**Git URL** — `url`: `.git`으로 끝나는 전체 URL, `ref`: 브랜치·태그, `sha`: 커밋 해시
+
+```json
+{
+  "source": {
+    "source": "url",
+    "url": "https://gitlab.com/team/plugin.git",
+    "ref": "main",
+    "sha": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0"
+  }
+}
+```
+
+**예제** (`samples/abra/.claude-plugin/marketplace.json`):
+
+```json
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "abra",
+  "owner": {
+    "name": "Unicorn Inc."
+  },
+  "plugins": [
+    {
+      "name": "abra",
+      "version": "1.0.0",
+      "source": "./"
+    }
+  ]
+}
+```
+
+#### CLI 명령
+
+```bash
+# 마켓플레이스 등록
+claude plugin marketplace add <경로-또는-repo>
+
+# 플러그인 설치
+claude plugin install <plugin-name> [--scope user|project|local]
+
+# 마켓플레이스 목록/업데이트/삭제
+claude plugin marketplace list
+claude plugin marketplace update <name>
+claude plugin marketplace remove <name>
+
+# 검증
+claude plugin validate .
+```
+
+> **참고**: `plugin.json`과 `marketplace.json`의 `name`, `version` 등이 동시 존재 시
+> `plugin.json`의 값이 우선 적용됨 (`strict: true` 기본 동작).
 
 ### README.md 필수 섹션
 

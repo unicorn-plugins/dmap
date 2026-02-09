@@ -1,9 +1,13 @@
 {
-  "display_name": "Abra",
-  "description": "서비스 목적을 자연어로 입력하면 시나리오 생성부터 AI Agent 개발까지 5단계 워크플로우를 자동화하는 DMAP 플러그인",
-  "author": "Unicorn Inc.",
-  "license": "MIT",
-  "repository": "https://github.com/unicorn-inc/abra",
-  "keywords": ["dify", "ai-agent", "workflow", "dsl", "automation"],
-  "categories": ["development", "ai"]
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "abra",
+  "owner": {
+    "name": "Unicorn Inc."
+  },
+  "plugins": [
+    {
+      "name": "abra",
+      "source": "./"
+    }
+  ]
 }
