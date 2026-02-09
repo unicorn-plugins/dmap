@@ -1,0 +1,36 @@
+# ─────────────────────────────────────────────
+# MCP 서버 — Abra는 외부 MCP 서버 미사용
+# ─────────────────────────────────────────────
+# mcp_servers: 없음
+
+# ─────────────────────────────────────────────
+# LSP 서버 — 런타임 기본 제공 LSP로 충분
+# ─────────────────────────────────────────────
+# lsp_servers: 없음
+
+# ─────────────────────────────────────────────
+# 커스텀 도구 — 플러그인 자체 포함
+# ─────────────────────────────────────────────
+custom_tools:
+  - name: dify_cli
+    description: "Dify 앱 관리 CLI — list, export, import, update, publish, run"
+    source: tools/dify_cli.py
+    required: true
+
+  - name: validate_dsl
+    description: "Dify DSL YAML 구조 검증 도구 — Import 전 필수 사전 검증"
+    source: tools/validate_dsl.py
+    required: true
+
+# ─────────────────────────────────────────────
+# Python 환경 — setup 스킬에서 구성
+# ─────────────────────────────────────────────
+python_env:
+  venv_path: .venv
+  requirements: requirements.txt
+
+# ─────────────────────────────────────────────
+# 환경 설정 — setup 스킬에서 생성
+# ─────────────────────────────────────────────
+config:
+  env_file: .env

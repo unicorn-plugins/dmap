@@ -1,0 +1,60 @@
+# ─────────────────────────────────────────────
+# 티어 → LLM 모델 매핑
+# ─────────────────────────────────────────────
+tier_mapping:
+  default:
+    HEAVY:
+      model: "claude-opus-4-6"
+    HIGH:
+      model: "claude-opus-4-6"
+    MEDIUM:
+      model: "claude-sonnet-4-5"
+    LOW:
+      model: "claude-haiku-4-5"
+
+# ─────────────────────────────────────────────
+# 추상 도구명 → 실제 도구 매핑
+#   builtin 도구(Read, Write, Bash 등)는 생략
+#   lsp, mcp, custom 도구만 매핑
+# ─────────────────────────────────────────────
+tool_mapping:
+  # ── 코드 분석 ──
+  code_search:
+    - type: lsp
+      tools: ["lsp_workspace_symbols"]
+
+  code_diagnostics:
+    - type: lsp
+      tools: ["lsp_diagnostics", "lsp_diagnostics_directory"]
+
+  # ── Dify 도구 (커스텀 CLI) ──
+  dify_app_management:
+    - type: custom
+      source: "tools/dify_cli.py"
+      tools: ["list", "export"]
+
+  dify_dsl_management:
+    - type: custom
+      source: "tools/dify_cli.py"
+      tools: ["import", "update", "export"]
+
+  dify_workflow_management:
+    - type: custom
+      source: "tools/dify_cli.py"
+      tools: ["publish", "run"]
+
+  dsl_validation:
+    - type: custom
+      source: "tools/validate_dsl.py"
+      tools: ["validate"]
+
+# ─────────────────────────────────────────────
+# 액션 카테고리 → 실제 도구 매핑
+# ─────────────────────────────────────────────
+action_mapping:
+  file_write: ["Write", "Edit"]
+  file_delete: ["Bash"]
+  code_execute: ["Bash"]
+  network_access: ["WebFetch", "WebSearch"]
+  user_interact: ["AskUserQuestion"]
+  agent_delegate: ["Task"]

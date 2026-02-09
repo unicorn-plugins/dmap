@@ -1,0 +1,12 @@
+{
+  "name": "abra",
+  "version": "1.0.0",
+  "description": "자연어 한마디로 AI Agent를 자동 생성하는 DMAP 플러그인",
+  "author": {
+    "name": "Unicorn Inc."
+  },
+  "repository": "https://github.com/cna-bootcamp/abra",
+  "homepage": "https://github.com/cna-bootcamp/abra",
+  "license": "MIT",
+  "keywords": ["abra", "dmap", "plugin", "multi-agent", "dify", "ai-agent", "automation"]
+}

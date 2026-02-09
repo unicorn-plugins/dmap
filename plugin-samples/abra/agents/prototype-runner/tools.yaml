@@ -1,0 +1,32 @@
+# 에이전트가 필요로 하는 도구 선언
+# 런타임이 Gateway의 runtime-mapping.yaml을 참조하여 실제 도구에 매핑
+tools:
+  - name: file_read
+    description: "파일 내용 읽기"
+    input: { 파일경로 }
+    output: { 파일내용 }
+
+  - name: file_write
+    description: "파일 생성·수정"
+    input: { 파일경로, 내용 }
+    output: { 성공여부 }
+
+  - name: dsl_validation
+    description: "DSL YAML 문법·구조 사전 검증"
+    input: { DSL파일경로 }
+    output: { 검증결과, 오류목록 }
+
+  - name: dify_app_management
+    description: "Dify 앱 관리 (list, export)"
+    input: { 명령, 앱ID }
+    output: { 실행결과 }
+
+  - name: dify_dsl_management
+    description: "Dify DSL 관리 (import/update/export)"
+    input: { 명령, DSL파일경로 }
+    output: { 실행결과, 앱ID }
+
+  - name: dify_workflow_management
+    description: "Dify 워크플로우 실행 (publish/run)"
+    input: { 명령, 앱ID }
+    output: { 실행결과, 에러정보 }
