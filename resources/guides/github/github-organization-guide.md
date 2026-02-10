@@ -240,11 +240,12 @@ GitHub Organization과 Personal 계정의 차이를 비교함:
 
 **Organization 생성 시기:**
 - 초기 개발: Personal 계정에서 시작
-- 팀원 참여 시점: Organization으로 레포지토리 이전 (Transfer repository 기능 사용)
+- 팀원 참여 시점: Organization으로 레포지토리 이전 (Transfer ownership 기능 사용)
 - 회사 공식 프로젝트: 처음부터 Organization 생성
 
 **레포지토리 이전 방법:**
-- Personal → Organization: 레포지토리 Settings → General → 하단 Danger Zone → Transfer repository → Organization 이름 입력
+예를 들어 개인 Organization에서 팀 Organization으로 이동할 때 사용  
+- 레포지토리 Settings → General → 하단 Danger Zone → Transfer ownership → Organization 이름 입력
 - 이전 후에도 Git 이력, 이슈, PR 모두 유지됨
 - 이전 URL은 자동 리다이렉트됨 (일정 기간 후 리다이렉트 해제 가능)
 

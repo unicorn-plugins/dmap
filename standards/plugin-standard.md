@@ -29,6 +29,7 @@
       - [source 타입](#source-타입)
       - [CLI 명령](#cli-명령)
     - [README.md 필수 섹션](#readmemd-필수-섹션)
+    - [업그레이드](#업그레이드)
   - [빠른 참조](#빠른-참조)
 
 ---
@@ -235,8 +236,7 @@ AI가 작업별로 로드할 문서를 정의함. 이미 로드한 문서는 재
 | 6 | 추상 선언(tools.yaml)과 구체 매핑(runtime-mapping.yaml) 분리 | Dependency Inversion |
 | 7 | 스킬 네임스페이스는 `{plugin-name}:{skill-name}` 형식 | 충돌 방지 |
 | 8 | `/{plugin-name}:{skill-name}` 형식의 진입점 위해 커맨드 생성 | 슬래시 명령 노출 |
-| 9 | setup 스킬과 core 스킬 반드시 포함. setup은 설치 시 프로젝트 루트 `CLAUDE.md`에 core 스킬의 활성화 조건을 라우팅 테이블로 작성 (기존 내용 유지, 끝에 추가). 플러그인당 core 스킬 1개 | 설치/라우팅 등록 |
-| 10 | AGENT.md에 도구 명세 금지 — tools.yaml에 분리 | 프롬프트/도구 분리 |
+| 9 | AGENT.md에 도구 명세 금지 — tools.yaml에 분리 | 프롬프트/도구 분리 |
 
 ### MUST NOT 규칙
 

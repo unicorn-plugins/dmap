@@ -127,20 +127,6 @@
 - "DMAP 설정", "빌더 설정" → /dmap:setup
 - "도움말", "뭘 할 수 있어" → /dmap:help
 
-# abra 플러그인
-
-## 사용 가능한 명령
-
-| 명령 | 설명 |
-|------|------|
-| `/abra:dify-setup` | Dify Docker 환경 구축 |
-| `/abra:setup` | 플러그인 초기 설정 (.env, 가상환경, 연결 테스트) |
-| `/abra:scenario` | 요구사항 시나리오 생성 및 선택 |
-| `/abra:dsl-generate` | Dify DSL 자동 생성 |
-| `/abra:prototype` | Dify 프로토타이핑 자동화 |
-| `/abra:dev-plan` | 개발계획서 작성 |
-| `/abra:develop` | AI Agent 개발 및 배포 |
-| `/abra:help` | 사용 안내 |
 
 ## 운영 규칙
 
