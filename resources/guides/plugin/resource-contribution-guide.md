@@ -613,60 +613,24 @@ resources/tools/customs/general/generate_image.py
 
 ### 단계 2. 툴 가이드 작성
 
-`resources/tools/generate-image.md` 파일을 커스텀 앱 템플릿에 따라 작성.
+[부록 B](#부록-b-ai-활용-프롬프트)의 툴 가이드 작성 프롬프트를 AI에게 전달.
 
-**기본 정보 섹션:**
+**실제 사용한 프롬프트:**
 
-```markdown
-## 기본 정보
+````
+'resources/tools/customs/general/generate_image.py'를 읽고
+resources/tools/generate-image.md에 커스텀 앱 툴 가이드를 작성해줘.
+템플릿은 resources/guides/plugin/resource-contribution-guide.md의
+'커스텀 앱 툴 가이드 템플릿'을 따라줘.
+````
 
-| 항목 | 값 |
-|------|---|
-| 도구명 | generate_image |
-| 카테고리 | 커스텀 앱 |
-| 설명 | Gemini (Nano Banana) 모델 기반 이미지 생성 도구 |
-| 소스 경로 | `resources/tools/customs/general/generate_image.py` |
-```
-
-**설치 정보 섹션:**
-
-```markdown
-## 설치 정보
-
-| 항목 | 값 |
-|------|---|
-| 설치 방법 | 소스 파일 포함 (의존성 설치 필요) |
-| 의존성 설치 | `pip install python-dotenv google-genai` |
-| 검증 명령 | `python tools/general/generate_image.py --help` |
-```
-
-**환경 변수 섹션:**
-
-```markdown
-## 환경 변수
-
-| 변수명 | 필수 | 설명 | 기본값 |
-|--------|:----:|------|--------|
-| `GEMINI_API_KEY` | 필수 | Google Gemini API Key | - |
-```
-
-**명령어 섹션:**
-
-```markdown
-## 명령어
-
-| 파라미터 | 필수 | 설명 | 기본값 |
-|---------|:----:|------|--------|
-| `--prompt` | 택1 | 이미지 생성 프롬프트 텍스트 | - |
-| `--prompt-file` | 택1 | 프롬프트가 담긴 파일 경로 | - |
-| `--output-dir` | 선택 | 출력 디렉토리 | `.` (현재 디렉토리) |
-| `--output-name` | 선택 | 출력 파일명 (확장자 제외) | `generated_image` |
-| `--api-key` | 선택 | Gemini API Key (환경 변수 대체) | - |
-```
+> **참고 — 생성 결과:** AI가 소스 코드를 분석하여 기본 정보, 설치 정보,
+> 환경 변수(`GEMINI_API_KEY`), 명령어(`--prompt`, `--output-dir` 등),
+> 사용 예시를 포함한 툴 가이드를 자동 생성함.
 
 ### 단계 3. 카탈로그 등록
 
-[부록 B](#부록-b-ai-활용-프롬프트)의 커스텀 도구 등록 프롬프트를 AI에게 전달하여 자동 등록.
+[부록 B](#부록-b-ai-활용-프롬프트)의 커스텀 도구 등록 프롬프트를 AI에게 전달.
 
 **실제 사용한 프롬프트:**
 
