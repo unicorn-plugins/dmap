@@ -156,7 +156,7 @@ DMAP 표준에 맞춰 플러그인의 전체 구조 설계.
 
 개발 순서:
 1. 플러그인 스켈레톤 생성 (`.claude-plugin/`, 디렉토리 구조)
-2. `.gitignore` 생성 (`.dmap/secrets/`, `__pycache__/`, `.env` 등 보안·임시 파일 제외)
+2. `.gitignore` 생성 (`.dmap/secrets/`, `__pycache__/`, `.env` 등 보안·임시 파일 제외. `output/` 디렉토리는 제외하지 않음)
 3. Gateway 설정 (`install.yaml`, `runtime-mapping.yaml`)
 4. 공유자원 복사 (리소스 마켓플레이스 → 플러그인 디렉토리)
 5. 에이전트 개발 (`AGENT.md`, `agentcard.yaml`, `tools.yaml`)
