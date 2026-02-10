@@ -12,8 +12,8 @@
     - [MCP 서버 추가](#mcp-서버-추가)
   - [실전 예시: generate_image 도구 등록](#실전-예시-generate_image-도구-등록)
   - [검증 체크리스트](#검증-체크리스트)
-  - [Appendix A. 마크다운 작성 규칙](#appendix-a-마크다운-작성-규칙)
-  - [Appendix B. 카탈로그 등록 프롬프트](#appendix-b-카탈로그-등록-프롬프트)
+  - [부록 A. 마크다운 작성 규칙](#부록-a-마크다운-작성-규칙)
+  - [부록 B. 카탈로그 등록 프롬프트](#부록-b-카탈로그-등록-프롬프트)
 
 ---
 
@@ -85,7 +85,7 @@ resources/
 
 가이드 추가는 3단계로 진행.
 
-### STEP 1. 파일 배치
+### 단계 1. 파일 배치
 
 가이드 파일을 다음 경로에 배치:
 
@@ -96,9 +96,9 @@ resources/guides/{2차분류}/{guide-name}.md
 - 파일명: kebab-case 사용 (예: `plugin-dev-guide.md`)
 - 2차 분류 디렉토리가 없으면 생성
 
-### STEP 2. 가이드 문서 작성
+### 단계 2. 가이드 문서 작성
 
-마크다운 작성 규칙 준수 필수 (상세 규칙은 [Appendix A](#appendix-a-마크다운-작성-규칙) 참조):
+마크다운 작성 규칙 준수 필수 (상세 규칙은 [부록 A](#부록-a-마크다운-작성-규칙) 참조):
 
 | 규칙 | 설명 |
 |------|------|
@@ -108,11 +108,11 @@ resources/guides/{2차분류}/{guide-name}.md
 | 구분선 | 모든 H2 위에 `---` 수평선 |
 | Top 링크 | 각 H2 섹션 마지막에 `[Top](#제목-앵커)` |
 
-> **TIP:** [Appendix A](#appendix-a-마크다운-작성-규칙)의 내용을 복사하여
+> **참고:** [부록 A](#부록-a-마크다운-작성-규칙)의 내용을 복사하여
 > 사용 중인 런타임 AI의 지시 파일(`CLAUDE.md`, `AGENTS.md` 등)에 붙여넣으면
 > AI가 자동으로 마크다운 작성 규칙을 준수함.
 
-### STEP 3. 카탈로그 등록
+### 단계 3. 카탈로그 등록
 
 `plugin-resources.md`의 **"가이드 목록"** 테이블에 행 추가.
 
@@ -127,7 +127,7 @@ resources/guides/{2차분류}/{guide-name}.md
 > 분류별 정렬을 유지하여 삽입.
 > 동일 2차 분류 내에서는 가이드명 기준 정렬 권장.
 >
-> **TIP:** 카탈로그 등록은 [Appendix B](#appendix-b-카탈로그-등록-프롬프트)의 프롬프트를
+> **참고:** 카탈로그 등록은 [부록 B](#부록-b-카탈로그-등록-프롬프트)의 프롬프트를
 > AI에게 전달하면 자동으로 처리 가능.
 
 [Top](#리소스-마켓플레이스-기여-가이드)
@@ -138,7 +138,7 @@ resources/guides/{2차분류}/{guide-name}.md
 
 템플릿 추가는 2단계로 진행.
 
-### STEP 1. 파일 배치
+### 단계 1. 파일 배치
 
 템플릿 파일을 다음 경로에 배치:
 
@@ -149,7 +149,7 @@ resources/templates/{2차분류}/{template-name}.md
 - 템플릿은 스켈레톤 또는 프롬프트 형태
 - 파일명: kebab-case 사용
 
-### STEP 2. 카탈로그 등록
+### 단계 2. 카탈로그 등록
 
 `plugin-resources.md`의 **"템플릿 목록"** 테이블에 행 추가.
 
@@ -169,7 +169,7 @@ resources/templates/{2차분류}/{template-name}.md
 
 샘플 추가는 2단계로 진행.
 
-### STEP 1. 파일 배치
+### 단계 1. 파일 배치
 
 샘플 파일(또는 디렉토리)을 다음 경로에 배치:
 
@@ -180,7 +180,7 @@ resources/samples/{2차분류}/{sample-name}
 - 단일 파일 또는 디렉토리 형태 모두 가능
 - 디렉토리인 경우 내부에 README.md 포함 권장
 
-### STEP 2. 카탈로그 등록
+### 단계 2. 카탈로그 등록
 
 `plugin-resources.md`의 **"샘플 목록"** 테이블에 행 추가.
 
@@ -216,14 +216,14 @@ resources/samples/{2차분류}/{sample-name}
 2. **툴 가이드 작성** — `resources/tools/{tool-name}.md`에 도구별 가이드 문서 작성
 3. **카탈로그 등록** — `plugin-resources.md`의 "도구 목록" 테이블에 행 추가
 
-**카탈로그 도구 목록 컬럼 구조:** `카테고리 | 도구명 | 설명 | 필수 | 상세`
+**카탈로그 도구 목록 컬럼 구조:** `카테고리 | 도구명 | 설명 | 상세`
 
 ### 커스텀 앱 추가
 
 커스텀 앱은 Python, Node.js 등으로 구현한 독립 실행 프로그램임.
 소스 배치, 툴 가이드 작성, 카탈로그 등록 3단계로 진행.
 
-#### STEP 1. 소스 배치
+#### 단계 1. 소스 배치
 
 소스 파일을 다음 경로에 배치:
 
@@ -249,7 +249,7 @@ resources/tools/customs/general/
 └── .env.example               # 환경 변수 예시 (권장)
 ```
 
-#### STEP 2. 툴 가이드 작성
+#### 단계 2. 툴 가이드 작성
 
 `resources/tools/{tool-name}.md` 경로에 툴 가이드 문서 작성.
 파일명은 kebab-case 사용 (예: `generate-image.md`).
@@ -288,7 +288,6 @@ resources/tools/customs/general/
 | 설치 방법 | 소스 파일 포함 (의존성 설치 필요) |
 | 의존성 설치 | `pip install {패키지}` 또는 `npm install {패키지}` |
 | 검증 명령 | `python tools/{분류}/{파일명} --help` |
-| 필수 여부 | 필수 또는 선택 |
 
 [Top](#{tool-name-앵커})
 
@@ -333,25 +332,25 @@ python tools/{분류}/{파일명} --{param} "값"
 | 섹션 | 필수 | 작성 규칙 |
 |------|:----:|----------|
 | 기본 정보 | 필수 | 도구명, 카테고리("커스텀 앱"), 설명, 소스 경로 4항목 |
-| 설치 정보 | 필수 | 설치 방법, 의존성 설치, 검증 명령, 필수 여부 4항목 |
+| 설치 정보 | 필수 | 설치 방법, 의존성 설치, 검증 명령 3항목 |
 | 환경 변수 | 조건부 | 환경 변수가 있는 경우에만 작성 |
 | 명령어 | 필수 | CLI 파라미터 테이블 (필수/선택 구분) |
 | 사용 예시 | 필수 | bash 코드블록으로 실제 사용법 제시 |
 
-#### STEP 3. 카탈로그 등록
+#### 단계 3. 카탈로그 등록
 
 `plugin-resources.md`의 **"도구 목록"** 테이블에 행 추가.
 
 **행 포맷:**
 
 ```markdown
-| 커스텀 앱 | {도구명} | {설명} | {필수여부} | [상세](tools/{tool-name}.md) |
+| 커스텀 앱 | {도구명} | {설명} | [상세](tools/{tool-name}.md) |
 ```
 
 **예시:**
 
 ```markdown
-| 커스텀 앱 | generate_image | Gemini (Nano Banana) 모델 기반 이미지 생성 | 선택 | [상세](tools/generate-image.md) |
+| 커스텀 앱 | generate_image | Gemini (Nano Banana) 모델 기반 이미지 생성 | [상세](tools/generate-image.md) |
 ```
 
 > 카테고리별 정렬을 유지하여 삽입.
@@ -362,7 +361,7 @@ python tools/{분류}/{파일명} --{param} "값"
 커스텀 CLI는 셸 스크립트로 구현한 경량 도구임.
 커스텀 앱과 동일한 3단계이나 툴 가이드 구조가 다름.
 
-#### STEP 1. 소스 배치
+#### 단계 1. 소스 배치
 
 셸 스크립트를 다음 경로에 배치:
 
@@ -373,7 +372,7 @@ resources/tools/customs/{분류}/{script-name}.sh
 - 실행 권한 설정: `chmod +x {script-name}.sh`
 - Windows 환경은 `.bat` 또는 `.cmd` 확장자 사용
 
-#### STEP 2. 툴 가이드 작성
+#### 단계 2. 툴 가이드 작성
 
 커스텀 CLI의 툴 가이드는 커스텀 앱과 구조가 다름.
 환경 변수, 명령어 섹션이 없고 컨테이너 실행 가이드가 포함될 수 있음.
@@ -428,7 +427,6 @@ resources/tools/customs/{분류}/{script-name}.sh
 | 항목 | 값 |
 |------|---|
 | 설치 방법 | 소스 파일 포함 (별도 설치 불요) |
-| 필수 여부 | 필수 또는 선택 |
 | 의존성 | {의존성 설명 (예: Docker)} |
 
 **검증 명령:**
@@ -467,18 +465,18 @@ bash tools/{분류}/{스크립트명} {인자}
 | 컨테이너 실행 가이드 | 없음 | 있음 (Docker 의존 시) |
 | 의존성 설치 | pip/npm install | 대부분 불필요 (스크립트 자체 실행) |
 
-#### STEP 3. 카탈로그 등록
+#### 단계 3. 카탈로그 등록
 
 **행 포맷:**
 
 ```markdown
-| 커스텀 CLI | {도구명} | {설명} | {필수여부} | [상세](tools/{tool-name}.md) |
+| 커스텀 CLI | {도구명} | {설명} | [상세](tools/{tool-name}.md) |
 ```
 
 **예시:**
 
 ```markdown
-| 커스텀 CLI | check-mermaid | Docker 기반 Mermaid 다이어그램 문법 검증 | 선택 | [상세](tools/check-mermaid.md) |
+| 커스텀 CLI | check-mermaid | Docker 기반 Mermaid 다이어그램 문법 검증 | [상세](tools/check-mermaid.md) |
 ```
 
 ### MCP 서버 추가
@@ -486,11 +484,11 @@ bash tools/{분류}/{스크립트명} {인자}
 MCP 서버는 외부 npm 패키지로 제공되므로 소스 배치가 불필요함.
 툴 가이드 작성과 카탈로그 등록 2단계로 진행.
 
-#### STEP 1. 소스 배치
+#### 단계 1. 소스 배치
 
 불필요. 외부 패키지이므로 `claude mcp add-json` 명령으로 설치.
 
-#### STEP 2. 툴 가이드 작성
+#### 단계 2. 툴 가이드 작성
 
 MCP 서버의 툴 가이드는 커스텀 앱/CLI와 구조가 다름.
 소스 경로 대신 공식 사이트/제공자 정보를 포함하고,
@@ -528,7 +526,6 @@ MCP 서버의 툴 가이드는 커스텀 앱/CLI와 구조가 다름.
 
 | 항목 | 값 |
 |------|---|
-| 필수 여부 | 필수 또는 선택 |
 | 의존성 | Node.js 18+, npx |
 
 **설치 명령 (Windows):**
@@ -596,18 +593,18 @@ claude mcp list -s user
 | 제공 도구 섹션 | 있음 (MCP 도구 목록) | 없음 |
 | 스킬에서의 참조 | 있음 (매핑 정보) | 선택 사항 |
 
-#### STEP 3. 카탈로그 등록
+#### 단계 3. 카탈로그 등록
 
 **행 포맷:**
 
 ```markdown
-| MCP 서버 | {도구명} | {설명} | {필수여부} | [상세](tools/{tool-name}.md) |
+| MCP 서버 | {도구명} | {설명} | [상세](tools/{tool-name}.md) |
 ```
 
 **예시:**
 
 ```markdown
-| MCP 서버 | context7 | 라이브러리 공식 문서 검색 및 코드 예시 제공 | 선택 | [상세](tools/context7.md) |
+| MCP 서버 | context7 | 라이브러리 공식 문서 검색 및 코드 예시 제공 | [상세](tools/context7.md) |
 ```
 
 > 도구 목록 테이블은 카테고리별 정렬: MCP 서버 → 커스텀 앱 → 커스텀 CLI 순서.
@@ -620,7 +617,7 @@ claude mcp list -s user
 
 `generate_image` 도구를 리소스 마켓플레이스에 등록한 실제 과정을 3단계로 안내.
 
-### STEP 1. 소스 배치
+### 단계 1. 소스 배치
 
 Python 소스 파일을 `customs/general/` 디렉토리에 배치:
 
@@ -632,7 +629,7 @@ resources/tools/customs/general/generate_image.py
 - 의존성: `python-dotenv`, `google-genai`
 - 환경 변수: `GEMINI_API_KEY` (Google Gemini API Key)
 
-### STEP 2. 툴 가이드 작성
+### 단계 2. 툴 가이드 작성
 
 `resources/tools/generate-image.md` 파일을 커스텀 앱 템플릿에 따라 작성.
 
@@ -659,7 +656,6 @@ resources/tools/customs/general/generate_image.py
 | 설치 방법 | 소스 파일 포함 (의존성 설치 필요) |
 | 의존성 설치 | `pip install python-dotenv google-genai` |
 | 검증 명령 | `python tools/general/generate_image.py --help` |
-| 필수 여부 | 선택 |
 ```
 
 **환경 변수 섹션:**
@@ -686,12 +682,12 @@ resources/tools/customs/general/generate_image.py
 | `--api-key` | 선택 | Gemini API Key (환경 변수 대체) | - |
 ```
 
-### STEP 3. 카탈로그 등록
+### 단계 3. 카탈로그 등록
 
 `plugin-resources.md`의 도구 목록 테이블에 다음 행 추가:
 
 ```markdown
-| 커스텀 앱 | generate_image | Gemini (Nano Banana) 모델 기반 이미지 생성 | 선택 | [상세](tools/generate-image.md) |
+| 커스텀 앱 | generate_image | Gemini (Nano Banana) 모델 기반 이미지 생성 | [상세](tools/generate-image.md) |
 ```
 
 > 커스텀 앱 카테고리 내에서 도구명 기준 정렬하여 삽입.
@@ -724,7 +720,7 @@ resources/tools/customs/general/generate_image.py
 
 ---
 
-## Appendix A. 마크다운 작성 규칙
+## 부록 A. 마크다운 작성 규칙
 
 아래 내용을 사용 중인 런타임 AI의 지시 파일에 복사하여 붙여넣기하면
 AI가 마크다운 작성 규칙을 자동으로 준수함.
@@ -763,7 +759,7 @@ AI가 마크다운 작성 규칙을 자동으로 준수함.
 - 특수문자(괄호, 마침표, 콤마, 콜론 등) 제거
 - 한글은 그대로 유지
 - 예: `## 1.1 개요` → `#11-개요`
-- 예: `### STEP 1. 문서 준비` → `#step-1-문서-준비`
+- 예: `### 단계 1. 문서 준비` → `#step-1-문서-준비`
 
 ### 2. `---` 구분선 추가
 - 모든 `## ` (level-2) 헤딩 바로 위에 `---` 수평선 추가
@@ -788,81 +784,43 @@ AI가 마크다운 작성 규칙을 자동으로 준수함.
 
 ---
 
-## Appendix B. 카탈로그 등록 프롬프트
+## 부록 B. 카탈로그 등록 프롬프트
 
 카탈로그(`plugin-resources.md`) 등록을 AI에게 맡기면 컬럼 구조, 정렬, 링크 경로 실수를 방지할 수 있음.
-아래 프롬프트에서 `{변수}`를 채워 AI에게 전달하면 자동으로 카탈로그에 행을 추가함.
+아래 프롬프트를 AI에게 전달하면 파일 내용을 읽고 자동으로 카탈로그에 행을 추가함.
 
 ### 가이드/템플릿/샘플 등록 프롬프트
 
 ````
-resources/plugin-resources.md 파일의 "{유형} 목록" 테이블에 아래 리소스를 등록해줘.
-
-- 유형: {가이드 | 템플릿 | 샘플}
-- 2차 분류: {분류명}
-- 이름: {리소스명}
-- 설명: {한 줄 설명}
-- 파일 경로: {유형디렉토리}/{2차분류}/{파일명}
-
-등록 규칙:
-1. 기존 테이블의 컬럼 구조를 그대로 유지할 것
-2. 2차 분류(첫 번째 컬럼) 기준 정렬을 유지하여 적절한 위치에 삽입할 것
-3. 상세 컬럼의 링크는 plugin-resources.md 기준 상대 경로로 작성할 것
-4. 기존 행은 절대 수정하지 말 것
+resources/plugin-resources.md 파일의 "{유형} 목록" 테이블에
+'{파일 경로}'를 등록해줘.
+설명은 내용을 보고 적절히 생성해줘.
 ````
 
 **사용 예시:**
 
 ````
-resources/plugin-resources.md 파일의 "가이드 목록" 테이블에 아래 리소스를 등록해줘.
-
-- 유형: 가이드
-- 2차 분류: plugin
-- 이름: resource-contribution-guide
-- 설명: 리소스 마켓플레이스에 가이드, 템플릿, 샘플, 커스텀 도구를 추가하는 방법 안내
-- 파일 경로: guides/plugin/resource-contribution-guide.md
-
-등록 규칙:
-1. 기존 테이블의 컬럼 구조를 그대로 유지할 것
-2. 2차 분류(첫 번째 컬럼) 기준 정렬을 유지하여 적절한 위치에 삽입할 것
-3. 상세 컬럼의 링크는 plugin-resources.md 기준 상대 경로로 작성할 것
-4. 기존 행은 절대 수정하지 말 것
+resources/plugin-resources.md 파일의 "가이드 목록" 테이블에
+'resources/guides/plugin/resource-contribution-guide.md'를 등록해줘.
+설명은 내용을 보고 적절히 생성해줘.
 ````
 
 ### 커스텀 도구 등록 프롬프트
 
 ````
-resources/plugin-resources.md 파일의 "도구 목록" 테이블에 아래 도구를 등록해줘.
-
-- 카테고리: {MCP 서버 | 커스텀 앱 | 커스텀 CLI}
-- 도구명: {도구명}
-- 설명: {한 줄 설명}
-- 필수 여부: {필수 | 선택}
-- 툴 가이드 경로: tools/{tool-name}.md
-
-등록 규칙:
-1. 기존 테이블의 컬럼 구조(카테고리 | 도구명 | 설명 | 필수 | 상세)를 유지할 것
-2. 카테고리별 정렬(MCP 서버 → 커스텀 앱 → 커스텀 CLI)을 유지하여 삽입할 것
-3. 상세 컬럼의 링크는 plugin-resources.md 기준 상대 경로로 작성할 것
-4. 기존 행은 절대 수정하지 말 것
+resources/plugin-resources.md 파일의 "도구 목록" 테이블에
+'{툴 가이드 경로}'를 등록해줘.
+카테고리는 {MCP 서버 | 커스텀 앱 | 커스텀 CLI}이고,
+설명은 내용을 보고 적절히 생성해줘.
 ````
 
 **사용 예시:**
 
 ````
-resources/plugin-resources.md 파일의 "도구 목록" 테이블에 아래 도구를 등록해줘.
-
-- 카테고리: 커스텀 앱
-- 도구명: generate_image
-- 설명: Gemini (Nano Banana) 모델 기반 이미지 생성
-- 필수 여부: 선택
-- 툴 가이드 경로: tools/generate-image.md
-
-등록 규칙:
-1. 기존 테이블의 컬럼 구조(카테고리 | 도구명 | 설명 | 필수 | 상세)를 유지할 것
-2. 카테고리별 정렬(MCP 서버 → 커스텀 앱 → 커스텀 CLI)을 유지하여 삽입할 것
-3. 상세 컬럼의 링크는 plugin-resources.md 기준 상대 경로로 작성할 것
-4. 기존 행은 절대 수정하지 말 것
+resources/plugin-resources.md 파일의 "도구 목록" 테이블에
+'resources/tools/generate-image.md'를 등록해줘.
+카테고리는 커스텀 앱이고,
+설명은 내용을 보고 적절히 생성해줘.
 ````
 
 [Top](#리소스-마켓플레이스-기여-가이드)
