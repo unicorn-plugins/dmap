@@ -280,12 +280,15 @@ plugin-samples/{플러그인명}/
 | 스킬 | 유형 | 필수 | 설명 |
 |------|------|:----:|------|
 | setup | Setup (직결형) | 필수 | 플러그인 설치 및 초기 설정 |
-| core | Core (위임형) | 필수 | 시스템 전체 행동 규범, 라우팅 |
+| core | Core (위임형) | 필수 | 시스템 전체 행동 규범, 모호한 요청의 의도 판별 |
+| help | Utility (직결형) | 권장 | 사용 가능한 명령 및 자동 라우팅 안내 |
 | {기능 스킬} | Orchestrator/Planning | 상황별 | 핵심기능별 워크플로우 |
 
 setup 스킬 필수 수행 사항:
 - `gateway/install.yaml` 기반 도구 설치
-- 프로젝트 루트 `CLAUDE.md`에 라우팅 테이블 등록 (기존 내용 유지, 끝에 추가)
+
+setup 스킬 권장 사항:
+- `help` 유틸리티 스킬 제공 (사용 가능한 명령 및 자동 라우팅 안내)
 
 > 표준 참조: `standards/plugin-standard-skill.md`
 
@@ -334,7 +337,8 @@ with all arguments passed through.
 | 필수 파일 | `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` 존재 |
 | 에이전트 쌍 | 모든 에이전트에 `AGENT.md` + `agentcard.yaml` 존재 |
 | 스킬 구조 | 모든 스킬에 `SKILL.md` 존재, frontmatter 포함 |
-| setup 스킬 | setup 스킬 존재, `disable-model-invocation: true` 설정 |
+| setup 스킬 | setup 스킬 존재, `disable-model-invocation` 미사용 |
+| help 스킬 (권장) | help 유틸리티 스킬 존재, 명령 목록 및 자동 라우팅 규칙 안내 포함 |
 | Gateway | `install.yaml` + `runtime-mapping.yaml` 존재 |
 | 슬래시 명령 | `commands/` 진입점 파일 존재 |
 | 도구 매핑 | `tools.yaml`의 추상 도구가 `runtime-mapping.yaml`에 매핑 |
