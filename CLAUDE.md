@@ -113,6 +113,7 @@
 | 명령 | 설명 |
 |------|------|
 | `/dmap:develop-plugin` | DMAP 플러그인 개발 (4-Phase 워크플로우) |
+| `/dmap:requirement-writer` | 요구사항 정의서 작성 지원 (AI 자동 완성) |
 | `/dmap:setup` | DMAP 빌더 초기 설정 |
 | `/dmap:help` | 사용 안내 |
 
@@ -120,6 +121,7 @@
 
 다음과 같은 요청은 자동으로 dmap 플러그인이 처리합니다:
 - "플러그인 만들어줘", "DMAP 플러그인 개발" → /dmap:develop-plugin
+- "요구사항 작성", "정의서 작성", "요구사항 정의" → /dmap:requirement-writer
 - "DMAP 설정", "빌더 설정" → /dmap:setup
 - "도움말", "뭘 할 수 있어" → /dmap:help
 

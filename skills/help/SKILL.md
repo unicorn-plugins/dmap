@@ -28,6 +28,7 @@ DMAP 빌더 플러그인의 사용 가능한 명령과 자동 라우팅 규칙�
 | 명령 | 설명 |
 |------|------|
 | `/dmap:develop-plugin` | DMAP 플러그인 개발 (4-Phase 워크플로우) |
+| `/dmap:requirement-writer` | 요구사항 정의서 작성 지원 (AI 자동 완성) |
 | `/dmap:setup` | 플러그인 초기 설정 |
 | `/dmap:help` | 사용 안내 (현재 보고 있는 화면) |
 
@@ -36,8 +37,16 @@ DMAP 빌더 플러그인의 사용 가능한 명령과 자동 라우팅 규칙�
 다음과 같은 요청은 자동으로 DMAP 빌더가 처리함:
 
 - "플러그인 만들어줘", "DMAP 플러그인 개발" → `/dmap:develop-plugin`
+- "요구사항 작성", "정의서 작성", "요구사항 정의" → `/dmap:requirement-writer`
 - "DMAP 설정", "빌더 설정" → `/dmap:setup`
 - "도움말", "뭘 할 수 있어" → `/dmap:help`
+
+### 요구사항 정의서 작성
+
+`/dmap:requirement-writer`로 요구사항 정의서를 AI 도움으로 작성 가능:
+- 필수 항목(기본정보, 핵심기능, 사용자 플로우)만 입력하면 AI가 자동 완성
+- 에이전트 구성 힌트, 참고 공유 자원을 자동 추천
+- 완성된 정의서는 `/dmap:develop-plugin`에서 바로 활용 가능
 
 ### 플러그인 개발 워크플로우
 

@@ -276,14 +276,16 @@ claude plugin install dmap@unicorn
 | 명령 | 설명 |
 |------|------|
 | `/dmap:develop-plugin` | 4-Phase 워크플로우로 플러그인 개발 |
+| `/dmap:requirement-writer` | 요구사항 정의서 작성 지원 (AI 자동 완성) |
 | `/dmap:setup` | 설치 검증 (플러그인 구조 및 표준 문서 확인) |
 | `/dmap:help` | 사용 안내 |
 
 기본 사용 흐름:
 
 ```
-1. /dmap:setup           -- 설치 상태 검증
-2. /dmap:develop-plugin  -- 요구사항 -> 설계 -> 개발 -> 검증 자동 수행
+1. /dmap:setup                -- 설치 상태 검증
+2. /dmap:requirement-writer   -- 요구사항 정의서 작성 (AI 자동 완성)
+3. /dmap:develop-plugin       -- 요구사항 -> 설계 -> 개발 -> 검증 자동 수행
 ```
 
 [Top](#dmap-빌더)
@@ -337,10 +339,12 @@ gen-dmap/
 │   └── tools/               #   도구 (커스텀 앱/CLI)
 ├── skills/                  # DMAP 빌더 스킬
 │   ├── develop-plugin/      #   플러그인 개발 (4-Phase)
+│   ├── requirement-writer/  #   요구사항 정의서 작성 지원
 │   ├── setup/               #   초기 설정
 │   └── help/                #   사용 안내
 ├── commands/                # 슬래시 명령 진입점
 │   ├── develop-plugin.md
+│   ├── requirement-writer.md
 │   ├── setup.md
 │   └── help.md
 ├── references/              # 참조 문서
@@ -709,14 +713,16 @@ claude plugin install dmap@unicorn
 | Command | Description |
 |---------|-------------|
 | `/dmap:develop-plugin` | Develop a plugin via 4-Phase workflow |
+| `/dmap:requirement-writer` | Requirements specification writing support (AI auto-completion) |
 | `/dmap:setup` | Installation verification (plugin structure and standards check) |
 | `/dmap:help` | Usage guide |
 
 Basic usage flow:
 
 ```
-1. /dmap:setup           -- Verify installation status
-2. /dmap:develop-plugin  -- Automatically execute: requirements -> design -> development -> verification
+1. /dmap:setup                -- Verify installation status
+2. /dmap:requirement-writer   -- Write requirements specification (AI auto-completion)
+3. /dmap:develop-plugin       -- Automatically execute: requirements -> design -> development -> verification
 ```
 
 [Top](#dmap-builder)
@@ -770,10 +776,12 @@ gen-dmap/
 │   └── tools/               #   Tools (custom apps/CLI)
 ├── skills/                  # DMAP Builder skills
 │   ├── develop-plugin/      #   Plugin development (4-Phase)
+│   ├── requirement-writer/  #   Requirements specification writing support
 │   ├── setup/               #   Initial setup
 │   └── help/                #   Usage guide
 ├── commands/                # Slash command entry points
 │   ├── develop-plugin.md
+│   ├── requirement-writer.md
 │   ├── setup.md
 │   └── help.md
 ├── references/              # Reference documents
