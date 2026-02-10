@@ -41,6 +41,17 @@ user-invocable: true
 
 ---
 
+## 스킬 부스팅
+
+| 단계 | 부스팅 스킬 | 용도 |
+|------|------------|------|
+| Step 1 (인증 정보 수집) | `/oh-my-claudecode:security-review` | 토큰 저장 및 .gitignore 처리 보안 검증 |
+| Step 4~5 (Push + 완료) | `/oh-my-claudecode:ultraqa` | 배포 결과 검증 (저장소 접근, README 확인) |
+
+[Top](#publish)
+
+---
+
 ## 워크플로우
 
 ### Step 1: GitHub 인증 정보 수집
