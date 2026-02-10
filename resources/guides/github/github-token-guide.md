@@ -92,13 +92,15 @@ Username: {your-username}
 Password: {your-PAT}  # 비밀번호 대신 PAT 입력
 ```
 
-환경 변수로 저장 (권장):
+Git 자격 증명 저장 (권장):
 ```bash
-# Linux/macOS
-export GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+# gh CLI 사용 시 (가장 편리)
+gh auth login    # 토큰으로 인증
+gh auth setup-git   # git이 gh를 credential helper로 사용하도록 설정
+# → 이후 git push/pull 시 토큰을 다시 묻지 않음
 
-# Windows (PowerShell)
-$env:GITHUB_TOKEN="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+# gh CLI 미사용 시
+git config --global credential.helper store   # 토큰을 파일에 저장 (최초 1회 입력 필요)
 ```
 
 [Top](#github-personal-access-token-생성-가이드)
