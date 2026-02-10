@@ -31,6 +31,9 @@
 | 2차 분류 | 가이드명 | 설명 | 상세 |
 |---------|---------|------|------|
 | dify | dify-workflow-dsl-guide | Dify Workflow DSL 작성 가이드 (구조, 노드 타입, 변수 참조 등) | [상세](guides/dify/dify-workflow-dsl-guide.md) |
+| github | github-account-setup | GitHub 계정 생성 가이드 (회원가입, 프로필 설정, 2FA) | [상세](guides/github/github-account-setup.md) |
+| github | github-token-guide | Personal Access Token (PAT) 생성 가이드 (권한 설정, 보안) | [상세](guides/github/github-token-guide.md) |
+| github | github-organization-guide | GitHub Organization 생성 가이드 (팀 관리, 멤버 초대) | [상세](guides/github/github-organization-guide.md) |
 | plugin | plugin-dev-guide | DMAP 플러그인 개발 가이드 (요구사항 정의서, 개발 워크플로우) | [상세](guides/plugin/plugin-dev-guide.md) |
 | plugin | resource-contribution-guide | 리소스 마켓플레이스에 가이드, 템플릿, 샘플, 커스텀 도구를 추가하는 방법 안내 | [상세](guides/plugin/resource-contribution-guide.md) |
 

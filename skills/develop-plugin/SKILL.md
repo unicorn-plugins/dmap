@@ -30,6 +30,7 @@ user-invocable: true
 | 리소스 마켓플레이스 | `resources/plugin-resources.md` | 공유 자원 카탈로그 |
 | README 템플릿 | `resources/templates/plugin/README-plugin-template.md` | README.md 작성 참고 |
 | README 예제 | `resources/samples/plugin/README.md` | README.md 작성 예시 |
+| Publish 스킬 | `skills/publish/SKILL.md` | GitHub 배포 자동화 |
 
 ## 스킬 부스팅
 
@@ -137,13 +138,14 @@ DMAP 표준에 맞춰 플러그인의 전체 구조 설계.
 
 개발 순서:
 1. 플러그인 스켈레톤 생성 (`.claude-plugin/`, 디렉토리 구조)
-2. Gateway 설정 (`install.yaml`, `runtime-mapping.yaml`)
-3. 공유자원 복사 (리소스 마켓플레이스 → 플러그인 디렉토리)
-4. 에이전트 개발 (`AGENT.md`, `agentcard.yaml`, `tools.yaml`)
-5. 스킬 개발 (setup 필수, help 권장, 기능 스킬)
-6. commands/ 진입점 생성
-7. 커스텀 앱/CLI 개발 (필요 시)
-8. README.md 작성
+2. `.gitignore` 생성 (`.dmap/secrets/`, `__pycache__/`, `.env` 등 보안·임시 파일 제외)
+3. Gateway 설정 (`install.yaml`, `runtime-mapping.yaml`)
+4. 공유자원 복사 (리소스 마켓플레이스 → 플러그인 디렉토리)
+5. 에이전트 개발 (`AGENT.md`, `agentcard.yaml`, `tools.yaml`)
+6. 스킬 개발 (setup 필수, help 권장, 기능 스킬)
+7. commands/ 진입점 생성
+8. 커스텀 앱/CLI 개발 (필요 시)
+9. README.md 작성
 
 > 각 단계의 상세 내용은 `resources/guides/plugin/plugin-dev-guide.md`의 Phase 3 참조.
 
@@ -182,6 +184,15 @@ DMAP 표준에 맞춰 플러그인의 전체 구조 설계.
 `resources/` 마켓플레이스에 등록하여 다른 플러그인에서도 재사용 가능하게 함.
 
 > **Phase 4 완료**: 플러그인 개발 완료. 사용자에게 최종 보고.
+
+### 다음 단계: GitHub 배포 → Skill: publish
+
+- **INTENT**: 개발 완료된 플러그인을 GitHub에 배포하여 마켓플레이스에 등록 가능하게 함
+- **ARGS**: 플러그인 디렉토리 경로, 플러그인명
+- **RETURN**: GitHub 저장소 생성 완료, 마켓플레이스 등록 명령어 안내
+
+Phase 4 완료 보고 후 사용자에게 GitHub 배포 여부를 문의함.
+사용자가 동의하면 `/dmap:publish` 스킬로 전환.
 
 ## 완료 조건
 

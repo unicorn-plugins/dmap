@@ -30,6 +30,7 @@ DMAP 빌더 플러그인의 사용 가능한 명령과 자동 라우팅 규칙�
 | `/dmap:develop-plugin` | DMAP 플러그인 개발 (4-Phase 워크플로우) |
 | `/dmap:requirement-writer` | 요구사항 정의서 작성 지원 (AI 자동 완성) |
 | `/dmap:setup` | 플러그인 초기 설정 |
+| `/dmap:publish` | 개발 완료된 플러그인을 GitHub에 배포 |
 | `/dmap:help` | 사용 안내 (현재 보고 있는 화면) |
 
 ### 자동 라우팅
@@ -39,6 +40,7 @@ DMAP 빌더 플러그인의 사용 가능한 명령과 자동 라우팅 규칙�
 - "플러그인 만들어줘", "DMAP 플러그인 개발" → `/dmap:develop-plugin`
 - "요구사항 작성", "정의서 작성", "요구사항 정의" → `/dmap:requirement-writer`
 - "DMAP 설정", "빌더 설정" → `/dmap:setup`
+- "배포해줘", "publish", "GitHub에 올려줘", "플러그인 등록" → `/dmap:publish`
 - "도움말", "뭘 할 수 있어" → `/dmap:help`
 
 ### 요구사항 정의서 작성
@@ -57,6 +59,7 @@ Phase 1: 요구사항 수집     ──→ 사용자 확인
 Phase 2: 설계 및 계획      ──→ 사용자 확인
 Phase 3: 플러그인 개발     ──→ 사용자 확인
 Phase 4: 검증 및 완료      ──→ 사용자 확인
+  └──→ (선택) GitHub 배포  ──→ /dmap:publish
 ```
 
 ### 참조 문서

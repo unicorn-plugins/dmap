@@ -53,13 +53,6 @@ claude plugin install abra@abra
 claude plugin list
 ```
 
-**방법 3: 로컬 경로 (세션 단위)**
-
-```bash
-# 플러그인 디렉토리를 직접 지정하여 실행 (세션 종료 시 해제)
-claude --plugin-dir ./develop-agent/plugin/abra
-```
-
 > **설치 후 setup 스킬 실행:**
 > ```
 > /abra:dify-setup
@@ -71,6 +64,14 @@ claude --plugin-dir ./develop-agent/plugin/abra
 > - 설치 결과 검증 (`required: true` 항목 실패 시 중단)
 > - 플러그인 활성화 확인 (스킬 자동 탐색)
 > - 적용 범위 선택 (모든 프로젝트 / 현재 프로젝트만)
+
+### 처음 GitHub을 사용하시나요?
+
+다음 가이드를 참고하세요:
+
+- [GitHub 계정 생성 가이드](https://github.com/cna-bootcamp/gen-ma-plugin/blob/main/resources/guides/github/github-account-setup.md)
+- [Personal Access Token 생성 가이드](https://github.com/cna-bootcamp/gen-ma-plugin/blob/main/resources/guides/github/github-token-guide.md)
+- [GitHub Organization 생성 가이드](https://github.com/cna-bootcamp/gen-ma-plugin/blob/main/resources/guides/github/github-organization-guide.md)
 
 ---
 
