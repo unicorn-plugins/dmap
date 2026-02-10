@@ -76,7 +76,7 @@ GitHub Organization 생성은 다음 단계로 진행됨:
 - [https://github.com](https://github.com)에 접속하여 로그인
 
 **2. Organization 생성 페이지 접근**
-- 우측 상단 프로필 아이콘 클릭 → `+` 아이콘 → `New organization` 선택
+- 우측 상단 `+` 아이콘 → `New organization` 선택
 - 또는 직접 [https://github.com/organizations/plan](https://github.com/organizations/plan) 접속
 
 **3. 플랜 선택**
@@ -142,7 +142,7 @@ Organization에 팀원을 초대하는 절차는 다음과 같음:
 **방법 1: GitHub 사용자명으로 초대**
 
 1. **Members 페이지 접근**
-   - Organization 페이지 → `Settings` (톱니바퀴 아이콘) → 좌측 `People` 클릭
+   - Organization 페이지 → 상단 `People` 클릭
 
 2. **멤버 초대**
    - 우측 상단 `Invite member` 버튼 클릭
@@ -194,7 +194,7 @@ Organization에 팀원을 초대하는 절차는 다음과 같음:
    - 예: `developers` 팀에 Write 권한, `reviewers` 팀에 Maintain 권한
 
 **멤버 제거:**
-- Settings → People → 멤버 우측 톱니바퀴 → `Remove from organization`
+- Organization 페이지 접근. People → 멤버 우측 톱니바퀴 → `Remove from organization`
 - 제거된 멤버는 Organization 레포지토리 접근 불가 (Public은 여전히 읽기 가능)
 
 [Top](#github-organization-생성-가이드)
@@ -244,7 +244,7 @@ GitHub Organization과 Personal 계정의 차이를 비교함:
 - 회사 공식 프로젝트: 처음부터 Organization 생성
 
 **레포지토리 이전 방법:**
-- Personal → Organization: 레포지토리 Settings → Transfer ownership → Organization 이름 입력
+- Personal → Organization: 레포지토리 Settings → General → 하단 Danger Zone → Transfer repository → Organization 이름 입력
 - 이전 후에도 Git 이력, 이슈, PR 모두 유지됨
 - 이전 URL은 자동 리다이렉트됨 (일정 기간 후 리다이렉트 해제 가능)
 
