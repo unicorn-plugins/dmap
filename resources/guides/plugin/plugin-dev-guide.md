@@ -373,7 +373,8 @@ with all arguments passed through.
 
 `resources/templates/plugin/README-plugin-template.md`를 참고하여 README.md 작성.
 
-필수 섹션: 개요, 설치, 업그레이드, 사용법, 요구사항, 라이선스.
+- 필수 섹션: 개요, 설치, 업그레이드, 사용법, 요구사항, 라이선스.
+- {owner},{repo}, {marketplace-name}, {plugin-name}, {skill-name}, {HIGH/MEDIUM/LOW} 등 변수들을 실제값으로 치환 
 
 > **Phase 3 완료**: 개발된 플러그인의 구조와 기능을 사용자에게 보고하고 검증 착수 승인 요청.
 

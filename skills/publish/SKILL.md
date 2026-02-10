@@ -9,15 +9,25 @@ user-invocable: true
 
 [PUBLISH 활성화]
 
+---
+
 ## 목표
 
 개발 완료된 DMAP 플러그인을 GitHub 원격 저장소에 배포하고,
 사용자가 마켓플레이스를 통해 플러그인을 바로 설치할 수 있도록 안내함.
 
+[Top](#publish)
+
+---
+
 ## 활성화 조건
 
 사용자가 `/dmap:publish` 호출 시 또는 develop-plugin 스킬의 Phase 4 완료 후 연결 시.
 "배포", "publish", "GitHub에 올려줘", "플러그인 등록" 키워드 감지 시.
+
+[Top](#publish)
+
+---
 
 ## 참조
 
@@ -26,6 +36,10 @@ user-invocable: true
 | GitHub 계정 가이드 | `resources/guides/github/github-account-setup.md` | 계정 생성 안내 |
 | GitHub 토큰 가이드 | `resources/guides/github/github-token-guide.md` | PAT 생성 안내 |
 | GitHub Organization 가이드 | `resources/guides/github/github-organization-guide.md` | Organization 생성 안내 |
+
+[Top](#publish)
+
+---
 
 ## 워크플로우
 
@@ -150,10 +164,18 @@ claude plugin list
    https://github.com/{owner}/{repo-name}/blob/main/README.md
 ```
 
+[Top](#publish)
+
+---
+
 ## 사용자 상호작용
 
 모든 단계에서 AskUserQuestion 도구를 사용하여 사용자 입력을 수집함.
 특히 Step 1의 인증 정보는 민감 정보이므로 안전한 저장을 보장함.
+
+[Top](#publish)
+
+---
 
 ## 문제 해결
 
@@ -163,3 +185,44 @@ claude plugin list
 | 인증 실패 | 토큰 권한(repo) 확인, 토큰 재생성 안내 |
 | 저장소 생성 실패 | Organization 권한 확인, 이름 중복 확인 |
 | Push 실패 | 원격 저장소 URL 확인, 인증 토큰 확인 |
+
+[Top](#publish)
+
+---
+
+## MUST 규칙
+
+| # | 규칙 |
+|---|------|
+| 1 | GitHub 인증 정보(username, PAT, owner)를 반드시 수집 후 진행 |
+| 2 | 토큰을 `.dmap/secrets/` 디렉토리에 저장하고 `.gitignore` 등록 확인 |
+| 3 | 저장소 존재 여부를 먼저 확인하여 멱등성 보장 |
+| 4 | 완료 메시지에 플러그인 설치 방법(마켓플레이스 등록 명령) 포함 |
+
+[Top](#publish)
+
+---
+
+## MUST NOT 규칙
+
+| # | 금지 사항 |
+|---|----------|
+| 1 | 인증 토큰을 로그/출력에 노출 금지 |
+| 2 | 사용자 확인 없이 기존 저장소를 덮어쓰지 않음 |
+| 3 | `.dmap/secrets/` 디렉토리를 Git에 커밋하지 않음 |
+
+[Top](#publish)
+
+---
+
+## 검증 체크리스트
+
+- [ ] GitHub 인증 정보 수집 단계가 포함되어 있는가
+- [ ] `.dmap/secrets/` 저장 및 `.gitignore` 확인 로직이 있는가
+- [ ] gh CLI 설치 확인 로직이 있는가
+- [ ] 저장소 존재 여부 사전 확인(멱등성)이 있는가
+- [ ] 완료 메시지에 설치 명령어가 포함되어 있는가
+- [ ] 문제 해결 가이드가 포함되어 있는가
+- [ ] 토큰이 출력/로그에 노출되지 않도록 하는 규칙이 있는가
+
+[Top](#publish)

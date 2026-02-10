@@ -9,14 +9,24 @@ user-invocable: true
 
 [DEVELOP-PLUGIN 활성화]
 
+---
+
 ## 목표
 
 사용자의 요구사항 정의서를 기반으로 DMAP 표준에 맞는 플러그인을 자동 생성함.
 4-Phase 워크플로우를 순차 수행하며, 각 Phase 완료 시 사용자 승인을 받음.
 
+[Top](#develop-plugin)
+
+---
+
 ## 활성화 조건
 
 사용자가 `/dmap:develop-plugin` 호출 시 또는 "플러그인 만들어줘", "DMAP 플러그인 개발" 키워드 감지 시.
+
+[Top](#develop-plugin)
+
+---
 
 ## 참조
 
@@ -32,12 +42,20 @@ user-invocable: true
 | README 예제 | `resources/samples/plugin/README.md` | README.md 작성 예시 |
 | Publish 스킬 | `skills/publish/SKILL.md` | GitHub 배포 자동화 |
 
+[Top](#develop-plugin)
+
+---
+
 ## 스킬 부스팅
 
 | 단계 | 부스팅 스킬 | 용도 |
 |------|------------|------|
 | Phase 2 Step 3 | `/oh-my-claudecode:ralplan` | 개발 계획서 작성 (Planner+Architect+Critic 합의) |
 | Phase 3 | `/oh-my-claudecode:ralph` | 플러그인 개발 실행 (완료까지 지속) |
+
+[Top](#develop-plugin)
+
+---
 
 ## 워크플로우
 
@@ -169,6 +187,7 @@ DMAP 표준에 맞춰 플러그인의 전체 구조 설계.
 | 도구 매핑 | `tools.yaml`의 추상 도구가 `runtime-mapping.yaml`에 매핑 |
 | 티어 매핑 | `agentcard.yaml`의 tier가 `runtime-mapping.yaml`에 매핑 |
 | README | 필수 섹션(개요, 설치, 업그레이드, 사용법, 요구사항, 라이선스) 포함 |
+| 스킬 공통 섹션 | 모든 SKILL.md에 `## MUST 규칙`, `## MUST NOT 규칙`, `## 검증 체크리스트` 존재 |
 
 **Step 2. 사용자에게 개발완료 보고**
 
@@ -194,13 +213,66 @@ DMAP 표준에 맞춰 플러그인의 전체 구조 설계.
 Phase 4 완료 보고 후 사용자에게 GitHub 배포 여부를 문의함.
 사용자가 동의하면 `/dmap:publish` 스킬로 전환.
 
+[Top](#develop-plugin)
+
+---
+
 ## 완료 조건
 
 - 4-Phase 모두 사용자 승인 완료
 - 검증 항목 전체 통과
 - README.md 필수 섹션 포함
 
+[Top](#develop-plugin)
+
+---
+
 ## 취소/재개
 
 - 취소: `/oh-my-claudecode:cancel` 또는 사용자 요청 시 즉시 중단
 - 재개: 마지막 완료된 Phase부터 재시작 가능
+
+[Top](#develop-plugin)
+
+---
+
+## MUST 규칙
+
+| # | 규칙 |
+|---|------|
+| 1 | 4-Phase를 순차 수행하며 각 Phase 완료 시 사용자 승인 획득 |
+| 2 | 요구사항 정의서가 없으면 사용자에게 핵심 항목을 문의하여 수집 |
+| 3 | 플러그인 구조 설계 시 4개 표준 문서(main, agent, skill, gateway)를 모두 참조 |
+| 4 | Phase 3은 `/oh-my-claudecode:ralph` 스킬 부스팅 필수 사용 |
+| 5 | Phase 2 Step 3은 `/oh-my-claudecode:ralplan` 스킬 부스팅 필수 사용 |
+| 6 | 생성된 SKILL.md에 공통 섹션(MUST 규칙, MUST NOT 규칙, 검증 체크리스트) 포함 보장 |
+
+[Top](#develop-plugin)
+
+---
+
+## MUST NOT 규칙
+
+| # | 금지 사항 |
+|---|----------|
+| 1 | Phase 순서를 건너뛰거나 역순 수행 금지 |
+| 2 | 사용자 승인 없이 다음 Phase로 진행 금지 |
+| 3 | 요구사항을 임의로 변형하지 않음 — 변형 필요 시 사용자 확인 |
+| 4 | 표준 문서에 정의되지 않은 파일 구조를 생성하지 않음 |
+
+[Top](#develop-plugin)
+
+---
+
+## 검증 체크리스트
+
+- [ ] 4-Phase 워크플로우가 순차적으로 기술되어 있는가
+- [ ] 각 Phase에 사용자 승인 단계가 포함되어 있는가
+- [ ] 요구사항 정의서 탐색 순서(output/ → 메시지 → 문의)가 명확한가
+- [ ] Phase 2 Step 3에 ralplan 스킬 부스팅이 명시되어 있는가
+- [ ] Phase 3에 ralph 스킬 부스팅이 명시되어 있는가
+- [ ] Phase 4 검증 항목에 표준 준수 확인이 포함되어 있는가
+- [ ] 취소/재개 섹션이 존재하는가
+- [ ] 참조 테이블의 문서 경로가 모두 정확한가
+
+[Top](#develop-plugin)
