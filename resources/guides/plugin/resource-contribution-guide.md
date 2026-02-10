@@ -114,21 +114,13 @@ resources/guides/{2차분류}/{guide-name}.md
 
 ### 단계 3. 카탈로그 등록
 
-`plugin-resources.md`의 **"가이드 목록"** 테이블에 행 추가.
+[부록 B](#부록-b-카탈로그-등록-프롬프트)의 프롬프트를 AI에게 전달하여 자동 등록.
 
-**컬럼 구조:** `2차 분류 | 가이드명 | 설명 | 상세`
-
-**예시:**
-
-```markdown
-| plugin | my-guide | 플러그인 작성 시 참고할 가이드 | [상세](guides/plugin/my-guide.md) |
-```
-
-> 분류별 정렬을 유지하여 삽입.
-> 동일 2차 분류 내에서는 가이드명 기준 정렬 권장.
+> **참고 — 컬럼 구조:** `2차 분류 | 가이드명 | 설명 | 상세`
 >
-> **참고:** 카탈로그 등록은 [부록 B](#부록-b-카탈로그-등록-프롬프트)의 프롬프트를
-> AI에게 전달하면 자동으로 처리 가능.
+> ```markdown
+> | plugin | my-guide | 플러그인 작성 시 참고할 가이드 | [상세](guides/plugin/my-guide.md) |
+> ```
 
 [Top](#리소스-마켓플레이스-기여-가이드)
 
@@ -151,15 +143,13 @@ resources/templates/{2차분류}/{template-name}.md
 
 ### 단계 2. 카탈로그 등록
 
-`plugin-resources.md`의 **"템플릿 목록"** 테이블에 행 추가.
+[부록 B](#부록-b-카탈로그-등록-프롬프트)의 프롬프트를 AI에게 전달하여 자동 등록.
 
-**컬럼 구조:** `2차 분류 | 템플릿명 | 설명 | 상세`
-
-**예시:**
-
-```markdown
-| general | my-template | 범용 에이전트 설정 템플릿 | [상세](templates/general/my-template.md) |
-```
+> **참고 — 컬럼 구조:** `2차 분류 | 템플릿명 | 설명 | 상세`
+>
+> ```markdown
+> | general | my-template | 범용 에이전트 설정 템플릿 | [상세](templates/general/my-template.md) |
+> ```
 
 [Top](#리소스-마켓플레이스-기여-가이드)
 
@@ -182,15 +172,13 @@ resources/samples/{2차분류}/{sample-name}
 
 ### 단계 2. 카탈로그 등록
 
-`plugin-resources.md`의 **"샘플 목록"** 테이블에 행 추가.
+[부록 B](#부록-b-카탈로그-등록-프롬프트)의 프롬프트를 AI에게 전달하여 자동 등록.
 
-**컬럼 구조:** `2차 분류 | 샘플명 | 설명 | 상세`
-
-**예시:**
-
-```markdown
-| plugin | my-sample | 기본 플러그인 구조 샘플 | [상세](samples/plugin/my-sample/) |
-```
+> **참고 — 컬럼 구조:** `2차 분류 | 샘플명 | 설명 | 상세`
+>
+> ```markdown
+> | plugin | my-sample | 기본 플러그인 구조 샘플 | [상세](samples/plugin/my-sample/) |
+> ```
 
 [Top](#리소스-마켓플레이스-기여-가이드)
 
@@ -339,22 +327,13 @@ python tools/{분류}/{파일명} --{param} "값"
 
 #### 단계 3. 카탈로그 등록
 
-`plugin-resources.md`의 **"도구 목록"** 테이블에 행 추가.
+[부록 B](#부록-b-카탈로그-등록-프롬프트)의 커스텀 도구 등록 프롬프트를 AI에게 전달하여 자동 등록.
 
-**행 포맷:**
-
-```markdown
-| 커스텀 앱 | {도구명} | {설명} | [상세](tools/{tool-name}.md) |
-```
-
-**예시:**
-
-```markdown
-| 커스텀 앱 | generate_image | Gemini (Nano Banana) 모델 기반 이미지 생성 | [상세](tools/generate-image.md) |
-```
-
-> 카테고리별 정렬을 유지하여 삽입.
-> MCP 서버 → 커스텀 앱 → 커스텀 CLI 순서.
+> **참고 — 행 포맷:**
+>
+> ```markdown
+> | 커스텀 앱 | {도구명} | {설명} | [상세](tools/{tool-name}.md) |
+> ```
 
 ### 커스텀 CLI 추가
 
@@ -467,17 +446,13 @@ bash tools/{분류}/{스크립트명} {인자}
 
 #### 단계 3. 카탈로그 등록
 
-**행 포맷:**
+[부록 B](#부록-b-카탈로그-등록-프롬프트)의 커스텀 도구 등록 프롬프트를 AI에게 전달하여 자동 등록.
 
-```markdown
-| 커스텀 CLI | {도구명} | {설명} | [상세](tools/{tool-name}.md) |
-```
-
-**예시:**
-
-```markdown
-| 커스텀 CLI | check-mermaid | Docker 기반 Mermaid 다이어그램 문법 검증 | [상세](tools/check-mermaid.md) |
-```
+> **참고 — 행 포맷:**
+>
+> ```markdown
+> | 커스텀 CLI | {도구명} | {설명} | [상세](tools/{tool-name}.md) |
+> ```
 
 ### MCP 서버 추가
 
@@ -595,19 +570,13 @@ claude mcp list -s user
 
 #### 단계 3. 카탈로그 등록
 
-**행 포맷:**
+[부록 B](#부록-b-카탈로그-등록-프롬프트)의 커스텀 도구 등록 프롬프트를 AI에게 전달하여 자동 등록.
 
-```markdown
-| MCP 서버 | {도구명} | {설명} | [상세](tools/{tool-name}.md) |
-```
-
-**예시:**
-
-```markdown
-| MCP 서버 | context7 | 라이브러리 공식 문서 검색 및 코드 예시 제공 | [상세](tools/context7.md) |
-```
-
-> 도구 목록 테이블은 카테고리별 정렬: MCP 서버 → 커스텀 앱 → 커스텀 CLI 순서.
+> **참고 — 행 포맷:**
+>
+> ```markdown
+> | MCP 서버 | {도구명} | {설명} | [상세](tools/{tool-name}.md) |
+> ```
 
 [Top](#리소스-마켓플레이스-기여-가이드)
 
@@ -684,13 +653,22 @@ resources/tools/customs/general/generate_image.py
 
 ### 단계 3. 카탈로그 등록
 
-`plugin-resources.md`의 도구 목록 테이블에 다음 행 추가:
+[부록 B](#부록-b-카탈로그-등록-프롬프트)의 커스텀 도구 등록 프롬프트를 AI에게 전달하여 자동 등록.
 
-```markdown
-| 커스텀 앱 | generate_image | Gemini (Nano Banana) 모델 기반 이미지 생성 | [상세](tools/generate-image.md) |
-```
+**실제 사용한 프롬프트:**
 
-> 커스텀 앱 카테고리 내에서 도구명 기준 정렬하여 삽입.
+````
+resources/plugin-resources.md 파일의 "도구 목록" 테이블에
+'resources/tools/generate-image.md'를 등록해줘.
+카테고리는 커스텀 앱이고,
+설명은 내용을 보고 적절히 생성해줘.
+````
+
+> **참고 — 등록 결과:**
+>
+> ```markdown
+> | 커스텀 앱 | generate_image | Gemini (Nano Banana) 모델 기반 이미지 생성 | [상세](tools/generate-image.md) |
+> ```
 
 [Top](#리소스-마켓플레이스-기여-가이드)
 
