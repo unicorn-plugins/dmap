@@ -1,0 +1,24 @@
+DMAP Prompt Assembly process technical diagram.
+
+3-step assembly process flowing left to right:
+
+Step 1 "Load Agent Package":
+- 3 file icons from agents/architect/ directory
+  - AGENT.md (markdown icon, blue) — "Goals + Workflow"
+  - agentcard.yaml (YAML icon, green) — "Role + Constraints"
+  - tools.yaml (YAML icon, yellow) — "Required Tools"
+
+Step 2 "Concretize with Gateway Reference":
+- Arrow referencing runtime-mapping.yaml
+  - tier: HIGH → claude-opus-4-6 (model concretization)
+  - file_read → Read, Glob (tool concretization)
+  - forbidden: file_write → Exclude Write, Edit (prohibition concretization)
+
+Step 3 "Final Prompt Assembly":
+- Large combined document icon
+  - Common static (runtime-mapping) section
+  - Agent-specific static (3 files merged) section
+  - Dynamic (task instructions) section
+- "Task(FQN, model, prompt) invocation" text
+
+Style: Left-to-right flow diagram, clean flat design, pastel colors, English text. White background.

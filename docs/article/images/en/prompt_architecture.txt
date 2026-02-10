@@ -1,0 +1,23 @@
+DMAP (Declarative Multi-Agent Plugin) Architecture Diagram.
+
+Clean technical diagram showing layered structure based on Clean Architecture pattern.
+
+Components (flowing top to bottom in layer structure):
+1. Top layer: "User Request" (Input) — enters via blue arrow
+2. Second layer: "Skills (Controller)" — routing + orchestration, light purple box
+   - Delegating skills: Core, Planning, Orchestrator
+   - Direct skills: Setup, Utility
+3. Third layer: "Agents (Service)" — autonomous expert execution, light blue box
+   - Role-based icons for architect, executor, explorer, etc.
+4. Fourth layer: "Gateway" — abstract→concrete mapping, light green box
+   - Shows runtime-mapping.yaml
+5. Bottom layer: "Runtime" — execution environment, light gray box
+   - Logos for Claude Code, Codex CLI, etc.
+6. On the right side: "Resource Marketplace" — shared resource pool, light yellow separate box
+   - Guides, templates, samples, tools
+
+Arrows: Skills → Agents → Gateway → Runtime (unidirectional dependency)
+Direct skills bypass Agents with dotted lines, connecting directly to Gateway
+
+Style: Clean flat design, rounded corner boxes, thin connecting lines, bright pastel colors.
+Use English text. White background.

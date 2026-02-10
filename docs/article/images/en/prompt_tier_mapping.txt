@@ -1,0 +1,23 @@
+DMAP 4-Tier Agent Model tier mapping technical diagram.
+
+Left side: "Abstract Declaration (agentcard.yaml)" area
+- 4 tier boxes arranged vertically:
+  - HEAVY (red border) — "Highest capability + Large scale"
+  - HIGH (orange border) — "Highest capability"
+  - MEDIUM (blue border) — "Balanced"
+  - LOW (green border) — "Fast and low cost"
+
+Center: "runtime-mapping.yaml" arrow (showing transformation)
+- Large arrow with "Gateway Mapping" text inside
+
+Right side: "Concrete Model (Actual LLM)" area
+- HEAVY → Opus (Large budget)
+- HIGH → Opus
+- MEDIUM → Sonnet
+- LOW → Haiku
+- Icons showing cost/speed next to each model
+
+Bottom escalation arrow:
+- Dotted arrow pointing upward from LOW "Complexity exceeded → Report to higher tier"
+
+Style: Clean mapping diagram, rounded corners, pastel colors, English text. White background.

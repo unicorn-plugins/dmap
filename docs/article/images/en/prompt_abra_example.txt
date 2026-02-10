@@ -1,0 +1,37 @@
+DMAP abra plugin component composition technical diagram.
+
+Title: "abra Plugin — Dify DSL Automation"
+
+Directory tree visualization (left side):
+abra/
+├── .claude-plugin/ (plugin.json, marketplace.json)
+├── skills/ (8 skills)
+├── agents/ (5 agents)
+│   ├── scenario-analyst/
+│   ├── dsl-architect/
+│   ├── plan-writer/
+│   ├── prototype-runner/
+│   └── agent-developer/
+├── gateway/ (install.yaml, runtime-mapping.yaml)
+├── commands/ (slash commands)
+└── README.md
+
+Component relationship diagram (right side):
+- Skills area (light purple):
+  - setup, core (required/basic)
+  - dify-setup, scenario, dsl-generate, prototype, dev-plan, develop (feature skills)
+
+- Agents area (light blue):
+  - scenario-analyst: Scenario analysis expert
+  - dsl-architect: DSL design expert
+  - plan-writer: Development plan writing expert
+  - prototype-runner: Prototype execution expert
+  - agent-developer: Agent development expert
+
+- Gateway area (light green):
+  - Custom tool connections like Dify CLI, DSL validation tools, etc.
+
+User flow arrows:
+"Generate scenario" → "Generate DSL" → "Prototyping" → "Development plan" → "Agent development"
+
+Style: Clean component diagram, rounded corners, pastel colors, English text. White background.

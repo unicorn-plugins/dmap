@@ -1,0 +1,27 @@
+DMAP Skill Activation Paths technical diagram.
+
+Top: "User Request" starting point
+
+Two branching paths:
+
+Left path "Direct Activation":
+- User → "Slash command or clear natural language" → Runtime direct match → Specific skill activation
+- Example: "/abra:scenario" → Execute scenario skill directly
+- Blue solid arrow
+
+Right path "Core-mediated Activation":
+- User → "Ambiguous request" → Runtime → Core skill activation → Intent detection → Route to appropriate skill
+- Example: "Create an agent" → Core → Full workflow skill
+- Orange dotted arrow
+
+Bottom: 5 skill types arranged side by side
+- Core (purple) — "Behavior norms + routing"
+- Setup (green) — "Installation/configuration (direct type)"
+- Planning (blue) — "Planning establishment"
+- Orchestrator (orange) — "Workflow orchestration"
+- Utility (gray) — "Auxiliary functions (direct type)"
+
+Delegating types (Core, Planning, Orchestrator) have solid borders
+Direct types (Setup, Utility) have dotted borders
+
+Style: Flowchart style, clean flat design, pastel colors, English text. White background.
