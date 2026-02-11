@@ -41,6 +41,9 @@ DMAP 빌더 플러그인의 사용 가능한 명령과 자동 라우팅 규칙�
 | `/dmap:requirement-writer` | 요구사항 정의서 작성 지원 (AI 자동 완성) |
 | `/dmap:setup` | 플러그인 초기 설정 |
 | `/dmap:publish` | 개발 완료된 플러그인을 GitHub에 배포 |
+| `/dmap:add-ext-skill` | 외부호출 스킬(ext-{대상플러그인}) 추가 |
+| `/dmap:remove-ext-skill` | 외부호출 스킬(ext-{대상플러그인}) 제거 |
+| `/dmap:ext-github-release-manager` | GitHub Release 문서 자동 생성·수정·삭제 (외부 플러그인 위임) |
 | `/dmap:help` | 사용 안내 (현재 보고 있는 화면) |
 
 ### 자동 라우팅
