@@ -197,36 +197,42 @@ resources/samples/{2차분류}/{sample-name}
 기존 리소스 유형(가이드/템플릿/샘플/도구)이 "파일 복사"하여 사용하는 반면,
 플러그인은 "인터페이스 참조"하여 External 스킬 생성 시 활용.
 
-플러그인 명세서 추가는 3단계로 진행.
+플러그인 명세서 추가는 2단계로 진행.
 
-### 단계 1. 디렉토리 생성 및 파일 배치
+### 단계 1. 명세서 자동 생성
 
-명세서 파일을 다음 경로에 배치:
+[부록 B](#부록-b-ai-활용-프롬프트)의 플러그인 명세서 작성 프롬프트를 AI에게 전달하면
+대상 플러그인의 소스 파일을 읽고 디렉토리 생성부터 명세서 작성까지 자동 처리함.
 
-```
-resources/plugins/{2차분류}/{plugin-name}.md
-```
+**AI가 읽는 파일:**
 
-- 2차 분류 디렉토리가 없으면 생성 (예: `ai-agent/`, `data-pipeline/`)
-- 파일명: 플러그인명과 동일 (kebab-case)
+| 파일 | 필수 | 추출 정보 |
+|------|:----:|----------|
+| `README.md` | 필수 | 플러그인 개요, 설치 방법, 명령 목록, 워크플로우, 선행 요구사항 |
+| `.claude-plugin/plugin.json` | 필수 | 플러그인명, 버전, 설명, 저장소 URL |
+| `skills/help/SKILL.md` | 필수 | 제공 스킬 목록 및 설명 |
+| `skills/core/SKILL.md` | 선택 | 자동 라우팅 규칙, 실행 경로 분기 조건 |
+| `skills/*/SKILL.md` | 선택 | 각 스킬의 상세 워크플로우, ARGS 스키마 |
 
-### 단계 2. 명세서 작성
+> **참고 — 출력 경로:** `resources/plugins/{2차분류}/{plugin-name}.md`
+> 2차 분류 디렉토리가 없으면 AI가 자동 생성.
+> 파일명: 플러그인명과 동일 (kebab-case).
 
-명세서에 다음 7개 필수 섹션을 포함:
+**명세서 필수 7개 섹션:**
 
-| 섹션 | 설명 |
-|------|------|
-| 기본 정보 | 플러그인명, 설명, 설치 명령, 저장소 URL |
-| 제공 스킬 | 스킬명, FQN, 유형, 설명 목록 |
-| 실행 경로 | 경로명, 설명, 스킬 체인, 조건 |
-| ARGS 스키마 | 각 스킬별로 전달 가능한 ARGS 키, 필수 여부, 설명 |
-| 도메인 컨텍스트 수집 가이드 | External 스킬이 수집해야 할 대상, 소스, 용도 |
-| 선행 요구사항 | 플러그인 설치 및 기타 필요 조건 |
-| 호출 예시 | 실행 경로별 Skill→Skill 위임 예시 (INTENT, ARGS, RETURN) |
+| 섹션 | 설명 | 주요 소스 |
+|------|------|----------|
+| 기본 정보 | 플러그인명, 설명, 설치 명령, 저장소 URL | `plugin.json`, `README.md` |
+| 제공 스킬 | 스킬명, FQN, 유형, 설명 목록 | `skills/help/SKILL.md`, `skills/*/SKILL.md` |
+| 실행 경로 | 경로명, 설명, 스킬 체인, 조건 | `skills/core/SKILL.md`, `README.md` |
+| ARGS 스키마 | 각 스킬별로 전달 가능한 ARGS 키, 필수 여부, 설명 | `skills/*/SKILL.md` |
+| 도메인 컨텍스트 수집 가이드 | External 스킬이 수집해야 할 대상, 소스, 용도 | `skills/*/SKILL.md`, `README.md` |
+| 선행 요구사항 | 플러그인 설치 및 기타 필요 조건 | `README.md`, `plugin.json` |
+| 호출 예시 | 실행 경로별 Skill→Skill 위임 예시 (INTENT, ARGS, RETURN) | `skills/*/SKILL.md` |
 
-### 단계 3. 카탈로그 등록
+### 단계 2. 카탈로그 등록
 
-`plugin-resources.md`의 "플러그인 목록" 테이블에 행 추가.
+[부록 B](#부록-b-ai-활용-프롬프트)의 플러그인 등록 프롬프트를 AI에게 전달하여 자동 등록.
 
 > **참고 — 컬럼 구조:** `2차 분류 | 플러그인명 | 설명 | 상세`
 >
@@ -725,10 +731,12 @@ resources/plugin-resources.md 파일의 "도구 목록" 테이블에
 
 ### 플러그인 명세서 추가 체크리스트
 
-- [ ] 명세서 파일이 `resources/plugins/{분류}/`에 배치되었는가
+- [ ] AI가 대상 플러그인의 소스 파일(README.md, plugin.json, skills/)을 읽었는가
+- [ ] 명세서 파일이 `resources/plugins/{분류}/`에 자동 생성되었는가
 - [ ] 필수 7개 섹션이 모두 포함되었는가 (기본 정보, 제공 스킬, 실행 경로, ARGS 스키마, 도메인 컨텍스트 수집 가이드, 선행 요구사항, 호출 예시)
 - [ ] 카탈로그(`plugin-resources.md`)의 "플러그인 목록" 테이블에 행이 추가되었는가
 - [ ] 명세서의 FQN이 실제 플러그인의 스킬 FQN과 일치하는가
+- [ ] 명세서의 설치 명령이 실제 플러그인의 설치 방법과 일치하는가
 
 [Top](#리소스-마켓플레이스-기여-가이드)
 
@@ -853,6 +861,26 @@ resources/plugin-resources.md 파일의 "도구 목록" 테이블에
 'resources/tools/generate-image.md'를 등록해줘.
 카테고리는 커스텀 앱이고,
 설명은 내용을 보고 적절히 생성해줘.
+````
+
+### 플러그인 명세서 작성 프롬프트
+
+````
+'{대상 플러그인 디렉토리}'의 README.md, .claude-plugin/plugin.json,
+skills/help/SKILL.md, skills/core/SKILL.md, skills/*/SKILL.md를 읽고
+resources/plugins/{2차분류}/{plugin-name}.md에 플러그인 명세서를 작성해줘.
+템플릿은 resources/guides/plugin/resource-contribution-guide.md의
+'명세서 필수 7개 섹션'을 따라줘.
+````
+
+**사용 예시:**
+
+````
+'~/workspace/abra'의 README.md, .claude-plugin/plugin.json,
+skills/help/SKILL.md, skills/core/SKILL.md, skills/*/SKILL.md를 읽고
+resources/plugins/ai-agent/abra.md에 플러그인 명세서를 작성해줘.
+템플릿은 resources/guides/plugin/resource-contribution-guide.md의
+'명세서 필수 7개 섹션'을 따라줘.
 ````
 
 ### 플러그인 등록 프롬프트
