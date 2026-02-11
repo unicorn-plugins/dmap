@@ -401,7 +401,11 @@ claude plugin install dmap@unicorn
 1. /dmap:setup                -- 설치 상태 검증
 2. /dmap:requirement-writer   -- 요구사항 정의서 작성 (AI 자동 완성)
 3. /dmap:develop-plugin       -- 요구사항 -> 설계 -> 개발 -> 검증 자동 수행
+4. /dmap:publish              -- GitHub 배포 (저장소 생성, 커밋, 푸시)
 ```
+
+> **End-to-End 자동화**: 요구사항 정의부터 GitHub 배포까지 전 과정을 AI가 자동 수행함.
+> 사용자는 각 단계의 승인만 하면 됨.
 
 [Top](#dmap-빌더)
 
@@ -409,12 +413,13 @@ claude plugin install dmap@unicorn
 
 ## 플러그인 개발 워크플로우
 
-플러그인 개발은 `/dmap:requirement-writer`로 요구사항 정의서를 먼저 작성한 후,
-`/dmap:develop-plugin`으로 4-Phase 워크플로우를 자동 수행함.
-각 Phase 완료 시 사용자 승인을 받아 다음 단계로 진행함.
+요구사항 정의부터 GitHub 배포까지 **End-to-End 자동화**로 수행됨.
+`/dmap:requirement-writer`로 요구사항 정의서를 먼저 작성한 후,
+`/dmap:develop-plugin`으로 4-Phase 워크플로우를 자동 수행하고,
+`/dmap:publish`로 GitHub에 배포함. 각 Phase 완료 시 사용자 승인을 받아 다음 단계로 진행함.
 
 ```
-/dmap:requirement-writer → /dmap:develop-plugin (Phase 1~4)
+/dmap:requirement-writer → /dmap:develop-plugin (Phase 1~4) → /dmap:publish
 ```
 
 | Phase | 단계 | 주요 활동 |
@@ -967,7 +972,11 @@ Basic usage flow:
 1. /dmap:setup                -- Verify installation status
 2. /dmap:requirement-writer   -- Write requirements specification (AI auto-completion)
 3. /dmap:develop-plugin       -- Automatically execute: requirements -> design -> development -> verification
+4. /dmap:publish              -- Deploy to GitHub (repo creation, commit, push)
 ```
+
+> **End-to-End Automation**: AI handles the entire process from requirements definition to GitHub deployment.
+> Users only need to approve at each stage.
 
 [Top](#dmap-builder)
 
@@ -975,12 +984,13 @@ Basic usage flow:
 
 ## Plugin Development Workflow
 
+The entire pipeline from requirements to GitHub deployment is **End-to-End automated**.
 Plugin development starts with `/dmap:requirement-writer` to create the requirements specification,
-then `/dmap:develop-plugin` automatically executes a 4-Phase workflow.
-User approval is obtained at the completion of each Phase before proceeding to the next.
+then `/dmap:develop-plugin` automatically executes a 4-Phase workflow,
+and `/dmap:publish` deploys to GitHub. User approval is obtained at each stage.
 
 ```
-/dmap:requirement-writer → /dmap:develop-plugin (Phase 1~4)
+/dmap:requirement-writer → /dmap:develop-plugin (Phase 1~4) → /dmap:publish
 ```
 
 | Phase | Stage | Key Activities |
