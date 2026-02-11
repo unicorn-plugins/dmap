@@ -1,6 +1,6 @@
 {
   "name": "dmap",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "선언형 멀티에이전트 플러그인(DMAP) 빌더",
   "author": {
     "name": "Unicorn Inc."

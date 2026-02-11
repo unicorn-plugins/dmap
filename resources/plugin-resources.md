@@ -71,6 +71,7 @@
 | 2차 분류 | 플러그인명 | 설명 | 상세 |
 |---------|----------|------|------|
 | ai-agent | abra | Dify 워크플로우 기반 AI Agent 개발 자동화 플러그인 | [상세](plugins/ai-agent/abra.md) |
+| devops | github-release-manager | GitHub Release 문서 자동 생성·수정·삭제 및 구성 추천 플러그인 | [상세](plugins/devops/github-release-manager.md) |
 
 [Top](#리소스-마켓플레이스)
 
