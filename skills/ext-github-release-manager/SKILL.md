@@ -272,6 +272,6 @@ github-release-manager 플러그인 설치 여부 확인.
 - [ ] 경로 분기 조건이 명확히 정의되어 있는가
 - [ ] Skill→Skill 입력 전달 규약이 적용되어 있는가
 - [ ] 워크플로우의 모든 직접 수행 단계에 스킬 부스팅이 명시되어 있는가
-- [ ] 대상 플러그인 명세서(`resources/plugins/devops/github-release-manager.md`)가 존재하는가
+- [ ] 대상 플러그인 명세서(`.dmap/plugins/github-release-manager.md`)가 존재하는가
 
 [Top](#ext-github-release-manager)
