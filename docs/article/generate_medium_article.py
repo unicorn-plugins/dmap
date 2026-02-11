@@ -502,7 +502,7 @@ def section_06_case_study(doc):
         doc,
         "이러한 구현은 선언형 접근이 이론적 가능성이 아닌 실제 동작하는 시스템으로 실현 "
         "가능하다는 것을 보여준다. 프로젝트 전체는 GitHub에 공개되어 있다 "
-        "(https://github.com/cna-bootcamp/gen-dmap)."
+        "(https://github.com/unicorn-plugins/dmap)."
     )
 
     add_image_if_exists(
@@ -556,7 +556,7 @@ def section_07_outlook(doc):
     add_note(
         doc,
         "DMAP 표준 문서와 샘플은 GitHub에서 확인할 수 있다: "
-        "https://github.com/cna-bootcamp/gen-dmap",
+        "https://github.com/unicorn-plugins/dmap",
     )
 
 

@@ -469,7 +469,7 @@ def section_08_quickstart(doc):
 
     add_quote(doc,
         "DMAP 표준 문서와 샘플은 GitHub에서 확인하세요: "
-        "https://github.com/cna-bootcamp/gen-dmap"
+        "https://github.com/unicorn-plugins/dmap"
     )
 
 

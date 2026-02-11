@@ -389,8 +389,8 @@ Use the Skill tool to invoke the `abra:setup` skill with all arguments passed th
 | `version` | 권고 | 시맨틱 버전. marketplace.json의 version보다 우선. 예: `"1.0.0"` |
 | `description` | 권고 | 플러그인 목적 설명. 한 줄 요약. 예: `"AI Agent 자동 생성 플러그인"` |
 | `author` | 권고 | 작성자 정보 객체. `name`(필수), `email`, `url` 포함 |
-| `homepage` | 선택 | 문서 URL. 예: `"https://github.com/cna-bootcamp/abra"` |
-| `repository` | 선택 | 소스 코드 URL. 예: `"https://github.com/cna-bootcamp/abra"` |
+| `homepage` | 선택 | 문서 URL. 예: `"https://github.com/unicorn-plugins/abra"` |
+| `repository` | 선택 | 소스 코드 URL. 예: `"https://github.com/unicorn-plugins/abra"` |
 | `license` | 권고 | SPDX 라이선스 식별자. 예: `"MIT"`, `"Apache-2.0"` |
 | `keywords` | 권고 | 검색용 태그 배열. 예: `["dify", "ai-agent", "automation"]` |
 | `commands` | 선택 | 추가 커맨드 파일/디렉토리 경로. `./`로 시작하는 상대 경로. 기본: `commands/` |
@@ -415,8 +415,8 @@ Use the Skill tool to invoke the `abra:setup` skill with all arguments passed th
   "author": {
     "name": "Lee HaeKyung"
   },
-  "repository": "https://github.com/cna-bootcamp/abra",
-  "homepage": "https://github.com/cna-bootcamp/abra",
+  "repository": "https://github.com/unicorn-plugins/abra",
+  "homepage": "https://github.com/unicorn-plugins/abra",
   "license": "MIT",
   "keywords": ["abra", "dmap", "plugin", "multi-agent", "orchestration", "automation"]
 }
@@ -490,7 +490,7 @@ Use the Skill tool to invoke the `abra:setup` skill with all arguments passed th
 {
   "source": {
     "source": "github",
-    "repo": "cna-bootcamp/abra",
+    "repo": "unicorn-plugins/abra",
     "ref": "v1.0.0",
     "sha": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0"
   }

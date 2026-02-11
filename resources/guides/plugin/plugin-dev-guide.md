@@ -121,7 +121,7 @@ DMAP 빌더를 이용하여 선언형 멀티에이전트 플러그인을 개발�
 /dmap:requirement-writer
 ```
 
-완성된 정의서는 `{GEN-DMAP 프로젝트}/output/requirement-{플러그인명}.md`에 저장되며,
+완성된 정의서는 `{dmap 프로젝트}/output/requirement-{플러그인명}.md`에 저장되며,
 `/dmap:develop-plugin` 실행 시 자동으로 활용됨.
 
 **방법 B: 직접 작성**

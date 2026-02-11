@@ -68,7 +68,7 @@ user-invocable: true
 사용자가 제공한 요구사항 정의서의 각 항목을 분석함.
 
 요구사항 정의서 탐색 순서:
-1. `{GEN-DMAP 프로젝트}/output/requirement-{플러그인명}.md` 파일이 존재하면 자동 로드하여 사용
+1. `{dmap 프로젝트}/output/requirement-{플러그인명}.md` 파일이 존재하면 자동 로드하여 사용
    (requirement-writer 스킬로 사전 작성된 정의서)
 2. 사용자가 메시지에 정의서 내용을 직접 포함한 경우 해당 내용 사용
 3. 위 두 경우에 해당하지 않으면 `resources/guides/plugin/plugin-dev-guide.md`의

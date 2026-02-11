@@ -100,7 +100,7 @@
 
 # 가이드문서
 - Dify-DSL-가이드
-  - url: https://raw.githubusercontent.com/cna-bootcamp/gen-ma-plugin/refs/heads/main/guides/dify-workflow-dsl-guide.md
+  - url: https://raw.githubusercontent.com/unicorn-plugins/gen-ma-plugin/refs/heads/main/guides/dify-workflow-dsl-guide.md
   - filename: dify-workflow-dsl-guide.md
 
 # Lessons Learned

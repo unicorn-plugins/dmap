@@ -14,7 +14,7 @@ user-invocable: true
 
 사용자가 필수 항목(기본정보, 핵심기능, 사용자 플로우)만 입력하면
 AI가 에이전트 구성 힌트와 참고 공유 자원을 자동 분석/추천하여
-완성된 요구사항 정의서를 `{GEN-DMAP 프로젝트}/output/requirement-{플러그인명}.md`에 저장함.
+완성된 요구사항 정의서를 `{dmap 프로젝트}/output/requirement-{플러그인명}.md`에 저장함.
 
 [Top](#requirement-writer)
 
@@ -145,11 +145,11 @@ AskUserQuestion 도구를 활용하여 필수 항목을 순차 수집함.
 
 완성된 요구사항 정의서를 파일로 저장함.
 
-1. `{GEN-DMAP 프로젝트}/output/` 디렉토리 존재 여부 확인
+1. `{dmap 프로젝트}/output/` 디렉토리 존재 여부 확인
    미존재 시 자동 생성
-2. `{GEN-DMAP 프로젝트}/output/requirement-{플러그인명}.md` 파일 존재 여부 확인
+2. `{dmap 프로젝트}/output/requirement-{플러그인명}.md` 파일 존재 여부 확인
    존재 시 AskUserQuestion으로 덮어쓰기 확인
-3. `{GEN-DMAP 프로젝트}/output/requirement-{플러그인명}.md`에 저장
+3. `{dmap 프로젝트}/output/requirement-{플러그인명}.md`에 저장
 4. 사용자에게 완료 안내:
    - 저장 경로 안내
    - `/dmap:develop-plugin` 명령으로 이어서
@@ -187,7 +187,7 @@ AskUserQuestion 도구를 활용하여 필수 항목을 순차 수집함.
 
 ## 계획 저장
 
-결과 파일: `{GEN-DMAP 프로젝트}/output/requirement-{플러그인명}.md`
+결과 파일: `{dmap 프로젝트}/output/requirement-{플러그인명}.md`
 
 [Top](#requirement-writer)
 

@@ -66,11 +66,11 @@ DMAP 프로젝트에 관심을 가져주셔서 감사함.
 # 1. GitHub에서 저장소 Fork (웹 UI에서 진행)
 
 # 2. Fork한 저장소 Clone
-git clone https://github.com/{your-username}/gen-dmap.git
-cd gen-dmap
+git clone https://github.com/{your-username}/dmap.git
+cd dmap
 
 # 3. 원본 저장소를 upstream으로 추가
-git remote add upstream https://github.com/{원본소유자}/gen-dmap.git
+git remote add upstream https://github.com/{원본소유자}/dmap.git
 ```
 
 ### 브랜치 생성

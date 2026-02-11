@@ -539,7 +539,7 @@ def section_06_case_study(doc):
         doc,
         "This implementation demonstrates that the declarative approach is not merely a "
         "theoretical possibility but a viable, working system. The entire project is "
-        "publicly available on GitHub (https://github.com/cna-bootcamp/gen-dmap)."
+        "publicly available on GitHub (https://github.com/unicorn-plugins/dmap)."
     )
 
     add_image_if_exists(
@@ -598,7 +598,7 @@ def section_07_outlook(doc):
     add_note(
         doc,
         "DMAP standard documents and samples are available on GitHub: "
-        "https://github.com/cna-bootcamp/gen-dmap",
+        "https://github.com/unicorn-plugins/dmap",
     )
 
 

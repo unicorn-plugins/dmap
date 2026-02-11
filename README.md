@@ -32,6 +32,34 @@
     - [스킬 구성 (9개 워크플로우)](#스킬-구성-9개-워크플로우)
   - [로드맵](#로드맵)
   - [라이선스](#라이선스)
+- [DMAP Builder](#dmap-builder)
+  - [Overview](#overview)
+    - [Problem: Complexity of Traditional Multi-Agent Development](#problem-complexity-of-traditional-multi-agent-development)
+    - [How DMAP Solves It](#how-dmap-solves-it)
+    - [Core Values](#core-values)
+    - [Traditional Frameworks vs DMAP](#traditional-frameworks-vs-dmap)
+  - [Core Concepts](#core-concepts)
+    - [Skills = Department Heads](#skills--department-heads)
+    - [Agents = Specialists](#agents--specialists)
+    - [Gateway = Interpreter](#gateway--interpreter)
+    - [Resource Marketplace = Shared Drive](#resource-marketplace--shared-drive)
+    - [Architecture (Clean Architecture)](#architecture-clean-architecture)
+  - [How It Works](#how-it-works)
+    - [Prompt Assembly](#prompt-assembly)
+    - [4-Tier Model Mapping](#4-tier-model-mapping)
+    - [Skill Activation Paths](#skill-activation-paths)
+  - [Quick Start](#quick-start)
+    - [Prerequisites](#prerequisites)
+    - [DMAP Builder Installation](#dmap-builder-installation)
+    - [Usage](#usage)
+  - [Plugin Development Workflow](#plugin-development-workflow)
+  - [Project Structure](#project-structure)
+  - [Standards](#standards)
+  - [Practical Example](#practical-example)
+    - [Agent Composition (5 Specialists)](#agent-composition-5-specialists)
+    - [Skill Composition (9 Workflows)](#skill-composition-9-workflows)
+  - [Roadmap](#roadmap)
+  - [License](#license)
 
 ---
 
@@ -267,7 +295,7 @@ Setup 시 MCP는 context7만 설치:
 ### DMAP 빌더 설치
 
 ```bash
-claude plugin marketplace add cna-bootcamp/gen-dmap
+claude plugin marketplace add unicorn-plugins/dmap
 claude plugin install dmap@unicorn
 ```
 
@@ -299,7 +327,7 @@ claude plugin install dmap@unicorn
 
 | Phase | 단계 | 주요 활동 |
 |:-----:|------|----------|
-| 1 | 요구사항 수집 | 요구사항 정의서 분석, 플러그인 적합여부 판단, 누락 정보 수집 ([샘플](https://github.com/cna-bootcamp/abra/blob/main/output/requirement.md)) |
+| 1 | 요구사항 수집 | 요구사항 정의서 분석, 플러그인 적합여부 판단, 누락 정보 수집 ([샘플](https://github.com/unicorn-plugins/abra/blob/main/output/requirement.md)) |
 | 2 | 설계 및 계획 | 공유 자원 선택, 플러그인 구조 설계, 개발 계획서 작성 |
 | 3 | 플러그인 개발 | 스켈레톤 생성, Gateway/Agent/Skill/Command 개발, README 작성 |
 | 4 | 검증 및 완료 | DMAP 표준 준수 검증, 최종 보고, 공유자원 등록(선택) |
@@ -322,7 +350,7 @@ claude plugin install dmap@unicorn
 ## 프로젝트 구조
 
 ```
-gen-dmap/
+dmap/
 ├── .claude-plugin/          # 플러그인 매니페스트
 │   ├── plugin.json          #   플러그인 메타데이터
 │   └── marketplace.json     #   마켓플레이스 등록 정보
@@ -378,7 +406,7 @@ DMAP 표준은 4개의 핵심 문서와 리소스 카탈로그로 구성됨.
 Dify 플랫폼의 DSL(Domain Specific Language)을 자동 생성하고
 프로토타이핑까지 수행하는 플러그인임.
 
-Git Repository: https://github.com/cna-bootcamp/abra.git
+Git Repository: https://github.com/unicorn-plugins/abra.git
 
 ### 에이전트 구성 (5명의 전문가)
 
@@ -428,7 +456,7 @@ Git Repository: https://github.com/cna-bootcamp/abra.git
 MIT License
 
 Copyright (c) 2026 Unicorn Inc.
-https://github.com/cna-bootcamp/gen-dmap
+https://github.com/unicorn-plugins/dmap
 
 [Top](#dmap-빌더)
 
@@ -441,6 +469,34 @@ https://github.com/cna-bootcamp/gen-dmap
 
 > A declarative framework for building multi-agent plugins without code
 
+- [DMAP 빌더](#dmap-빌더)
+  - [개요](#개요)
+    - [문제: 기존 멀티에이전트 개발의 불편함](#문제-기존-멀티에이전트-개발의-불편함)
+    - [DMAP의 해결 방식](#dmap의-해결-방식)
+    - [핵심 가치](#핵심-가치)
+    - [기존 프레임워크 vs DMAP](#기존-프레임워크-vs-dmap)
+  - [핵심 개념](#핵심-개념)
+    - [Skills = 부서장](#skills--부서장)
+    - [Agents = 전문가](#agents--전문가)
+    - [Gateway = 통역사](#gateway--통역사)
+    - [리소스 마켓플레이스 = 사내 공유 드라이브](#리소스-마켓플레이스--사내-공유-드라이브)
+    - [아키텍처 (Clean Architecture)](#아키텍처-clean-architecture)
+  - [동작 원리](#동작-원리)
+    - [프롬프트 조립](#프롬프트-조립)
+    - [4-Tier 모델 매핑](#4-tier-모델-매핑)
+    - [스킬 활성화 경로](#스킬-활성화-경로)
+  - [빠른 시작](#빠른-시작)
+    - [사전 요구사항](#사전-요구사항)
+    - [DMAP 빌더 설치](#dmap-빌더-설치)
+    - [사용](#사용)
+  - [플러그인 개발 워크플로우](#플러그인-개발-워크플로우)
+  - [프로젝트 구조](#프로젝트-구조)
+  - [표준 문서](#표준-문서)
+  - [실전 예제](#실전-예제)
+    - [에이전트 구성 (5명의 전문가)](#에이전트-구성-5명의-전문가)
+    - [스킬 구성 (9개 워크플로우)](#스킬-구성-9개-워크플로우)
+  - [로드맵](#로드맵)
+  - [라이선스](#라이선스)
 - [DMAP Builder](#dmap-builder)
   - [Overview](#overview)
     - [Problem: Complexity of Traditional Multi-Agent Development](#problem-complexity-of-traditional-multi-agent-development)
@@ -704,7 +760,7 @@ Install only context7 for MCP during setup:
 ### DMAP Builder Installation
 
 ```bash
-claude plugin marketplace add cna-bootcamp/gen-dmap
+claude plugin marketplace add unicorn-plugins/dmap
 claude plugin install dmap@unicorn
 ```
 
@@ -736,7 +792,7 @@ User approval is obtained at the completion of each Phase before proceeding to t
 
 | Phase | Stage | Key Activities |
 |:-----:|-------|---------------|
-| 1 | Requirements Gathering | Analyze requirements specification, assess plugin suitability, collect missing information ([sample](https://github.com/cna-bootcamp/abra/blob/main/output/requirement.md)) |
+| 1 | Requirements Gathering | Analyze requirements specification, assess plugin suitability, collect missing information ([sample](https://github.com/unicorn-plugins/abra/blob/main/output/requirement.md)) |
 | 2 | Design and Planning | Select shared resources, design plugin structure, write development plan |
 | 3 | Plugin Development | Generate skeleton, develop Gateway/Agent/Skill/Command, write README |
 | 4 | Verification and Completion | Validate DMAP standard compliance, final report, register shared resources (optional) |
@@ -759,7 +815,7 @@ User approval is obtained at the completion of each Phase before proceeding to t
 ## Project Structure
 
 ```
-gen-dmap/
+dmap/
 ├── .claude-plugin/          # Plugin manifest
 │   ├── plugin.json          #   Plugin metadata
 │   └── marketplace.json     #   Marketplace registration info
@@ -815,7 +871,7 @@ The DMAP standard consists of 4 core documents and a resource catalog.
 Automatically generates DSL (Domain Specific Language) for the Dify platform
 and performs prototyping.
 
-Git Repository: https://github.com/cna-bootcamp/abra.git
+Git Repository: https://github.com/unicorn-plugins/abra.git
 
 ### Agent Composition (5 Specialists)
 
@@ -865,7 +921,7 @@ User flow: Scenario generation -> DSL generation -> Prototyping -> Development p
 MIT License
 
 Copyright (c) 2026 Unicorn Inc.
-https://github.com/cna-bootcamp/gen-dmap
+https://github.com/unicorn-plugins/dmap
 
 [Top](#dmap-builder)
 

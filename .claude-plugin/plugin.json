@@ -5,8 +5,8 @@
   "author": {
     "name": "Unicorn Inc."
   },
-  "repository": "https://github.com/cna-bootcamp/gen-dmap",
-  "homepage": "https://github.com/cna-bootcamp/gen-dmap",
+  "repository": "https://github.com/unicorn-plugins/dmap",
+  "homepage": "https://github.com/unicorn-plugins/dmap",
   "license": "MIT",
   "keywords": ["dmap", "plugin", "multi-agent", "builder", "declarative"]
 }

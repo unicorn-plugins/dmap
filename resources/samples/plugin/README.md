@@ -69,9 +69,9 @@ claude plugin list
 
 다음 가이드를 참고하세요:
 
-- [GitHub 계정 생성 가이드](https://github.com/cna-bootcamp/gen-ma-plugin/blob/main/resources/guides/github/github-account-setup.md)
-- [Personal Access Token 생성 가이드](https://github.com/cna-bootcamp/gen-ma-plugin/blob/main/resources/guides/github/github-token-guide.md)
-- [GitHub Organization 생성 가이드](https://github.com/cna-bootcamp/gen-ma-plugin/blob/main/resources/guides/github/github-organization-guide.md)
+- [GitHub 계정 생성 가이드](https://github.com/unicorn-plugins/gen-ma-plugin/blob/main/resources/guides/github/github-account-setup.md)
+- [Personal Access Token 생성 가이드](https://github.com/unicorn-plugins/gen-ma-plugin/blob/main/resources/guides/github/github-token-guide.md)
+- [GitHub Organization 생성 가이드](https://github.com/unicorn-plugins/gen-ma-plugin/blob/main/resources/guides/github/github-organization-guide.md)
 
 ---
 
