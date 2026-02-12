@@ -160,6 +160,7 @@ Initial setup: Run Claude Code, then
 ### Using on Web
 
 Clone DMAP to your PC and run the web app to use the DMAP Builder in your browser.
+![](images/2026-02-12-18-21-46.png) 
 
 **1. Clone DMAP**
 

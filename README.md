@@ -160,6 +160,7 @@ claude plugin install dmap@unicorn
 ### 웹에서 사용
 
 PC에 DMAP을 클론하고 웹 앱을 실행하면 브라우저에서 DMAP 빌더를 사용할 수 있음.
+![](images/2026-02-12-18-21-30.png)  
 
 **1. DMAP 클론**
 
