@@ -99,6 +99,134 @@ function findLatestVersion(basePath: string): string | null {
   return versionDirs.length > 0 ? versionDirs[versionDirs.length - 1] : null;
 }
 
+// Tier → model mapping for plugin agents
+const TIER_MODEL_MAP: Record<string, string> = {
+  HEAVY: 'opus',
+  HIGH: 'opus',
+  MEDIUM: 'sonnet',
+  LOW: 'haiku',
+};
+
+// Skip these directories in plugin cache scan
+const SKIP_SCOPES = new Set(['omc', 'claude-plugins-official']);
+
+function parseFrontmatterField(content: string, field: string): string | undefined {
+  const match = content.match(/^---[\s\S]*?---/);
+  if (!match) return undefined;
+  const fieldMatch = match[0].match(new RegExp(`^${field}:\\s*(.+)`, 'm'));
+  return fieldMatch ? fieldMatch[1].trim().replace(/^["']|["']$/g, '') : undefined;
+}
+
+function parseYamlTier(content: string): string | undefined {
+  const match = content.match(/^tier:\s*(\w+)/m);
+  return match ? match[1].trim() : undefined;
+}
+
+function parseYamlForbiddenActions(content: string, actionMapping: Record<string, string[]>): string[] {
+  const section = content.match(/forbidden_actions:\s*\n((?:\s+-\s*".+"\n?)+)/);
+  if (!section) return [];
+  const actions = [...section[1].matchAll(/- "(.+?)"/g)].map(m => m[1]);
+  const tools: string[] = [];
+  for (const action of actions) {
+    if (actionMapping[action]) {
+      tools.push(...actionMapping[action]);
+    }
+  }
+  return tools;
+}
+
+function parseActionMapping(runtimeContent: string): Record<string, string[]> {
+  const mapping: Record<string, string[]> = {};
+  const section = runtimeContent.match(/action_mapping:\s*\n([\s\S]*?)(?=\n\w|\n$|$)/);
+  if (!section) return mapping;
+  const lines = section[1].split('\n');
+  for (const line of lines) {
+    const match = line.match(/^\s+(\w+):\s*\[(.+)]/);
+    if (match) {
+      mapping[match[1]] = match[2].split(',').map(t => t.trim().replace(/"/g, ''));
+    }
+  }
+  return mapping;
+}
+
+export function loadPluginAgents(scopeFilter?: string): Record<string, OmcAgentDef> {
+  const agents: Record<string, OmcAgentDef> = {};
+  try {
+    const homedir = os.homedir();
+    const cacheDir = path.join(homedir, '.claude', 'plugins', 'cache');
+    if (!existsSync(cacheDir)) return agents;
+
+    const scopes = readdirSync(cacheDir, { withFileTypes: true })
+      .filter(e => e.isDirectory() && !SKIP_SCOPES.has(e.name))
+      .filter(e => !scopeFilter || e.name === scopeFilter);
+
+    for (const scope of scopes) {
+      const scopePath = path.join(cacheDir, scope.name);
+      const pluginDirs = readdirSync(scopePath, { withFileTypes: true }).filter(e => e.isDirectory());
+
+      for (const pluginDir of pluginDirs) {
+        const pluginPath = path.join(scopePath, pluginDir.name);
+        const latestVersion = findLatestVersion(pluginPath);
+        if (!latestVersion) continue;
+
+        const versionPath = path.join(pluginPath, latestVersion);
+        const agentsDir = path.join(versionPath, 'agents');
+        if (!existsSync(agentsDir)) continue;
+
+        // Load runtime-mapping for action_mapping
+        const runtimePath = path.join(versionPath, 'gateway', 'runtime-mapping.yaml');
+        let actionMapping: Record<string, string[]> = {};
+        if (existsSync(runtimePath)) {
+          actionMapping = parseActionMapping(readFileSync(runtimePath, 'utf-8'));
+        }
+
+        const agentSubDirs = readdirSync(agentsDir, { withFileTypes: true })
+          .filter(e => e.isDirectory());
+
+        for (const agentDir of agentSubDirs) {
+          const agentPath = path.join(agentsDir, agentDir.name);
+          const agentMd = path.join(agentPath, 'AGENT.md');
+          const agentCard = path.join(agentPath, 'agentcard.yaml');
+
+          if (!existsSync(agentMd)) continue;
+
+          // Read description from AGENT.md frontmatter
+          const mdContent = readFileSync(agentMd, 'utf-8');
+          const description = parseFrontmatterField(mdContent, 'description') || agentDir.name;
+
+          // Read tier from agentcard.yaml
+          let model = 'sonnet';
+          let disallowedTools: string[] = [];
+          if (existsSync(agentCard)) {
+            const cardContent = readFileSync(agentCard, 'utf-8');
+            const tier = parseYamlTier(cardContent);
+            if (tier && TIER_MODEL_MAP[tier]) {
+              model = TIER_MODEL_MAP[tier];
+            }
+            disallowedTools = parseYamlForbiddenActions(cardContent, actionMapping);
+          }
+
+          // FQN: {scope}:{agent-name}:{agent-name}
+          const fqn = `${scope.name}:${agentDir.name}:${agentDir.name}`;
+          agents[fqn] = {
+            description,
+            prompt: description,
+            model,
+            ...(disallowedTools.length > 0 ? { disallowedTools } : {}),
+          };
+        }
+      }
+    }
+
+    if (Object.keys(agents).length > 0) {
+      console.log(`Loaded ${Object.keys(agents).length} plugin agents: ${Object.keys(agents).join(', ')}`);
+    }
+  } catch (error) {
+    console.error('Failed to load plugin agents:', error);
+  }
+  return agents;
+}
+
 export async function loadOmcAgents(): Promise<Record<
   string,
   OmcAgentDef

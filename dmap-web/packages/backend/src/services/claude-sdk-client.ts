@@ -1,7 +1,8 @@
 import { readFile, mkdir, appendFile } from 'fs/promises';
 import path from 'path';
 import type { SSEEvent, QuestionItem } from '@dmap-web/shared';
-import { loadOmcAgents, getSkillPatterns } from './omc-integration.js';
+import { loadOmcAgents, getSkillPatterns, type OmcAgentDef } from './omc-integration.js';
+import { loadRegisteredAgents } from './agent-registry.js';
 
 let logFilePath: string | null = null;
 
@@ -280,6 +281,7 @@ export async function executeSkill(
   waitForUserResponse: () => Promise<string>,
   webSessionId: string,
   resumeSessionId?: string,
+  pluginId?: string,
   filePaths?: string[],
 ): Promise<ExecuteSkillResult> {
   // Always read SKILL.md (needed for appendSystemPrompt on every call, including resume)
@@ -307,6 +309,26 @@ export async function executeSkill(
     console.log(`[SDK] Loaded ${Object.keys(omcAgents).length} OMC agents`);
   }
 
+  // Load registered plugin agents for the active plugin (from dmap-web/agents/{pluginId}/)
+  const pluginAgents = pluginId ? loadRegisteredAgents(pluginId) : {};
+  const pluginAgentCount = Object.keys(pluginAgents).length;
+  if (pluginAgentCount > 0) {
+    console.log(`[SDK] Loaded ${pluginAgentCount} registered agents for plugin "${pluginId}"`);
+  }
+
+  // Merge all agents: OMC (permanent) + active plugin agents
+  const allAgents = { ...(omcAgents || {}), ...pluginAgents };
+  const allAgentCount = Object.keys(allAgents).length;
+
+  // Build plugin agent description for system prompt
+  let pluginAgentGuide = '';
+  if (pluginAgentCount > 0) {
+    const pluginList = (Object.entries(pluginAgents) as [string, OmcAgentDef][])
+      .map(([fqn, def]) => `  - "${fqn}" (${def.model || 'sonnet'}): ${def.description}`)
+      .join('\n');
+    pluginAgentGuide = `\nPLUGIN AGENTS: The following plugin-specific agents are also available via the Task tool:\n${pluginList}\nUse the full FQN as subagent_type (e.g., Task(subagent_type="${Object.keys(pluginAgents)[0] || 'scope:agent:agent'}", model="sonnet", prompt="...")).`;
+  }
+
   const options: Record<string, unknown> = {
     model: 'claude-sonnet-4-5-20250929',
     permissionMode: 'bypassPermissions',
@@ -314,14 +336,14 @@ export async function executeSkill(
     maxTurns: 15,
     // Prevent the model from delegating to agents/skills instead of working directly
     disallowedTools: ['EnterPlanMode', 'ExitPlanMode', 'TodoWrite'],
-    ...(omcAgents ? { agents: omcAgents } : {}),
+    ...(allAgentCount > 0 ? { agents: allAgents } : {}),
     // Place SKILL.md in system prompt so it's treated as instructions, not user input
     ...(skillContent ? {
       appendSystemPrompt: `${lang && lang !== 'ko' ? `### LANGUAGE OVERRIDE (HIGHEST PRIORITY) ###
 You MUST respond ONLY in English. Every single message, explanation, question, and status update you produce MUST be written in English.
 The skill instructions below are written in Korean — read and understand them, but ALL your output MUST be in English. Do NOT output any Korean text.
 ### END LANGUAGE OVERRIDE ###\n\n` : ''}IMPORTANT: You are a skill executor. Execute the skill instructions below using available tools (Read, Write, Edit, Bash, Glob, Grep, WebFetch, WebSearch, Task, etc.). Do NOT invoke other skills. Do NOT enter plan mode. Do NOT use TodoWrite.
-AGENT DELEGATION: You MAY use the Task tool for parallel or complex work. Available OMC agents are injected with "omc-" prefix. Use agent names like "omc-architect", "omc-executor", "omc-explore", "omc-planner", "omc-build-fixer", etc. You can also use built-in agents: "general-purpose", "Explore", "Plan", "Bash". Set the model parameter to "haiku", "sonnet", or "opus" for tier routing.
+AGENT DELEGATION: You MAY use the Task tool for parallel or complex work. Available OMC agents are injected with "omc-" prefix. Use agent names like "omc-architect", "omc-executor", "omc-explore", "omc-planner", "omc-build-fixer", etc. You can also use built-in agents: "general-purpose", "Explore", "Plan", "Bash". Set the model parameter to "haiku", "sonnet", or "opus" for tier routing.${pluginAgentGuide}
 ${ASK_USER_INSTRUCTION}
 
 === SKILL INSTRUCTIONS ===
@@ -340,7 +362,7 @@ ${skillContent}${omcAgents ? `\n\n=== AGENT ORCHESTRATION PATTERNS ===\n${getSki
 
   try {
     await initLog(dmapProjectDir, skillName);
-    await log('options', { model: options.model, maxTurns: options.maxTurns, resumeSessionId, disallowedTools: options.disallowedTools, hasAppendSystemPrompt: !!options.appendSystemPrompt, omcAgentCount: omcAgents ? Object.keys(omcAgents).length : 0, payloadBytes: agentsSize + promptSize });
+    await log('options', { model: options.model, maxTurns: options.maxTurns, resumeSessionId, disallowedTools: options.disallowedTools, hasAppendSystemPrompt: !!options.appendSystemPrompt, omcAgentCount: omcAgents ? Object.keys(omcAgents).length : 0, pluginAgentCount, totalAgentCount: allAgentCount, payloadBytes: agentsSize + promptSize });
 
     const isEnglish = lang && lang !== 'ko';
 

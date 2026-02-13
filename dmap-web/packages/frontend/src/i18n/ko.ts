@@ -159,6 +159,14 @@ const ko: Translations = {
   'activity.usage.input': '입력',
   'activity.usage.output': '출력',
   'activity.usage.cacheRead': '캐시',
+
+  // Agent Sync
+  'agentSync.label': '에이전트 갱신',
+  'agentSync.tooltip': 'DMAP에 플러그인 에이전트를 갱신합니다.\n에이전트 내용 갱신 시 반드시 수행해 주세요.',
+  'agentSync.syncing': '갱신 중...',
+  'agentSync.success': '에이전트 {{count}}개 갱신 완료',
+  'agentSync.fail': '에이전트 갱신 실패',
+  'agentSync.noAgents': '갱신할 에이전트가 없습니다',
 };
 
 export default ko;

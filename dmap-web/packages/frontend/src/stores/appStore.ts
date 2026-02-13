@@ -43,6 +43,7 @@ interface AppState {
   selectPlugin: (plugin: PluginInfo) => void;
   addPlugin: (projectDir: string, displayNames: { ko: string; en: string }) => Promise<PluginInfo>;
   removePlugin: (pluginId: string) => Promise<void>;
+  syncAgents: (pluginId: string) => Promise<{ count: number; agents: string[] }>;
   fetchSkills: () => Promise<void>;
   selectSkill: (skill: SkillMeta) => void;
   setSessionId: (id: string) => void;
@@ -110,6 +111,17 @@ export const useAppStore = create<AppState>((set) => ({
     }
     // Refresh plugin list
     await useAppStore.getState().fetchPlugins();
+  },
+
+  syncAgents: async (pluginId: string) => {
+    const res = await fetch(`${API_BASE}/plugins/${pluginId}/agents/sync`, {
+      method: 'POST',
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error);
+    }
+    return res.json();
   },
 
   fetchSkills: async () => {

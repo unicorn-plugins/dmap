@@ -99,6 +99,10 @@ export function AddPluginDialog({ onClose, onAdded }: AddPluginDialogProps) {
       const displayNames = { ko: pluginName.trim(), en: pluginName.trim() };
       const newPlugin = await addPlugin(dirPath.trim(), displayNames);
       localStorage.setItem(LAST_DIR_KEY, dirPath.trim());
+      // Auto-sync plugin agents after adding
+      try {
+        await useAppStore.getState().syncAgents(newPlugin.id);
+      } catch { /* ignore sync errors on add */ }
       selectPlugin(newPlugin);
       setTimeout(() => fetchSkills(), 0);
       onAdded();

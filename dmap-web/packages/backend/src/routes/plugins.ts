@@ -1,5 +1,6 @@
 import { Router } from 'express';
-import { getAllPlugins, addPlugin, removePlugin, validatePluginDir } from '../services/plugin-manager.js';
+import { getAllPlugins, addPlugin, removePlugin, validatePluginDir, resolveProjectDir } from '../services/plugin-manager.js';
+import { syncPluginAgents, removeRegisteredAgents } from '../services/agent-registry.js';
 
 export const pluginsRouter = Router();
 
@@ -27,6 +28,8 @@ pluginsRouter.post('/', async (req, res) => {
 
   try {
     const plugin = await addPlugin(projectDir, displayNames);
+    // Auto-sync plugin agents
+    try { syncPluginAgents(plugin.id, plugin.projectDir); } catch { /* ignore sync errors */ }
     res.status(201).json(plugin);
   } catch (error: any) {
     const status = error.message === 'already_registered' ? 409 : 400;
@@ -47,10 +50,23 @@ pluginsRouter.post('/validate', async (req, res) => {
   res.json(result);
 });
 
+// POST /api/plugins/:id/agents/sync - Sync plugin agents from local project
+pluginsRouter.post('/:id/agents/sync', async (req, res) => {
+  try {
+    const projectDir = await resolveProjectDir(req.params.id);
+    const result = syncPluginAgents(req.params.id, projectDir);
+    res.json({ success: true, count: result.count, agents: result.agents });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // DELETE /api/plugins/:id - Remove a plugin
 pluginsRouter.delete('/:id', async (req, res) => {
   try {
     await removePlugin(req.params.id);
+    // Auto-remove registered agents
+    try { removeRegisteredAgents(req.params.id); } catch { /* ignore */ }
     res.json({ success: true });
   } catch (error: any) {
     const status = error.message === 'cannot_remove_default' ? 403 : 404;

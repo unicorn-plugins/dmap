@@ -141,6 +141,7 @@ skillsRouter.post('/:name/execute', async (req: Request, res: Response) => {
       () => sessionManager.waitForUserResponse(session.id),
       session.id,
       session.sdkSessionId,
+      pluginId,
       filePaths,
     );
 

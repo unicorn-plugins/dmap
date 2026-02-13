@@ -155,4 +155,12 @@ export interface Translations {
   'activity.usage.input': string;
   'activity.usage.output': string;
   'activity.usage.cacheRead': string;
+
+  // Agent Sync
+  'agentSync.label': string;
+  'agentSync.tooltip': string;
+  'agentSync.syncing': string;
+  'agentSync.success': string;
+  'agentSync.fail': string;
+  'agentSync.noAgents': string;
 }

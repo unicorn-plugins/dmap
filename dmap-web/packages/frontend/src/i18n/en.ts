@@ -159,6 +159,14 @@ const en: Translations = {
   'activity.usage.input': 'Input',
   'activity.usage.output': 'Output',
   'activity.usage.cacheRead': 'Cache',
+
+  // Agent Sync
+  'agentSync.label': 'Sync Agents',
+  'agentSync.tooltip': 'Refresh plugin agents in DMAP.\nRequired when agent definitions are updated.',
+  'agentSync.syncing': 'Syncing...',
+  'agentSync.success': '{{count}} agents synced',
+  'agentSync.fail': 'Agent sync failed',
+  'agentSync.noAgents': 'No agents to sync',
 };
 
 export default en;
