@@ -30,6 +30,7 @@ export interface StreamCallbacks {
 interface RunQueryResult {
   hasContent: boolean;
   sdkSessionId?: string;
+  numTurns?: number;
   pendingQuestions?: {
     title: string;
     questions: QuestionItem[];
@@ -165,6 +166,7 @@ async function runQuery(
 
   let hasContent = false;
   let sdkSessionId: string | undefined;
+  let numTurns = 0;
   let pendingQuestions: RunQueryResult['pendingQuestions'] = undefined;
 
   for await (const message of query({
@@ -294,6 +296,7 @@ async function runQuery(
       // Emit usage data
       if (resultMsg.total_cost_usd !== undefined || resultMsg.usage) {
         const usageData = (resultMsg.usage || {}) as Record<string, number>;
+        numTurns = (resultMsg.num_turns as number) || 0;
         callbacks.onEvent({
           type: 'usage',
           inputTokens: usageData.input_tokens || 0,
@@ -302,7 +305,7 @@ async function runQuery(
           cacheCreationTokens: usageData.cache_creation_input_tokens || 0,
           totalCostUsd: (resultMsg.total_cost_usd as number) || 0,
           durationMs: (resultMsg.duration_ms as number) || 0,
-          numTurns: (resultMsg.num_turns as number) || 0,
+          numTurns,
         });
       }
       if (resultMsg.session_id) {
@@ -312,7 +315,7 @@ async function runQuery(
     }
   }
 
-  return { hasContent, sdkSessionId, pendingQuestions };
+  return { hasContent, sdkSessionId, numTurns, pendingQuestions };
 }
 
 export interface ExecuteSkillResult {
@@ -380,7 +383,7 @@ export async function executeSkill(
     model: 'claude-sonnet-4-5-20250929',
     permissionMode: 'bypassPermissions',
     cwd: dmapProjectDir,
-    maxTurns: 15,
+    maxTurns: 50,
     // Prevent the model from delegating to agents/skills instead of working directly
     disallowedTools: ['EnterPlanMode', 'ExitPlanMode', 'TodoWrite'],
     ...(allAgentCount > 0 ? { agents: allAgents } : {}),
@@ -471,6 +474,10 @@ ${skillContent}${omcAgents ? `\n\n=== AGENT ORCHESTRATION PATTERNS ===\n${getSki
       : callbacks;
 
     // Loop to handle AskUserQuestion interactions
+    const MAX_AUTO_CONTINUES = 5;
+    let autoContinueCount = 0;
+    const maxTurns = (options.maxTurns as number) || 50;
+
     while (true) {
       const opts: Record<string, unknown> = { ...options };
       if (sdkSessionId) opts.resume = sdkSessionId;
@@ -492,10 +499,22 @@ ${skillContent}${omcAgents ? `\n\n=== AGENT ORCHESTRATION PATTERNS ===\n${getSki
         });
       }
 
+      const hasPendingQuestions = result.pendingQuestions && result.pendingQuestions.questions.length > 0;
+      const turnsExhausted = result.numTurns !== undefined && result.numTurns >= maxTurns;
+
+      // Auto-continue if turns exhausted and no pending questions
+      if (!hasPendingQuestions && turnsExhausted && autoContinueCount < MAX_AUTO_CONTINUES) {
+        autoContinueCount++;
+        console.log(`[SDK] Turns exhausted (${result.numTurns}/${maxTurns}), auto-continuing (${autoContinueCount}/${MAX_AUTO_CONTINUES})`);
+        currentPrompt = isEnglish
+          ? 'Continue executing the skill from where you left off. Do not repeat completed work. Respond in English.'
+          : '이전 작업을 이어서 계속 진행하세요. 중단된 지점부터 재개합니다.';
+        continue;
+      }
 
       // No askUserQuestion and no pendingQuestions → skill fully complete
-      const fullyComplete = !result.pendingQuestions || result.pendingQuestions.questions.length === 0;
-      console.log(`[SDK] Skill execution completed (fullyComplete=${fullyComplete})`);
+      const fullyComplete = !hasPendingQuestions;
+      console.log(`[SDK] Skill execution completed (fullyComplete=${fullyComplete}, numTurns=${result.numTurns}, autoContinues=${autoContinueCount})`);
 
       // Mark all progress steps as complete when skill finishes
       if (parsedSkillSteps && fullyComplete) {
@@ -555,7 +574,7 @@ export async function executePrompt(
     model: 'claude-sonnet-4-5-20250929',
     permissionMode: 'bypassPermissions',
     cwd: dmapProjectDir,
-    maxTurns: 15,
+    maxTurns: 50,
     disallowedTools: ['EnterPlanMode', 'ExitPlanMode', 'TodoWrite'],
     ...(allAgentCount > 0 ? { agents: allAgents } : {}),
     appendSystemPrompt: `${isEnglish ? `You MUST respond ONLY in English.\n\n` : ''}You are a helpful assistant working in the project directory. Execute the user's request using available tools (Read, Write, Edit, Bash, Glob, Grep, WebFetch, WebSearch, Task, etc.). Do NOT invoke other skills. Do NOT enter plan mode. Do NOT use TodoWrite.
