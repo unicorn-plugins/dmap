@@ -27,8 +27,8 @@ export const DMAP_SKILLS: SkillMeta[] = [
   },
   {
     name: 'setup',
-    displayName: '빌더 설정',
-    description: 'DMAP 빌더 초기 설정 및 상태 확인',
+    displayName: '플러그인 초기설정',
+    description: 'DMAP 플러그인 초기 설정 및 상태 확인',
     icon: '⚙️',
     category: 'setup',
     hasApprovalGates: false,
@@ -66,6 +66,15 @@ export const DMAP_SKILLS: SkillMeta[] = [
     hasApprovalGates: true,
   },
 ];
+
+export const PROMPT_SKILL: SkillMeta = {
+  name: '__prompt__',
+  displayName: '프롬프트',
+  description: '자유 프롬프트 실행',
+  icon: '⚡',
+  category: 'core',
+  hasApprovalGates: true,
+};
 
 export const SKILL_CATEGORIES = {
   core: { label: '핵심', color: 'blue' },

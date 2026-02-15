@@ -163,4 +163,31 @@ export interface Translations {
   'agentSync.success': string;
   'agentSync.fail': string;
   'agentSync.noAgents': string;
+
+  // Prompt
+  'prompt.title': string;
+  'prompt.description': string;
+  'prompt.placeholder': string;
+  'prompt.tooltip': string;
+  'prompt.run': string;
+  'prompt.emptyWarn': string;
+
+  // Session History
+  'session.history': string;
+  'session.empty': string;
+  'session.resume': string;
+  'session.resumed': string;
+  'session.delete': string;
+  'session.deleteConfirm': string;
+  'session.status.completed': string;
+  'session.status.waiting': string;
+  'session.status.error': string;
+  'session.status.active': string;
+  'session.tokens': string;
+  'session.cost': string;
+  'session.duration': string;
+  'session.timeAgo.now': string;
+  'session.timeAgo.minutes': string;
+  'session.timeAgo.hours': string;
+  'session.timeAgo.days': string;
 }

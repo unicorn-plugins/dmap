@@ -10,6 +10,7 @@ import { QuestionFormDialog } from './QuestionFormDialog.js';
 import { ToolIndicator } from './ToolIndicator.js';
 import { TurnApprovalBar } from './TurnApprovalBar.js';
 import { FileBrowserDialog } from './FileBrowserDialog.js';
+import { SessionList } from './SessionList.js';
 
 const LINE_HEIGHT = 22;
 const MIN_ROWS = 2;
@@ -193,6 +194,7 @@ export function ChatPanel() {
 
   const handleExecute = () => {
     if (!selectedSkill || isStreaming) return;
+    if (selectedSkill.name === '__prompt__' && !inputValue.trim()) return;
     if (inputValue.trim()) {
       useAppStore.getState().addMessage({ role: 'user', content: inputValue.trim() });
     }
@@ -278,9 +280,15 @@ export function ChatPanel() {
         <div className="flex items-center justify-between mb-3">
           <div>
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-              {selectedSkill.icon} {t(`skill.${selectedSkill.name}.name` as keyof Translations) || selectedSkill.displayName}
+              {selectedSkill.name === '__prompt__'
+                ? `${selectedSkill.icon} ${t('prompt.title')}`
+                : `${selectedSkill.icon} ${t(`skill.${selectedSkill.name}.name` as keyof Translations) || selectedSkill.displayName}`}
             </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">{t(`skill.${selectedSkill.name}.desc` as keyof Translations) || selectedSkill.description}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {selectedSkill.name === '__prompt__'
+                ? t('prompt.description')
+                : t(`skill.${selectedSkill.name}.desc` as keyof Translations) || selectedSkill.description}
+            </p>
           </div>
           <div className="flex gap-2">
             {messages.length > 0 && !isStreaming && (
@@ -312,7 +320,7 @@ export function ChatPanel() {
               }}
               onKeyDown={handleKeyDown}
               onPaste={handlePaste}
-              placeholder={t('chat.inputPlaceholder')}
+              placeholder={selectedSkill.name === '__prompt__' ? t('prompt.placeholder') : t('chat.inputPlaceholder')}
               rows={MIN_ROWS}
               style={{ lineHeight: `${LINE_HEIGHT}px`, maxHeight: LINE_HEIGHT * MAX_ROWS + 16 }}
               className="w-full px-4 py-3 text-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-y-auto"
@@ -320,10 +328,10 @@ export function ChatPanel() {
             <div className="flex items-center gap-2 mt-2">
               <button
                 onClick={handleExecute}
-                disabled={isStreaming}
+                disabled={isStreaming || (selectedSkill.name === '__prompt__' && !inputValue.trim())}
                 className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-200 disabled:text-gray-500 dark:disabled:bg-gray-700 dark:disabled:text-gray-400 disabled:cursor-not-allowed"
               >
-                {t('chat.run')}
+                {selectedSkill.name === '__prompt__' ? t('prompt.run') : t('chat.run')}
               </button>
               <button
                 onClick={() => setShowFileBrowser(true)}
@@ -356,9 +364,7 @@ export function ChatPanel() {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 chat-scroll">
         {messages.length === 0 && !isStreaming && (
-          <div className="text-center text-gray-400 dark:text-gray-500 py-12">
-            <p>{t('chat.startPrompt')}</p>
-          </div>
+          <SessionList skillName={selectedSkill.name} />
         )}
 
         {messages.map((msg, idx) => {

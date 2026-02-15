@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { DMAP_SKILLS } from '@dmap-web/shared';
 import type { SkillExecuteRequest, SkillMeta } from '@dmap-web/shared';
 import { sessionManager } from '../services/session-manager.js';
-import { executeSkill } from '../services/claude-sdk-client.js';
+import { executeSkill, executePrompt } from '../services/claude-sdk-client.js';
 import { initSSE, sendSSE, endSSE } from '../middleware/sse-handler.js';
 import { DMAP_PROJECT_DIR } from '../config.js';
 import { resolveProjectDir } from '../services/plugin-manager.js';
@@ -39,7 +39,7 @@ function discoverSkills(projectDir: string = DMAP_PROJECT_DIR): SkillMeta[] {
     'add-ext-skill': { category: 'utility', icon: '➕', displayName: '플러그인 추가', order: 0 },
     'remove-ext-skill': { category: 'utility', icon: '➖', displayName: '플러그인 제거', order: 1 },
     'help': { category: 'utility', icon: '❓', displayName: '도움말', order: 2 },
-    'setup': { category: 'setup', icon: '⚙️', displayName: '빌더 설정', order: 0 },
+    'setup': { category: 'setup', icon: '⚙️', displayName: '플러그인 초기설정', order: 0 },
   };
   // Category display order
   const CATEGORY_ORDER: Record<string, number> = { core: 0, utility: 1, setup: 2, external: 3 };
@@ -98,6 +98,73 @@ skillsRouter.post('/:name/execute', async (req: Request, res: Response) => {
   // Resolve project directory
   const dmapProjectDir = await resolveProjectDir(pluginId);
 
+  // Handle free-form prompt mode (no SKILL.md needed)
+  if (skillName === '__prompt__') {
+    if (!input?.trim()) {
+      res.status(400).json({ error: 'Prompt input is required' });
+      return;
+    }
+
+    const session = existingSessionId
+      ? sessionManager.get(existingSessionId)
+      : sessionManager.create(skillName);
+
+    if (!session) {
+      res.status(404).json({ error: 'Session not found' });
+      return;
+    }
+
+    sessionManager.updateMeta(session.id, {
+      preview: input?.slice(0, 100),
+      pluginId: pluginId || 'dmap',
+      skillIcon: '\u26A1',
+    });
+
+    initSSE(res);
+    req.on('close', () => {
+      console.log(`[SSE] Client disconnected from prompt session ${session.id}`);
+    });
+
+    try {
+      let lastUsage: any = null;
+      const result = await executePrompt(
+        input,
+        dmapProjectDir,
+        lang,
+        {
+          onEvent: (event) => {
+            sendSSE(res, event);
+            if (event.type === 'usage') lastUsage = event;
+          },
+          onSessionId: (sdkSessionId) => sessionManager.updateSdkSessionId(session.id, sdkSessionId),
+        },
+        session.sdkSessionId,
+        pluginId,
+        filePaths,
+      );
+
+      if (lastUsage) {
+        sessionManager.updateMeta(session.id, {
+          usage: {
+            inputTokens: lastUsage.inputTokens,
+            outputTokens: lastUsage.outputTokens,
+            totalCostUsd: lastUsage.totalCostUsd,
+            durationMs: lastUsage.durationMs,
+          },
+        });
+      }
+
+      sendSSE(res, { type: 'complete', sessionId: session.id, fullyComplete: result.fullyComplete });
+      sessionManager.setStatus(session.id, result.fullyComplete ? 'completed' : 'waiting');
+    } catch (error: any) {
+      sendSSE(res, { type: 'error', message: error.message || 'Prompt execution failed' });
+      sessionManager.setStatus(session.id, 'error');
+    } finally {
+      endSSE(res);
+    }
+    return;
+  }
+
   // Validate skill exists on filesystem
   const skills = discoverSkills(dmapProjectDir);
   const skill = skills.find((s) => s.name === skillName);
@@ -116,6 +183,12 @@ skillsRouter.post('/:name/execute', async (req: Request, res: Response) => {
     return;
   }
 
+  sessionManager.updateMeta(session.id, {
+    preview: input?.slice(0, 100),
+    pluginId: pluginId || 'dmap',
+    skillIcon: skill.icon,
+  });
+
   // Setup SSE
   initSSE(res);
 
@@ -125,6 +198,7 @@ skillsRouter.post('/:name/execute', async (req: Request, res: Response) => {
   });
 
   try {
+    let lastUsage: any = null;
     const result = await executeSkill(
       skillName,
       input,
@@ -133,6 +207,7 @@ skillsRouter.post('/:name/execute', async (req: Request, res: Response) => {
       {
         onEvent: (event) => {
           sendSSE(res, event);
+          if (event.type === 'usage') lastUsage = event;
         },
         onSessionId: (sdkSessionId) => {
           sessionManager.updateSdkSessionId(session.id, sdkSessionId);
@@ -142,6 +217,17 @@ skillsRouter.post('/:name/execute', async (req: Request, res: Response) => {
       pluginId,
       filePaths,
     );
+
+    if (lastUsage) {
+      sessionManager.updateMeta(session.id, {
+        usage: {
+          inputTokens: lastUsage.inputTokens,
+          outputTokens: lastUsage.outputTokens,
+          totalCostUsd: lastUsage.totalCostUsd,
+          durationMs: lastUsage.durationMs,
+        },
+      });
+    }
 
     sendSSE(res, { type: 'complete', sessionId: session.id, fullyComplete: result.fullyComplete });
     sessionManager.setStatus(session.id, result.fullyComplete ? 'completed' : 'waiting');

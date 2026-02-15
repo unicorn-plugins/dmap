@@ -85,8 +85,8 @@ const ko: Translations = {
   'skill.team-planner.desc': 'AI 기반 팀 기획서 자동 완성',
   'skill.publish.name': 'GitHub 배포',
   'skill.publish.desc': '개발 완료된 플러그인을 GitHub에 배포',
-  'skill.setup.name': '빌더 설정',
-  'skill.setup.desc': 'DMAP 빌더 초기 설정 및 상태 확인',
+  'skill.setup.name': '플러그인 초기설정',
+  'skill.setup.desc': 'DMAP 플러그인 초기 설정 및 상태 확인',
   'skill.help.name': '도움말',
   'skill.help.desc': '사용 가능한 명령어 및 사용법 안내',
   'skill.add-ext-skill.name': '플러그인 추가',
@@ -167,6 +167,33 @@ const ko: Translations = {
   'agentSync.success': '에이전트 {{count}}개 갱신 완료',
   'agentSync.fail': '에이전트 갱신 실패',
   'agentSync.noAgents': '갱신할 에이전트가 없습니다',
+
+  // Prompt
+  'prompt.title': '프롬프트',
+  'prompt.description': '자유 프롬프트 실행',
+  'prompt.placeholder': '실행할 프롬프트를 입력하세요...',
+  'prompt.tooltip': '프롬프트 실행',
+  'prompt.run': '실행 (Ctrl+Enter)',
+  'prompt.emptyWarn': '프롬프트를 입력해주세요',
+
+  // Session History
+  'session.history': '이전 대화',
+  'session.empty': '이전 대화가 없습니다',
+  'session.resume': '이어하기',
+  'session.resumed': '이전 대화를 이어갑니다',
+  'session.delete': '삭제',
+  'session.deleteConfirm': '이 대화를 삭제하시겠습니까?',
+  'session.status.completed': '완료',
+  'session.status.waiting': '대기',
+  'session.status.error': '오류',
+  'session.status.active': '실행 중',
+  'session.tokens': '{{count}} 토큰',
+  'session.cost': '${{cost}}',
+  'session.duration': '{{time}}',
+  'session.timeAgo.now': '방금',
+  'session.timeAgo.minutes': '{{n}}분 전',
+  'session.timeAgo.hours': '{{n}}시간 전',
+  'session.timeAgo.days': '{{n}}일 전',
 };
 
 export default ko;

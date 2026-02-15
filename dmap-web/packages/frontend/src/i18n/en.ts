@@ -85,8 +85,8 @@ const en: Translations = {
   'skill.team-planner.desc': 'AI-powered team plan auto-completion',
   'skill.publish.name': 'GitHub Deploy',
   'skill.publish.desc': 'Deploy completed plugin to GitHub',
-  'skill.setup.name': 'Builder Setup',
-  'skill.setup.desc': 'DMAP builder initial setup and status check',
+  'skill.setup.name': 'Plugin Setup',
+  'skill.setup.desc': 'DMAP plugin initial setup and status check',
   'skill.help.name': 'Help',
   'skill.help.desc': 'Available commands and usage guide',
   'skill.add-ext-skill.name': 'Add Plugin',
@@ -167,6 +167,33 @@ const en: Translations = {
   'agentSync.success': '{{count}} agents synced',
   'agentSync.fail': 'Agent sync failed',
   'agentSync.noAgents': 'No agents to sync',
+
+  // Prompt
+  'prompt.title': 'Prompt',
+  'prompt.description': 'Execute free-form prompt',
+  'prompt.placeholder': 'Enter a prompt to execute...',
+  'prompt.tooltip': 'Run Prompt',
+  'prompt.run': 'Run (Ctrl+Enter)',
+  'prompt.emptyWarn': 'Please enter a prompt',
+
+  // Session History
+  'session.history': 'Recent Conversations',
+  'session.empty': 'No previous conversations',
+  'session.resume': 'Resume',
+  'session.resumed': 'Resuming previous conversation',
+  'session.delete': 'Delete',
+  'session.deleteConfirm': 'Delete this conversation?',
+  'session.status.completed': 'Done',
+  'session.status.waiting': 'Waiting',
+  'session.status.error': 'Error',
+  'session.status.active': 'Running',
+  'session.tokens': '{{count}} tokens',
+  'session.cost': '${{cost}}',
+  'session.duration': '{{time}}',
+  'session.timeAgo.now': 'Just now',
+  'session.timeAgo.minutes': '{{n}}m ago',
+  'session.timeAgo.hours': '{{n}}h ago',
+  'session.timeAgo.days': '{{n}}d ago',
 };
 
 export default en;

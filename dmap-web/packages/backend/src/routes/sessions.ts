@@ -5,8 +5,12 @@ import type { SessionRespondRequest } from '@dmap-web/shared';
 export const sessionsRouter = Router();
 
 // GET /api/sessions - List all sessions
-sessionsRouter.get('/', (_req, res) => {
-  const sessions = sessionManager.listAll();
+sessionsRouter.get('/', (req, res) => {
+  const pluginId = req.query.pluginId as string | undefined;
+  let sessions = sessionManager.listAll();
+  if (pluginId) {
+    sessions = sessions.filter(s => s.pluginId === pluginId || !s.pluginId);
+  }
   res.json({ sessions });
 });
 
@@ -39,5 +43,15 @@ sessionsRouter.post('/:id/respond', (req, res) => {
     return;
   }
 
+  res.json({ success: true });
+});
+
+// DELETE /api/sessions/:id - Delete a session
+sessionsRouter.delete('/:id', (req, res) => {
+  const deleted = sessionManager.delete(req.params.id);
+  if (!deleted) {
+    res.status(404).json({ error: 'Session not found' });
+    return;
+  }
   res.json({ success: true });
 });

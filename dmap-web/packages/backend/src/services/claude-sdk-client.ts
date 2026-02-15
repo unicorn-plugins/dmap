@@ -484,3 +484,99 @@ ${skillContent}${omcAgents ? `\n\n=== AGENT ORCHESTRATION PATTERNS ===\n${getSki
     return { fullyComplete: true };
   }
 }
+
+export async function executePrompt(
+  input: string,
+  dmapProjectDir: string,
+  lang: string | undefined,
+  callbacks: StreamCallbacks,
+  resumeSessionId?: string,
+  pluginId?: string,
+  filePaths?: string[],
+): Promise<ExecuteSkillResult> {
+  // Load OMC agents if available
+  const omcAgents = await loadOmcAgents();
+  if (omcAgents) {
+    console.log(`[SDK] Loaded ${Object.keys(omcAgents).length} OMC agents for prompt mode`);
+  }
+
+  // Load registered plugin agents
+  const pluginAgents = pluginId ? loadRegisteredAgents(pluginId) : {};
+  const pluginAgentCount = Object.keys(pluginAgents).length;
+
+  const allAgents = { ...(omcAgents || {}), ...pluginAgents };
+  const allAgentCount = Object.keys(allAgents).length;
+
+  let pluginAgentGuide = '';
+  if (pluginAgentCount > 0) {
+    const pluginList = (Object.entries(pluginAgents) as [string, OmcAgentDef][])
+      .map(([fqn, def]) => `  - "${fqn}" (${def.model || 'sonnet'}): ${def.description}`)
+      .join('\n');
+    pluginAgentGuide = `\nPLUGIN AGENTS:\n${pluginList}\nUse the full FQN as subagent_type.`;
+  }
+
+  const isEnglish = lang && lang !== 'ko';
+
+  const options: Record<string, unknown> = {
+    model: 'claude-sonnet-4-5-20250929',
+    permissionMode: 'bypassPermissions',
+    cwd: dmapProjectDir,
+    maxTurns: 15,
+    disallowedTools: ['EnterPlanMode', 'ExitPlanMode', 'TodoWrite'],
+    ...(allAgentCount > 0 ? { agents: allAgents } : {}),
+    appendSystemPrompt: `${isEnglish ? `You MUST respond ONLY in English.\n\n` : ''}You are a helpful assistant working in the project directory. Execute the user's request using available tools (Read, Write, Edit, Bash, Glob, Grep, WebFetch, WebSearch, Task, etc.). Do NOT invoke other skills. Do NOT enter plan mode. Do NOT use TodoWrite.
+AGENT DELEGATION: You MAY use the Task tool for parallel or complex work. Available OMC agents are injected with "omc-" prefix.${pluginAgentGuide}
+${ASK_USER_INSTRUCTION}`,
+  };
+
+  if (resumeSessionId) {
+    options.resume = resumeSessionId;
+  }
+
+  try {
+    await initLog(dmapProjectDir, '__prompt__');
+
+    let fileAttachment = '';
+    if (filePaths && filePaths.length > 0) {
+      const fileList = filePaths.map((f) => `- ${f}`).join('\n');
+      fileAttachment = isEnglish
+        ? `\n\nAttached files:\n${fileList}\n\nRead the above files using the Read tool and refer to their contents.`
+        : `\n\n첨부 파일:\n${fileList}\n\n위 파일들을 Read 도구로 읽어서 참고하세요.`;
+    }
+
+    let currentPrompt: string;
+    if (resumeSessionId && input) {
+      currentPrompt = isEnglish ? `${input}\n\nRespond in English.` : input;
+    } else if (resumeSessionId) {
+      currentPrompt = isEnglish
+        ? 'Continue from where you left off. Respond in English.'
+        : '중단된 지점부터 이어서 계속하세요.';
+    } else {
+      currentPrompt = isEnglish ? `${input}\n\nRespond in English.` : input;
+    }
+    currentPrompt += fileAttachment;
+
+    console.log(`[SDK] Prompt mode: ${currentPrompt.slice(0, 100)}...`);
+
+    const result = await runQuery(currentPrompt, options, callbacks);
+
+    if (result.sdkSessionId) {
+      callbacks.onSessionId?.(result.sdkSessionId);
+    }
+
+    if (result.pendingQuestions && result.pendingQuestions.questions.length > 0) {
+      callbacks.onEvent({
+        type: 'questions',
+        title: result.pendingQuestions.title,
+        questions: result.pendingQuestions.questions,
+      });
+    }
+
+    const fullyComplete = !result.pendingQuestions || result.pendingQuestions.questions.length === 0;
+    return { fullyComplete };
+  } catch (error: any) {
+    console.error(`[SDK] Prompt error:`, error);
+    callbacks.onEvent({ type: 'error', message: error.message || 'Prompt execution failed' });
+    return { fullyComplete: true };
+  }
+}

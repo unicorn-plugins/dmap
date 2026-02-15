@@ -86,13 +86,22 @@ function checkClaudeCli(cliAvailable: boolean): CheckResult {
 
 async function checkClaudeAuth(): Promise<CheckResult> {
   const settingsFile = path.join(CLAUDE_DIR, 'settings.json');
-  const statsigDir = path.join(CLAUDE_DIR, 'statsig');
-
   const hasSettings = fs.existsSync(settingsFile);
-  const hasStatsig = fs.existsSync(statsigDir) &&
-    fs.readdirSync(statsigDir).some((f: string) => f.includes('session_id'));
 
-  if (hasSettings && hasStatsig) {
+  if (!hasSettings) {
+    return {
+      id: 'claude_auth', label: 'Claude Authentication', status: 'fail',
+      detail: 'Run "claude" in terminal to authenticate',
+      fixable: false,
+    };
+  }
+
+  // settings.json이 존재하면 CLI로 인증 상태 재확인
+  const { stdout, stderr } = await runCommand('claude --version', 5000);
+  const output = (stdout || stderr).trim();
+  const isAuthenticated = output.length > 0 && !output.includes('not found') && !output.includes('not recognized');
+
+  if (isAuthenticated) {
     return { id: 'claude_auth', label: 'Claude Authentication', status: 'pass', detail: 'Authenticated', fixable: false };
   }
   return {

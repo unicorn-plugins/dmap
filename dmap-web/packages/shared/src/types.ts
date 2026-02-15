@@ -135,6 +135,13 @@ export interface SkillMeta {
 }
 
 // Session Types
+export interface SessionUsage {
+  inputTokens: number;
+  outputTokens: number;
+  totalCostUsd: number;
+  durationMs: number;
+}
+
 export interface Session {
   id: string;
   sdkSessionId?: string;
@@ -142,6 +149,10 @@ export interface Session {
   status: 'active' | 'waiting' | 'completed' | 'error';
   createdAt: string;
   lastActivity: string;
+  preview?: string;
+  pluginId?: string;
+  skillIcon?: string;
+  usage?: SessionUsage;
 }
 
 export interface ChatMessage {

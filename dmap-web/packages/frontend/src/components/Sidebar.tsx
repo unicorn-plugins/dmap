@@ -6,7 +6,7 @@ import { PluginSwitcher } from './PluginSwitcher.js';
 import { AddPluginDialog } from './AddPluginDialog.js';
 import { useT } from '../i18n/index.js';
 import { useLangStore } from '../stores/langStore.js';
-import { SKILL_CATEGORIES } from '@dmap-web/shared';
+import { SKILL_CATEGORIES, PROMPT_SKILL } from '@dmap-web/shared';
 import type { SkillMeta } from '@dmap-web/shared';
 
 export function Sidebar() {
@@ -62,6 +62,20 @@ export function Sidebar() {
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+            </button>
+            <button
+              onClick={() => !isStreaming && selectSkill(PROMPT_SKILL)}
+              disabled={isStreaming}
+              className={`p-1.5 rounded-full border transition-colors ${
+                selectedSkill?.name === '__prompt__'
+                  ? 'border-blue-400 dark:border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30'
+                  : 'border-gray-200 dark:border-gray-600 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+              } ${isStreaming ? 'opacity-50 cursor-not-allowed' : ''}`}
+              title={t('prompt.tooltip')}
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 7.5l3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0021 18V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v12a2.25 2.25 0 002.25 2.25z" />
               </svg>
             </button>
             <SettingsMenu version={selectedPlugin?.version || ''} />

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import type { ChatMessage, SkillMeta, ApprovalOption, QuestionItem, PluginInfo } from '@dmap-web/shared';
+import type { ChatMessage, SkillMeta, ApprovalOption, QuestionItem, PluginInfo, Session } from '@dmap-web/shared';
+import { PROMPT_SKILL } from '@dmap-web/shared';
 
 const API_BASE = '/api';
 const SELECTED_PLUGIN_KEY = 'dmap-selected-plugin';
@@ -35,6 +36,9 @@ interface AppState {
   messages: ChatMessage[];
   isStreaming: boolean;
 
+  // Session History
+  sessions: Session[];
+
   // Approval
   pendingApproval: PendingApproval | null;
 
@@ -52,6 +56,9 @@ interface AppState {
   setStreaming: (streaming: boolean) => void;
   setPendingApproval: (approval: PendingApproval | null) => void;
   clearChat: () => void;
+  fetchSessions: () => Promise<void>;
+  deleteSession: (sessionId: string) => Promise<void>;
+  resumeSession: (session: Session, skill: SkillMeta | null) => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -62,6 +69,7 @@ export const useAppStore = create<AppState>((set) => ({
   sessionId: null,
   messages: [],
   isStreaming: false,
+  sessions: [],
   pendingApproval: null,
 
   fetchPlugins: async () => {
@@ -174,4 +182,45 @@ export const useAppStore = create<AppState>((set) => ({
   setPendingApproval: (approval) => set({ pendingApproval: approval }),
   clearChat: () =>
     set({ messages: [], sessionId: null, pendingApproval: null, isStreaming: false }),
+
+  fetchSessions: async () => {
+    try {
+      const pluginId = useAppStore.getState().selectedPlugin?.id;
+      const url = pluginId ? `${API_BASE}/sessions?pluginId=${pluginId}` : `${API_BASE}/sessions`;
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        set({ sessions: data.sessions || [] });
+      }
+    } catch {
+      // Keep current sessions on error
+    }
+  },
+
+  deleteSession: async (sessionId: string) => {
+    try {
+      await fetch(`${API_BASE}/sessions/${sessionId}`, { method: 'DELETE' });
+      set((state) => ({ sessions: state.sessions.filter(s => s.id !== sessionId) }));
+    } catch {
+      // ignore
+    }
+  },
+
+  resumeSession: (session, skill) => {
+    const targetSkill = session.skillName === '__prompt__'
+      ? PROMPT_SKILL
+      : skill;
+    if (!targetSkill) return;
+    set({
+      selectedSkill: targetSkill,
+      sessionId: session.id,
+      messages: [{
+        id: crypto.randomUUID(),
+        role: 'system' as const,
+        content: `\uD83D\uDCC2 ${session.preview || session.skillName}`,
+        timestamp: new Date().toISOString(),
+      }],
+      pendingApproval: null,
+    });
+  },
 }));
