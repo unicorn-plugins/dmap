@@ -102,8 +102,8 @@ function extractAskUserBlocks(text: string): { cleanText: string; title: string;
 }
 
 function detectSkillChainCommand(text: string): { skillName: string; input?: string } | null {
-  // Detect Skill tool invocation pattern: /pluginId:skill-name at line start
-  const slashPattern = /^\/([a-zA-Z0-9_-]+):([a-zA-Z0-9_-]+)(?:\s+(.+))?/m;
+  // Detect explicit chain marker: CHAIN>>>/pluginId:skill-name at line start
+  const slashPattern = /^CHAIN>>>\/([a-zA-Z0-9_-]+):([a-zA-Z0-9_-]+)(?:\s+(.+))?/m;
   const match = text.match(slashPattern);
   if (match) {
     return { skillName: match[2], input: match[3]?.trim() };
@@ -141,11 +141,14 @@ Rules:
 
 const SKILL_CHAIN_FILE_CONVENTION = `
 SKILL CHAIN FILE CONVENTION:
-When your skill work is complete and you are about to chain to another skill using /pluginId:skill-name:
+When your skill work is complete and you are about to chain to another skill:
 1. BEFORE outputting the chain command, save your key results/output to: ./output/{current-skill-name}-result.md (relative to the project root)
 2. Use the Write tool to create this file in the project directory
 3. The file should contain all essential outputs that the next skill needs to continue the workflow
-4. Then output the chain command as usual
+4. Then output the chain command using the CHAIN>>> prefix: CHAIN>>>/pluginId:skill-name [optional input]
+   - IMPORTANT: You MUST use the exact prefix "CHAIN>>>" before the slash command. Without this prefix, the chain will NOT be detected.
+   - Example: CHAIN>>>/dmap:publish my-plugin
+   - Do NOT output /pluginId:skill-name without the CHAIN>>> prefix when you intend to chain to another skill.
 
 When a previous skill's result file path is provided below, read that file FIRST to get context from the previous skill before starting your own workflow. If the file does not exist, proceed with your workflow without previous context.`;
 
