@@ -101,6 +101,16 @@ function extractAskUserBlocks(text: string): { cleanText: string; title: string;
   return { cleanText, title, questions: allQuestions };
 }
 
+function detectSkillChainCommand(text: string): { skillName: string; input?: string } | null {
+  // Detect Skill tool invocation pattern: /pluginId:skill-name at line start
+  const slashPattern = /^\/([a-zA-Z0-9_-]+):([a-zA-Z0-9_-]+)(?:\s+(.+))?/m;
+  const match = text.match(slashPattern);
+  if (match) {
+    return { skillName: match[2], input: match[3]?.trim() };
+  }
+  return null;
+}
+
 const ASK_USER_INSTRUCTION = `
 CRITICAL INSTRUCTION - USER INTERACTION FORMAT:
 You do NOT have access to the AskUserQuestion tool. It is disabled in this environment.
@@ -129,14 +139,25 @@ Rules:
 - Output your explanation text normally before the JSON block. Do NOT use numbered plain text questions.
 - If you need to ask even ONE question, use this format. No exceptions.`;
 
+const SKILL_CHAIN_FILE_CONVENTION = `
+SKILL CHAIN FILE CONVENTION:
+When your skill work is complete and you are about to chain to another skill using /pluginId:skill-name:
+1. BEFORE outputting the chain command, save your key results/output to: ./output/{current-skill-name}-result.md (relative to the project root)
+2. Use the Write tool to create this file in the project directory
+3. The file should contain all essential outputs that the next skill needs to continue the workflow
+4. Then output the chain command as usual
+
+When a previous skill's result file path is provided below, read that file FIRST to get context from the previous skill before starting your own workflow. If the file does not exist, proceed with your workflow without previous context.`;
+
 async function runQuery(
   prompt: string,
   options: Record<string, unknown>,
   callbacks: StreamCallbacks,
+  externalAbortController?: AbortController,
 ): Promise<RunQueryResult> {
   const { query } = await import('@anthropic-ai/claude-code');
 
-  const abortController = new AbortController();
+  const abortController = externalAbortController || new AbortController();
   options.abortController = abortController;
 
   let hasContent = false;
@@ -167,6 +188,21 @@ async function runQuery(
       if (Array.isArray(content)) {
         for (const block of content) {
           if (block.type === 'text' && block.text) {
+            // Detect skill chain command (e.g., /dmap:develop-plugin)
+            const chainCommand = detectSkillChainCommand(block.text);
+            if (chainCommand) {
+              console.log(`[SDK] Detected skill chain: → ${chainCommand.skillName}`);
+              await log('skill_chain_detected', chainCommand);
+              callbacks.onEvent({
+                type: 'skill_changed',
+                newSkillName: chainCommand.skillName,
+                chainInput: chainCommand.input || '',
+              } as any);
+              // Abort current execution to prevent complete event conflict
+              abortController.abort();
+              return { hasContent, sdkSessionId, pendingQuestions };
+            }
+
             const extracted = extractAskUserBlocks(block.text);
             if (extracted) {
               if (extracted.cleanText) {
@@ -249,22 +285,9 @@ async function runQuery(
       }
     }
 
-    // Result with session ID — send text BEFORE complete
+    // Result: process usage and session ID only (text already emitted in assistant message)
     if (message.type === 'result') {
       const resultMsg = message as any;
-      if (resultMsg.result) {
-        const extracted = extractAskUserBlocks(resultMsg.result as string);
-        if (extracted) {
-          if (extracted.cleanText) {
-            hasContent = true;
-            callbacks.onEvent({ type: 'text', text: extracted.cleanText });
-          }
-          pendingQuestions = { title: extracted.title, questions: extracted.questions };
-        } else {
-          hasContent = true;
-          callbacks.onEvent({ type: 'text', text: resultMsg.result });
-        }
-      }
       // Emit usage data
       if (resultMsg.total_cost_usd !== undefined || resultMsg.usage) {
         const usageData = (resultMsg.usage || {}) as Record<string, number>;
@@ -302,6 +325,8 @@ export async function executeSkill(
   resumeSessionId?: string,
   pluginId?: string,
   filePaths?: string[],
+  abortController?: AbortController,
+  previousSkillName?: string,
 ): Promise<ExecuteSkillResult> {
   // Always read SKILL.md (needed for appendSystemPrompt on every call, including resume)
   const skillPath = path.join(dmapProjectDir, 'skills', skillName, 'SKILL.md');
@@ -364,6 +389,7 @@ The skill instructions below are written in Korean — read and understand them,
 ### END LANGUAGE OVERRIDE ###\n\n` : ''}IMPORTANT: You are a skill executor. Execute the skill instructions below using available tools (Read, Write, Edit, Bash, Glob, Grep, WebFetch, WebSearch, Task, etc.). Do NOT invoke other skills. Do NOT enter plan mode. Do NOT use TodoWrite.
 AGENT DELEGATION: You MAY use the Task tool for parallel or complex work. Available OMC agents are injected with "omc-" prefix. Use agent names like "omc-architect", "omc-executor", "omc-explore", "omc-planner", "omc-build-fixer", etc. You can also use built-in agents: "general-purpose", "Explore", "Plan", "Bash". Set the model parameter to "haiku", "sonnet", or "opus" for tier routing.${pluginAgentGuide}
 ${ASK_USER_INSTRUCTION}
+${SKILL_CHAIN_FILE_CONVENTION}${previousSkillName ? `\n\nPREVIOUS SKILL RESULT:\nThe previous skill "${previousSkillName}" may have saved results at: output/${previousSkillName}-result.md\nRead this file FIRST using the Read tool before starting your workflow.` : ''}
 
 === SKILL INSTRUCTIONS ===
 ${skillContent}${omcAgents ? `\n\n=== AGENT ORCHESTRATION PATTERNS ===\n${getSkillPatterns()}` : ''}`,
@@ -446,7 +472,7 @@ ${skillContent}${omcAgents ? `\n\n=== AGENT ORCHESTRATION PATTERNS ===\n${getSki
       const opts: Record<string, unknown> = { ...options };
       if (sdkSessionId) opts.resume = sdkSessionId;
 
-      const result = await runQuery(currentPrompt, opts, trackingCallbacks);
+      const result = await runQuery(currentPrompt, opts, trackingCallbacks, abortController);
       sdkSessionId = result.sdkSessionId || sdkSessionId;
 
       // Update SDK session ID for future resume
@@ -476,6 +502,10 @@ ${skillContent}${omcAgents ? `\n\n=== AGENT ORCHESTRATION PATTERNS ===\n${getSki
       return { fullyComplete };
     }
   } catch (error: any) {
+    if (abortController?.signal.aborted) {
+      console.log(`[SDK] Skill execution aborted for "${skillName}"`);
+      return { fullyComplete: true };
+    }
     console.error(`[SDK] Error:`, error);
     callbacks.onEvent({
       type: 'error',
@@ -493,6 +523,7 @@ export async function executePrompt(
   resumeSessionId?: string,
   pluginId?: string,
   filePaths?: string[],
+  abortController?: AbortController,
 ): Promise<ExecuteSkillResult> {
   // Load OMC agents if available
   const omcAgents = await loadOmcAgents();
@@ -558,7 +589,7 @@ ${ASK_USER_INSTRUCTION}`,
 
     console.log(`[SDK] Prompt mode: ${currentPrompt.slice(0, 100)}...`);
 
-    const result = await runQuery(currentPrompt, options, callbacks);
+    const result = await runQuery(currentPrompt, options, callbacks, abortController);
 
     if (result.sdkSessionId) {
       callbacks.onSessionId?.(result.sdkSessionId);
@@ -575,6 +606,10 @@ ${ASK_USER_INSTRUCTION}`,
     const fullyComplete = !result.pendingQuestions || result.pendingQuestions.questions.length === 0;
     return { fullyComplete };
   } catch (error: any) {
+    if (abortController?.signal.aborted) {
+      console.log(`[SDK] Prompt execution aborted`);
+      return { fullyComplete: true };
+    }
     console.error(`[SDK] Prompt error:`, error);
     callbacks.onEvent({ type: 'error', message: error.message || 'Prompt execution failed' });
     return { fullyComplete: true };

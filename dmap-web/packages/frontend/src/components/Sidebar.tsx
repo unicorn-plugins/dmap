@@ -4,13 +4,14 @@ import { SkillCard } from './SkillCard.js';
 import { SettingsMenu } from './SettingsMenu.js';
 import { PluginSwitcher } from './PluginSwitcher.js';
 import { AddPluginDialog } from './AddPluginDialog.js';
+import { ConfirmSwitchDialog } from './ConfirmSwitchDialog.js';
 import { useT } from '../i18n/index.js';
 import { useLangStore } from '../stores/langStore.js';
 import { SKILL_CATEGORIES, PROMPT_SKILL } from '@dmap-web/shared';
 import type { SkillMeta } from '@dmap-web/shared';
 
 export function Sidebar() {
-  const { skills, selectedSkill, selectSkill, isStreaming, fetchSkills, selectedPlugin, fetchPlugins, syncAgents } = useAppStore();
+  const { skills, selectedSkill, selectSkill, isStreaming, fetchSkills, selectedPlugin, fetchPlugins, syncAgents, pendingApproval, setPendingSkillSwitch } = useAppStore();
   const { lang } = useLangStore();
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'fail'>('idle');
@@ -49,35 +50,50 @@ export function Sidebar() {
     setTimeout(() => { setSyncStatus('idle'); setSyncMessage(''); }, 3000);
   };
 
+  const handleSkillClick = (skill: SkillMeta) => {
+    if (isStreaming || pendingApproval) {
+      setPendingSkillSwitch(skill);
+    } else {
+      selectSkill(skill);
+    }
+  };
+
   return (
     <aside className="w-full h-full bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col">
       <div className="p-4 border-b border-gray-200 dark:border-gray-800">
         <div className="flex items-center justify-between">
           <PluginSwitcher disabled={isStreaming} />
           <div className="flex items-center gap-1">
-            <button
-              onClick={() => setShowAddDialog(true)}
-              className="p-1.5 rounded-full border border-gray-200 dark:border-gray-600 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              title={t('plugin.add')}
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-              </svg>
-            </button>
-            <button
-              onClick={() => !isStreaming && selectSkill(PROMPT_SKILL)}
-              disabled={isStreaming}
-              className={`p-1.5 rounded-full border transition-colors ${
-                selectedSkill?.name === '__prompt__'
-                  ? 'border-blue-400 dark:border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30'
-                  : 'border-gray-200 dark:border-gray-600 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-              } ${isStreaming ? 'opacity-50 cursor-not-allowed' : ''}`}
-              title={t('prompt.tooltip')}
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 7.5l3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0021 18V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v12a2.25 2.25 0 002.25 2.25z" />
-              </svg>
-            </button>
+            <div className="relative group">
+              <button
+                onClick={() => setShowAddDialog(true)}
+                className="p-1.5 rounded-full border border-gray-200 dark:border-gray-600 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+              </button>
+              <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 px-2 py-1 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap pointer-events-none z-[100]">
+                {t('plugin.add')}
+              </div>
+            </div>
+            <div className="relative group">
+              <button
+                onClick={() => handleSkillClick(PROMPT_SKILL)}
+                className={`p-1.5 rounded-full border transition-colors ${
+                  selectedSkill?.name === '__prompt__'
+                    ? 'border-blue-400 dark:border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30'
+                    : 'border-gray-200 dark:border-gray-600 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`}
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 7.5l3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0021 18V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v12a2.25 2.25 0 002.25 2.25z" />
+                </svg>
+              </button>
+              <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 px-2 py-1 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap pointer-events-none z-[100]">
+                {t('prompt.tooltip')}
+              </div>
+            </div>
             <SettingsMenu version={selectedPlugin?.version || ''} />
           </div>
         </div>
@@ -118,7 +134,7 @@ export function Sidebar() {
                 <svg className="w-4 h-4 text-gray-400 dark:text-gray-500 cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
                 </svg>
-                <div className="absolute right-0 top-full mt-2 w-72 px-3 py-2 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 whitespace-pre-line pointer-events-none">
+                <div className="absolute -right-4 top-full mt-2 w-72 px-3 py-2 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-[100] whitespace-pre-line pointer-events-none">
                   {t('agentSync.tooltip')}
                 </div>
               </div>
@@ -141,8 +157,7 @@ export function Sidebar() {
                     key={skill.name}
                     skill={skill}
                     isSelected={selectedSkill?.name === skill.name}
-                    onClick={() => !isStreaming && selectSkill(skill)}
-                    disabled={isStreaming}
+                    onClick={() => handleSkillClick(skill)}
                   />
                 ))}
               </div>
@@ -154,6 +169,8 @@ export function Sidebar() {
       <div className="p-3 border-t border-gray-200 dark:border-gray-800 text-xs text-gray-400 dark:text-gray-400 truncate">
         {selectedPlugin?.displayNames?.[lang] || selectedPlugin?.name || 'Plugin'} v{selectedPlugin?.version || '...'}
       </div>
+
+      <ConfirmSwitchDialog />
 
       {showAddDialog && (
         <AddPluginDialog

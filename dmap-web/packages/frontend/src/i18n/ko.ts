@@ -79,10 +79,10 @@ const ko: Translations = {
   'category.external': '외부 연동',
 
   // Skill names
-  'skill.develop-plugin.name': '플러그인 개발',
-  'skill.develop-plugin.desc': '4-Phase 워크플로우로 DMAP 플러그인 전체 개발',
-  'skill.team-planner.name': '팀 기획서',
-  'skill.team-planner.desc': 'AI 기반 팀 기획서 자동 완성',
+  'skill.develop-plugin.name': '플러그인(AI팀) 개발',
+  'skill.develop-plugin.desc': 'AI팀 기획서 기반 플러그인 개발',
+  'skill.team-planner.name': 'AI팀(플러그인) 기획서',
+  'skill.team-planner.desc': '새로운 AI팀(플러그인) 기획서 작성',
   'skill.publish.name': 'GitHub 배포',
   'skill.publish.desc': '개발 완료된 플러그인을 GitHub에 배포',
   'skill.setup.name': '플러그인 초기설정',
@@ -194,6 +194,12 @@ const ko: Translations = {
   'session.timeAgo.minutes': '{{n}}분 전',
   'session.timeAgo.hours': '{{n}}시간 전',
   'session.timeAgo.days': '{{n}}일 전',
+
+  // Skill Switch Dialog
+  'switchDialog.title': '스킬 전환',
+  'switchDialog.message': '현재 실행 중인 스킬이 중단됩니다. 전환하시겠습니까?',
+  'switchDialog.confirm': '전환',
+  'switchDialog.cancel': '취소',
 };
 
 export default ko;

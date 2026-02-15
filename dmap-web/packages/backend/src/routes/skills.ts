@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { DMAP_SKILLS } from '@dmap-web/shared';
-import type { SkillExecuteRequest, SkillMeta } from '@dmap-web/shared';
+import type { SkillExecuteRequest, SkillMeta, SSESkillChangedEvent } from '@dmap-web/shared';
 import { sessionManager } from '../services/session-manager.js';
 import { executeSkill, executePrompt } from '../services/claude-sdk-client.js';
 import { initSSE, sendSSE, endSSE } from '../middleware/sse-handler.js';
@@ -10,6 +10,9 @@ import fs from 'fs';
 import path from 'path';
 
 export const skillsRouter = Router();
+
+// Per-session execution lock: ensures only one execution per session at a time
+const activeExecutions = new Map<string, AbortController>();
 
 // Build dynamic skill list by scanning skills/ directory
 function discoverSkills(projectDir: string = DMAP_PROJECT_DIR): SkillMeta[] {
@@ -121,8 +124,19 @@ skillsRouter.post('/:name/execute', async (req: Request, res: Response) => {
     });
 
     initSSE(res);
+
+    // Abort any existing execution for this session
+    const existingController = activeExecutions.get(session.id);
+    if (existingController) {
+      console.log(`[SSE] Aborting previous execution for prompt session ${session.id}`);
+      existingController.abort();
+    }
+    const abortController = new AbortController();
+    activeExecutions.set(session.id, abortController);
+
     req.on('close', () => {
-      console.log(`[SSE] Client disconnected from prompt session ${session.id}`);
+      console.log(`[SSE] Client disconnected from prompt session ${session.id}, aborting query`);
+      abortController.abort();
     });
 
     try {
@@ -141,6 +155,7 @@ skillsRouter.post('/:name/execute', async (req: Request, res: Response) => {
         session.sdkSessionId,
         pluginId,
         filePaths,
+        abortController,
       );
 
       if (lastUsage) {
@@ -154,12 +169,19 @@ skillsRouter.post('/:name/execute', async (req: Request, res: Response) => {
         });
       }
 
-      sendSSE(res, { type: 'complete', sessionId: session.id, fullyComplete: result.fullyComplete });
-      sessionManager.setStatus(session.id, result.fullyComplete ? 'completed' : 'waiting');
+      if (!abortController.signal.aborted) {
+        sendSSE(res, { type: 'complete', sessionId: session.id, fullyComplete: result.fullyComplete });
+        sessionManager.setStatus(session.id, result.fullyComplete ? 'completed' : 'waiting');
+      } else {
+        sessionManager.abortSession(session.id);
+      }
     } catch (error: any) {
       sendSSE(res, { type: 'error', message: error.message || 'Prompt execution failed' });
       sessionManager.setStatus(session.id, 'error');
     } finally {
+      if (activeExecutions.get(session.id) === abortController) {
+        activeExecutions.delete(session.id);
+      }
       endSSE(res);
     }
     return;
@@ -192,13 +214,23 @@ skillsRouter.post('/:name/execute', async (req: Request, res: Response) => {
   // Setup SSE
   initSSE(res);
 
-  // Handle client disconnect
+  // Abort any existing execution for this session
+  const existingController = activeExecutions.get(session.id);
+  if (existingController) {
+    console.log(`[SSE] Aborting previous execution for skill session ${session.id}`);
+    existingController.abort();
+  }
+  const abortController = new AbortController();
+  activeExecutions.set(session.id, abortController);
+
   req.on('close', () => {
-    console.log(`[SSE] Client disconnected from session ${session.id}`);
+    console.log(`[SSE] Client disconnected from session ${session.id}, aborting query`);
+    abortController.abort();
   });
 
   try {
     let lastUsage: any = null;
+    let chainDetected = false;
     const result = await executeSkill(
       skillName,
       input,
@@ -206,6 +238,35 @@ skillsRouter.post('/:name/execute', async (req: Request, res: Response) => {
       lang,
       {
         onEvent: (event) => {
+          // Handle skill chain: create new session, complete old one
+          if (event.type === 'skill_changed') {
+            const changeEvent = event as SSESkillChangedEvent;
+            const targetSkill = skills.find((s) => s.name === changeEvent.newSkillName);
+
+            if (!targetSkill) {
+              console.warn(`[Skills] Skill chain target not found: ${changeEvent.newSkillName}, ignoring`);
+              return; // Don't send the event, don't complete old session
+            }
+
+            console.log(`[Skills] Skill chain: ${skillName} → ${changeEvent.newSkillName}`);
+
+            // Complete current session
+            sessionManager.setStatus(session.id, 'completed');
+            chainDetected = true;
+
+            // Create new session for the chained skill
+            const newSession = sessionManager.create(changeEvent.newSkillName);
+            sessionManager.updateMeta(newSession.id, {
+              preview: changeEvent.chainInput?.slice(0, 100) || `← ${skillName}`,
+              pluginId: pluginId || 'dmap',
+              skillIcon: targetSkill.icon,
+              previousSkillName: skillName,
+            });
+
+            // Enrich the event with new session ID before sending
+            changeEvent.newSessionId = newSession.id;
+          }
+
           sendSSE(res, event);
           if (event.type === 'usage') lastUsage = event;
         },
@@ -216,6 +277,8 @@ skillsRouter.post('/:name/execute', async (req: Request, res: Response) => {
       session.sdkSessionId,
       pluginId,
       filePaths,
+      abortController,
+      session.previousSkillName,
     );
 
     if (lastUsage) {
@@ -229,8 +292,12 @@ skillsRouter.post('/:name/execute', async (req: Request, res: Response) => {
       });
     }
 
-    sendSSE(res, { type: 'complete', sessionId: session.id, fullyComplete: result.fullyComplete });
-    sessionManager.setStatus(session.id, result.fullyComplete ? 'completed' : 'waiting');
+    if (!abortController.signal.aborted) {
+      sendSSE(res, { type: 'complete', sessionId: session.id, fullyComplete: result.fullyComplete });
+      sessionManager.setStatus(session.id, result.fullyComplete ? 'completed' : 'waiting');
+    } else if (!chainDetected) {
+      sessionManager.abortSession(session.id);
+    }
   } catch (error: any) {
     sendSSE(res, {
       type: 'error',
@@ -238,6 +305,9 @@ skillsRouter.post('/:name/execute', async (req: Request, res: Response) => {
     });
     sessionManager.setStatus(session.id, 'error');
   } finally {
+    if (activeExecutions.get(session.id) === abortController) {
+      activeExecutions.delete(session.id);
+    }
     endSSE(res);
   }
 });

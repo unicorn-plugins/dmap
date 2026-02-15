@@ -190,4 +190,10 @@ export interface Translations {
   'session.timeAgo.minutes': string;
   'session.timeAgo.hours': string;
   'session.timeAgo.days': string;
+
+  // Skill Switch Dialog
+  'switchDialog.title': string;
+  'switchDialog.message': string;
+  'switchDialog.confirm': string;
+  'switchDialog.cancel': string;
 }

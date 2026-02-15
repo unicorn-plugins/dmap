@@ -85,12 +85,13 @@ class SessionManager {
     }
   }
 
-  updateMeta(id: string, meta: { preview?: string; pluginId?: string; skillIcon?: string; usage?: SessionUsage }): void {
+  updateMeta(id: string, meta: { preview?: string; pluginId?: string; skillIcon?: string; usage?: SessionUsage; previousSkillName?: string }): void {
     const session = this.sessions.get(id);
     if (!session) return;
     if (meta.preview !== undefined) session.preview = meta.preview;
     if (meta.pluginId !== undefined) session.pluginId = meta.pluginId;
     if (meta.skillIcon !== undefined) session.skillIcon = meta.skillIcon;
+    if (meta.previousSkillName !== undefined) session.previousSkillName = meta.previousSkillName;
     if (meta.usage !== undefined) session.usage = meta.usage;
     session.lastActivity = new Date().toISOString();
     this.saveToDisk(session);
@@ -123,6 +124,20 @@ class SessionManager {
     session.pendingResponse.resolve(response);
     session.pendingResponse = undefined;
     return true;
+  }
+
+  abortSession(id: string): void {
+    const session = this.sessions.get(id);
+    if (!session) return;
+
+    if (session.pendingResponse) {
+      session.pendingResponse.reject(new Error('Session aborted'));
+      session.pendingResponse = undefined;
+    }
+
+    session.status = 'aborted';
+    session.lastActivity = new Date().toISOString();
+    console.log(`[SessionManager] Session ${id} aborted`);
   }
 
   delete(id: string): boolean {

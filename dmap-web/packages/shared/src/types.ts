@@ -1,5 +1,5 @@
 // SSE Event Types (Flat structure matching backend implementation)
-export type SSEEventType = 'text' | 'tool' | 'agent' | 'usage' | 'progress' | 'approval' | 'questions' | 'complete' | 'error' | 'done';
+export type SSEEventType = 'text' | 'tool' | 'agent' | 'usage' | 'progress' | 'approval' | 'questions' | 'complete' | 'error' | 'done' | 'skill_changed';
 
 export interface SSETextEvent {
   type: 'text';
@@ -67,6 +67,13 @@ export interface SSEDoneEvent {
   type: 'done';
 }
 
+export interface SSESkillChangedEvent {
+  type: 'skill_changed';
+  newSkillName: string;
+  newSessionId?: string;
+  chainInput: string;
+}
+
 export interface QuestionItem {
   question: string;
   description?: string;
@@ -92,7 +99,8 @@ export type SSEEvent =
   | SSEQuestionsEvent
   | SSECompleteEvent
   | SSEErrorEvent
-  | SSEDoneEvent;
+  | SSEDoneEvent
+  | SSESkillChangedEvent;
 
 // Activity Panel Types
 export interface ActivityToolEvent {
@@ -146,12 +154,13 @@ export interface Session {
   id: string;
   sdkSessionId?: string;
   skillName: string;
-  status: 'active' | 'waiting' | 'completed' | 'error';
+  status: 'active' | 'waiting' | 'completed' | 'error' | 'aborted';
   createdAt: string;
   lastActivity: string;
   preview?: string;
   pluginId?: string;
   skillIcon?: string;
+  previousSkillName?: string;
   usage?: SessionUsage;
 }
 

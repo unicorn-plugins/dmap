@@ -3,16 +3,16 @@ import type { SkillMeta } from './types.js';
 export const DMAP_SKILLS: SkillMeta[] = [
   {
     name: 'team-planner',
-    displayName: '팀 기획서',
-    description: 'AI 기반 팀 기획서 자동 완성',
+    displayName: 'AI팀(플러그인) 기획서',
+    description: '새로운 AI팀(플러그인) 기획서 작성',
     icon: '📋',
     category: 'core',
     hasApprovalGates: true,
   },
   {
     name: 'develop-plugin',
-    displayName: '플러그인 개발',
-    description: '4-Phase 워크플로우로 DMAP 플러그인 전체 개발',
+    displayName: '플러그인(AI팀) 개발',
+    description: 'AI팀 기획서 기반 플러그인 개발',
     icon: '🔨',
     category: 'core',
     hasApprovalGates: true,

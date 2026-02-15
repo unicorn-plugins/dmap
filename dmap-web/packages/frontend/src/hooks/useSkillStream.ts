@@ -15,11 +15,13 @@ export function useSkillStream() {
     setStreaming,
     setPendingApproval,
     fetchSkills,
+    switchSkillChain,
   } = useAppStore();
 
   const t = useT();
   const abortRef = useRef<AbortController | null>(null);
   const pendingQuestionsRef = useRef<{ title: string; questions: QuestionItem[] } | null>(null);
+  const executionIdRef = useRef<string | null>(null);
 
   const handleSSEEvent = useCallback(
     (type: string, data: Record<string, unknown>) => {
@@ -83,8 +85,23 @@ export function useSkillStream() {
             questions: data.questions as QuestionItem[],
           };
           break;
+        case 'skill_changed': {
+          const newSkillName = data.newSkillName as string;
+          const newSessionId = data.newSessionId as string;
+          const skills = useAppStore.getState().skills;
+          const newSkill = skills.find((s) => s.name === newSkillName);
+          if (newSkill && newSessionId) {
+            switchSkillChain(newSkill, newSessionId);
+          }
+          break;
+        }
         case 'complete': {
-          setSessionId(data.sessionId as string);
+          // Don't overwrite session ID if a skill chain has already set a new one
+          const currentSessionId = useAppStore.getState().sessionId;
+          const completedSessionId = data.sessionId as string;
+          if (!currentSessionId || currentSessionId === completedSessionId) {
+            setSessionId(completedSessionId);
+          }
           fetchSkills();
           const storedQuestions = pendingQuestionsRef.current;
           pendingQuestionsRef.current = null;
@@ -132,7 +149,7 @@ export function useSkillStream() {
           break;
       }
     },
-    [appendToLastMessage, addMessage, setPendingApproval, setSessionId, setStreaming, fetchSkills, t],
+    [appendToLastMessage, addMessage, setPendingApproval, setSessionId, setStreaming, fetchSkills, switchSkillChain, t],
   );
 
   const executeSkill = useCallback(
@@ -141,6 +158,12 @@ export function useSkillStream() {
       abortRef.current?.abort();
       abortRef.current = new AbortController();
       pendingQuestionsRef.current = null;
+
+      const executionId = crypto.randomUUID();
+      executionIdRef.current = executionId;
+
+      // Register abort controller in appStore for centralized abort (ConfirmSwitchDialog)
+      useAppStore.getState().setStreamAbortController(abortRef.current);
 
       setStreaming(true);
       useActivityStore.getState().startExecution();
@@ -195,6 +218,12 @@ export function useSkillStream() {
 
             if (!eventType || !data) continue;
 
+            // Ignore events from stale executions
+            if (executionIdRef.current !== executionId) {
+              abortRef.current?.abort();
+              break;
+            }
+
             try {
               const parsed = JSON.parse(data);
               handleSSEEvent(eventType, parsed);
@@ -234,6 +263,7 @@ export function useSkillStream() {
 
   const stopStream = useCallback(() => {
     abortRef.current?.abort();
+    useAppStore.getState().abortCurrentStream();
     setStreaming(false);
   }, [setStreaming]);
 

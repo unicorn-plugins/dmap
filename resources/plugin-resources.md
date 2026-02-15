@@ -88,10 +88,10 @@
 | 커스텀 앱 | validate_dsl | Dify DSL YAML 구조 검증 도구 | [상세](tools/validate-dsl.md) |
 | 커스텀 앱 | generate_image | Gemini (Nano Banana) 모델 기반 이미지 생성 | [상세](tools/generate-image.md) |
 | 커스텀 앱 | generate_video | Veo 3.1 모델 기반 비디오 생성 (음성 포함, Scene Extension 지원) | [상세](tools/generate-video.md) |
-| 커스텀 앱 | gmail-notification | Google Apps Script 기반 Gmail 알림 발송 (Dify 연동) | [상세](tools/gmail-notification.md) |
 | 커스텀 앱 | create_repo | GitHub REST API 기반 원격 저장소 생성 및 초기 푸시 (gh CLI 불요) | [상세](tools/create-repo.md) |
 | 커스텀 CLI | check-mermaid | Docker 기반 Mermaid 다이어그램 문법 검증 | [상세](tools/check-mermaid.md) |
 | 커스텀 CLI | check-plantuml | Docker 기반 PlantUML 다이어그램 문법 검증 | [상세](tools/check-plantuml.md) |
+| 커스텀 앱 | email_sender | smtplib 기반 SMTP 이메일 발송 (텍스트/HTML 지원) | [상세](tools/email_sender.md) |
 
 [Top](#리소스-마켓플레이스)
 

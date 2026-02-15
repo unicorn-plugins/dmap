@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { ChatMessage, SkillMeta, ApprovalOption, QuestionItem, PluginInfo, Session } from '@dmap-web/shared';
 import { PROMPT_SKILL } from '@dmap-web/shared';
+import { useActivityStore } from './activityStore.js';
 
 const API_BASE = '/api';
 const SELECTED_PLUGIN_KEY = 'dmap-selected-plugin';
@@ -42,6 +43,11 @@ interface AppState {
   // Approval
   pendingApproval: PendingApproval | null;
 
+  // Skill switch confirmation
+  pendingSkillSwitch: SkillMeta | null;
+  // Centralized stream abort
+  streamAbortController: AbortController | null;
+
   // Actions
   fetchPlugins: () => Promise<void>;
   selectPlugin: (plugin: PluginInfo) => void;
@@ -56,9 +62,15 @@ interface AppState {
   setStreaming: (streaming: boolean) => void;
   setPendingApproval: (approval: PendingApproval | null) => void;
   clearChat: () => void;
+  setPendingSkillSwitch: (skill: SkillMeta | null) => void;
+  confirmSkillSwitch: () => void;
+  cancelSkillSwitch: () => void;
+  setStreamAbortController: (controller: AbortController | null) => void;
+  abortCurrentStream: () => void;
   fetchSessions: () => Promise<void>;
   deleteSession: (sessionId: string) => Promise<void>;
   resumeSession: (session: Session, skill: SkillMeta | null) => void;
+  switchSkillChain: (newSkill: SkillMeta, newSessionId: string) => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -71,6 +83,8 @@ export const useAppStore = create<AppState>((set) => ({
   isStreaming: false,
   sessions: [],
   pendingApproval: null,
+  pendingSkillSwitch: null,
+  streamAbortController: null,
 
   fetchPlugins: async () => {
     try {
@@ -93,6 +107,7 @@ export const useAppStore = create<AppState>((set) => ({
 
   selectPlugin: (plugin) => {
     localStorage.setItem(SELECTED_PLUGIN_KEY, plugin.id);
+    useActivityStore.getState().clearActivity();
     set({ selectedPlugin: plugin, selectedSkill: null, messages: [], sessionId: null, pendingApproval: null, skills: [] });
   },
 
@@ -146,8 +161,10 @@ export const useAppStore = create<AppState>((set) => ({
     }
   },
 
-  selectSkill: (skill) =>
-    set({ selectedSkill: skill, messages: [], sessionId: null, pendingApproval: null }),
+  selectSkill: (skill) => {
+    useActivityStore.getState().clearActivity();
+    set({ selectedSkill: skill, messages: [], sessionId: null, pendingApproval: null });
+  },
 
   setSessionId: (id) => set({ sessionId: id }),
 
@@ -182,6 +199,25 @@ export const useAppStore = create<AppState>((set) => ({
   setPendingApproval: (approval) => set({ pendingApproval: approval }),
   clearChat: () =>
     set({ messages: [], sessionId: null, pendingApproval: null, isStreaming: false }),
+
+  setPendingSkillSwitch: (skill) => set({ pendingSkillSwitch: skill }),
+
+  confirmSkillSwitch: () => {
+    const { pendingSkillSwitch } = useAppStore.getState();
+    if (!pendingSkillSwitch) return;
+    set({ pendingSkillSwitch: null });
+    useAppStore.getState().selectSkill(pendingSkillSwitch);
+  },
+
+  cancelSkillSwitch: () => set({ pendingSkillSwitch: null }),
+
+  setStreamAbortController: (controller) => set({ streamAbortController: controller }),
+
+  abortCurrentStream: () => {
+    const { streamAbortController } = useAppStore.getState();
+    streamAbortController?.abort();
+    set({ streamAbortController: null, isStreaming: false });
+  },
 
   fetchSessions: async () => {
     try {
@@ -222,5 +258,21 @@ export const useAppStore = create<AppState>((set) => ({
       }],
       pendingApproval: null,
     });
+  },
+
+  switchSkillChain: (newSkill, newSessionId) => {
+    useActivityStore.getState().clearActivity();
+    set((state) => ({
+      selectedSkill: newSkill,
+      sessionId: newSessionId,
+      pendingApproval: null,
+      // Keep messages but add transition marker
+      messages: [...state.messages, {
+        id: crypto.randomUUID(),
+        role: 'system' as const,
+        content: `\uD83D\uDD04 ${newSkill.displayName}`,
+        timestamp: new Date().toISOString(),
+      }],
+    }));
   },
 }));

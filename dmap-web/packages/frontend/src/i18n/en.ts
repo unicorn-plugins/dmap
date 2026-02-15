@@ -79,10 +79,10 @@ const en: Translations = {
   'category.external': 'External',
 
   // Skill names
-  'skill.develop-plugin.name': 'Plugin Development',
-  'skill.develop-plugin.desc': 'Full DMAP plugin development with 4-Phase workflow',
-  'skill.team-planner.name': 'Team Planner',
-  'skill.team-planner.desc': 'AI-powered team plan auto-completion',
+  'skill.develop-plugin.name': 'Plugin (AI Team) Dev',
+  'skill.develop-plugin.desc': 'Plugin development based on AI team plan',
+  'skill.team-planner.name': 'AI Team (Plugin) Plan',
+  'skill.team-planner.desc': 'Create a new AI team (plugin) plan',
   'skill.publish.name': 'GitHub Deploy',
   'skill.publish.desc': 'Deploy completed plugin to GitHub',
   'skill.setup.name': 'Plugin Setup',
@@ -194,6 +194,12 @@ const en: Translations = {
   'session.timeAgo.minutes': '{{n}}m ago',
   'session.timeAgo.hours': '{{n}}h ago',
   'session.timeAgo.days': '{{n}}d ago',
+
+  // Skill Switch Dialog
+  'switchDialog.title': 'Switch Skill',
+  'switchDialog.message': 'The running skill will be interrupted. Switch?',
+  'switchDialog.confirm': 'Switch',
+  'switchDialog.cancel': 'Cancel',
 };
 
 export default en;
