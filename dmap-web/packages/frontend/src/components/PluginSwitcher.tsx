@@ -67,6 +67,7 @@ export function PluginSwitcher({ disabled }: PluginSwitcherProps) {
       // ignore
     }
     setConfirmRemoveId(null);
+    setOpen(false);
   };
 
   const handleCancelRemove = (e: React.MouseEvent) => {

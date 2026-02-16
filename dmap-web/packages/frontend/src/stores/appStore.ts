@@ -36,6 +36,7 @@ interface AppState {
   sessionId: string | null;
   messages: ChatMessage[];
   isStreaming: boolean;
+  isTranscriptView: boolean;
 
   // Session History
   sessions: Session[];
@@ -72,6 +73,8 @@ interface AppState {
   fetchSessions: () => Promise<void>;
   deleteSession: (sessionId: string) => Promise<void>;
   resumeSession: (session: Session, skill: SkillMeta | null) => void;
+  loadTranscriptSession: (sessionId: string, summary: string) => Promise<void>;
+  clearTranscriptView: () => void;
   switchSkillChain: (newSkill: SkillMeta, newSessionId: string) => void;
   showToast: (message: string) => void;
   clearToast: () => void;
@@ -85,6 +88,7 @@ export const useAppStore = create<AppState>((set) => ({
   sessionId: null,
   messages: [],
   isStreaming: false,
+  isTranscriptView: false,
   sessions: [],
   pendingApproval: null,
   pendingSkillSwitch: null,
@@ -137,8 +141,16 @@ export const useAppStore = create<AppState>((set) => ({
       const err = await res.json();
       throw new Error(err.error);
     }
-    // Refresh plugin list
+    // Refresh plugin list and switch to DMAP if deleted plugin was selected
+    const wasSelected = useAppStore.getState().selectedPlugin?.id === pluginId;
     await useAppStore.getState().fetchPlugins();
+    if (wasSelected) {
+      const firstPlugin = useAppStore.getState().plugins[0];
+      if (firstPlugin) {
+        useAppStore.getState().selectPlugin(firstPlugin);
+        await useAppStore.getState().fetchSkills();
+      }
+    }
   },
 
   syncAgents: async (pluginId: string) => {
@@ -203,7 +215,7 @@ export const useAppStore = create<AppState>((set) => ({
   setStreaming: (streaming) => set({ isStreaming: streaming }),
   setPendingApproval: (approval) => set({ pendingApproval: approval }),
   clearChat: () =>
-    set({ messages: [], sessionId: null, pendingApproval: null, isStreaming: false }),
+    set({ messages: [], sessionId: null, pendingApproval: null, isStreaming: false, isTranscriptView: false }),
 
   setPendingSkillSwitch: (skill) => set({ pendingSkillSwitch: skill }),
 
@@ -263,6 +275,39 @@ export const useAppStore = create<AppState>((set) => ({
       }],
       pendingApproval: null,
     });
+  },
+
+  loadTranscriptSession: async (transcriptId, summary) => {
+    // transcriptId = sdkSessionId = JSONL filename
+    // Find the dmap-web session linked to this sdkSessionId for resume
+    const dmapSession = useAppStore.getState().sessions.find(s => s.sdkSessionId === transcriptId);
+    set({
+      isTranscriptView: true,
+      sessionId: dmapSession?.id || null,
+      messages: [{ id: 'transcript-loading', role: 'system' as const, content: '...', timestamp: new Date().toISOString() }],
+      pendingApproval: null,
+    });
+    try {
+      const res = await fetch(`${API_BASE}/transcripts/${transcriptId}`);
+      if (!res.ok) throw new Error('Failed to fetch transcript');
+      const data = await res.json();
+      const msgs: ChatMessage[] = (data.messages || []).map((m: any) => ({
+        id: m.id || crypto.randomUUID(),
+        role: m.role as 'user' | 'assistant',
+        content: m.content,
+        timestamp: m.timestamp || new Date().toISOString(),
+      }));
+      if (msgs.length === 0) {
+        msgs.push({ id: 'empty', role: 'system' as const, content: summary, timestamp: new Date().toISOString() });
+      }
+      set({ messages: msgs });
+    } catch {
+      set({ messages: [{ id: 'error', role: 'system' as const, content: 'Failed to load transcript', timestamp: new Date().toISOString() }] });
+    }
+  },
+
+  clearTranscriptView: () => {
+    set({ isTranscriptView: false, messages: [], sessionId: null, pendingApproval: null });
   },
 
   switchSkillChain: (newSkill, newSessionId) => {

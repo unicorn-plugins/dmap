@@ -178,7 +178,9 @@ export interface Translations {
   'session.resume': string;
   'session.resumed': string;
   'session.delete': string;
+  'session.deleteAll': string;
   'session.deleteConfirm': string;
+  'session.deleteAllConfirm': string;
   'session.status.completed': string;
   'session.status.waiting': string;
   'session.status.error': string;
@@ -199,4 +201,9 @@ export interface Translations {
 
   // Setup Guard
   'setup.required': string;
+
+  // Transcript (integrated into SessionList)
+  'session.claudeCode': string;
+  'session.transcriptView': string;
+  'session.backToList': string;
 }

@@ -8,6 +8,7 @@ import { infoRouter } from './routes/info.js';
 import { startupRouter } from './routes/startup.js';
 import { pluginsRouter } from './routes/plugins.js';
 import { filesystemRouter } from './routes/filesystem.js';
+import { transcriptsRouter } from './routes/transcripts.js';
 import { errorHandler } from './middleware/error-handler.js';
 
 const app = express();
@@ -24,6 +25,7 @@ app.use('/api/sessions', sessionsRouter);
 app.use('/api/startup-check', startupRouter);
 app.use('/api/plugins', pluginsRouter);
 app.use('/api/filesystem', filesystemRouter);
+app.use('/api/transcripts', transcriptsRouter);
 
 // Error handler (must be last)
 app.use(errorHandler);

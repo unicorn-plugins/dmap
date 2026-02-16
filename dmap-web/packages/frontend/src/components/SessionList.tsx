@@ -1,8 +1,15 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import { useAppStore } from '../stores/appStore.js';
 import { useT } from '../i18n/index.js';
-import type { Session } from '@dmap-web/shared';
 import type { Translations } from '../i18n/types.js';
+
+interface TranscriptSession {
+  id: string;
+  summary: string;
+  lastModified: string;
+  fileSize: number;
+  messageCount: number;
+}
 
 function formatTimeAgo(dateStr: string, t: (key: keyof Translations) => string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -15,57 +22,88 @@ function formatTimeAgo(dateStr: string, t: (key: keyof Translations) => string):
   return t('session.timeAgo.days').replace('{{n}}', String(days));
 }
 
-function formatDuration(ms: number): string {
-  if (ms < 1000) return '<1s';
-  const seconds = Math.floor(ms / 1000);
-  if (seconds < 60) return `${seconds}s`;
-  const minutes = Math.floor(seconds / 60);
-  const remainSeconds = seconds % 60;
-  return `${minutes}m${remainSeconds > 0 ? ` ${remainSeconds}s` : ''}`;
+function formatDateTime(dateStr: string): string {
+  const d = new Date(dateStr);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
-
-function formatTokens(count: number): string {
-  if (count >= 1000) return `${(count / 1000).toFixed(1)}K`;
-  return String(count);
-}
-
-const STATUS_STYLES: Record<string, string> = {
-  completed: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
-  waiting: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400',
-  error: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400',
-  active: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400',
-};
 
 interface SessionListProps {
-  skillName?: string;  // Filter by skill name. Omit to show all sessions.
+  skillName?: string;
 }
 
 export function SessionList({ skillName }: SessionListProps) {
-  const { sessions, fetchSessions, deleteSession, resumeSession, skills, isStreaming } = useAppStore();
+  const { sessions, fetchSessions, isStreaming, loadTranscriptSession } = useAppStore();
   const t = useT();
+  const [transcriptSessions, setTranscriptSessions] = useState<TranscriptSession[]>([]);
+  const [transcriptLoading, setTranscriptLoading] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
+
+  const isPromptSkill = skillName === '__prompt__';
 
   useEffect(() => {
     fetchSessions();
+    // Always fetch transcripts - filter by sdkSessionId matching
+    setTranscriptLoading(true);
+    fetch('/api/transcripts')
+      .then(res => res.ok ? res.json() : { sessions: [] })
+      .then(data => setTranscriptSessions(data.sessions || []))
+      .catch(() => setTranscriptSessions([]))
+      .finally(() => setTranscriptLoading(false));
   }, [fetchSessions]);
 
   const filtered = skillName
     ? sessions.filter(s => s.skillName === skillName)
     : sessions;
 
-  const handleResume = useCallback((session: Session) => {
+  // Collect sdkSessionIds for current skill's sessions
+  const skillSdkIds = new Set(
+    filtered.filter(s => s.sdkSessionId).map(s => s.sdkSessionId!)
+  );
+  // Collect ALL sdkSessionIds to identify orphan transcripts
+  const allSdkIds = new Set(
+    sessions.filter(s => s.sdkSessionId).map(s => s.sdkSessionId!)
+  );
+  // Filter transcripts: skill-matched + orphans for prompt skill
+  // Sort descending by lastModified (newest first)
+  const filteredTranscripts = transcriptSessions
+    .filter(ts => skillSdkIds.has(ts.id) || (isPromptSkill && !allSdkIds.has(ts.id)))
+    .sort((a, b) => new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime());
+
+  const handleTranscriptClick = useCallback((ts: TranscriptSession) => {
     if (isStreaming) return;
-    const skill = session.skillName === '__prompt__'
-      ? null
-      : skills.find(s => s.name === session.skillName) || null;
-    resumeSession(session, skill);
-  }, [isStreaming, skills, resumeSession]);
+    loadTranscriptSession(ts.id, ts.summary);
+  }, [isStreaming, loadTranscriptSession]);
 
-  const handleDelete = useCallback((e: React.MouseEvent, sessionId: string) => {
-    e.stopPropagation();
-    deleteSession(sessionId);
-  }, [deleteSession]);
+  const handleDelete = useCallback(async (id: string) => {
+    try {
+      const res = await fetch(`/api/transcripts/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setTranscriptSessions(prev => prev.filter(ts => ts.id !== id));
+      }
+    } catch { /* ignore */ }
+    setConfirmDeleteId(null);
+  }, []);
 
-  if (filtered.length === 0) {
+  const handleDeleteAll = useCallback(async () => {
+    try {
+      const ids = filteredTranscripts.map(ts => ts.id);
+      if (ids.length === 0) return;
+      const res = await fetch('/api/transcripts', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids }),
+      });
+      if (res.ok) {
+        const deletedSet = new Set(ids);
+        setTranscriptSessions(prev => prev.filter(ts => !deletedSet.has(ts.id)));
+      }
+    } catch { /* ignore */ }
+    setConfirmDeleteAll(false);
+  }, [filteredTranscripts]);
+
+  if (filteredTranscripts.length === 0 && !transcriptLoading) {
     return (
       <div className="text-center text-gray-400 dark:text-gray-500 py-12">
         <p>{t('session.empty')}</p>
@@ -75,74 +113,88 @@ export function SessionList({ skillName }: SessionListProps) {
 
   return (
     <div className="py-4">
-      <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
-        {t('session.history')}
-      </h3>
-      <div className="space-y-2">
-        {filtered.map((session) => {
-          const statusKey = `session.status.${session.status}` as any;
-          const totalTokens = session.usage
-            ? session.usage.inputTokens + session.usage.outputTokens
-            : 0;
-
-          return (
-            <button
-              key={session.id}
-              onClick={() => handleResume(session)}
-              disabled={isStreaming}
-              className="w-full text-left group relative px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-blue-300 dark:hover:border-blue-600 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {/* Delete button */}
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+          {t('session.history')}
+        </h3>
+        {filteredTranscripts.length > 0 && (
+          confirmDeleteAll ? (
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-red-500">{t('session.deleteAllConfirm')}</span>
               <button
-                onClick={(e) => handleDelete(e, session.id)}
-                className="absolute top-2 right-2 p-1 rounded-full text-gray-300 dark:text-gray-600 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 opacity-0 group-hover:opacity-100 transition-opacity"
-                title={t('session.delete')}
+                onClick={handleDeleteAll}
+                className="px-2 py-0.5 text-xs bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
               >
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                {t('session.delete')}
               </button>
-
+              <button
+                onClick={() => setConfirmDeleteAll(false)}
+                className="px-2 py-0.5 text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+              >
+                {t('plugin.cancel')}
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setConfirmDeleteAll(true)}
+              disabled={isStreaming}
+              className="px-2 py-0.5 text-xs text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 transition-colors disabled:opacity-50"
+            >
+              {t('session.deleteAll')}
+            </button>
+          )
+        )}
+      </div>
+      <div className="space-y-2">
+        {filteredTranscripts.map((ts) => (
+          <div key={ts.id} className="group relative">
+            <button
+              onClick={() => handleTranscriptClick(ts)}
+              disabled={isStreaming}
+              className="w-full text-left px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-blue-300 dark:hover:border-blue-600 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               <div className="flex items-start gap-3">
-                {/* Skill icon */}
-                <span className="text-lg flex-shrink-0 mt-0.5">
-                  {session.skillIcon || (session.skillName === '__prompt__' ? '\u26A1' : '\uD83D\uDCC4')}
-                </span>
-
-                {/* Content */}
-                <div className="flex-1 min-w-0">
+                <span className="text-lg flex-shrink-0 mt-0.5">{'\uD83D\uDCDD'}</span>
+                <div className="flex-1 min-w-0 pr-6">
                   <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                    {session.preview || session.skillName}
+                    {ts.summary}
                   </p>
                   <div className="flex items-center gap-2 mt-1 text-xs text-gray-400 dark:text-gray-500">
-                    <span>{formatTimeAgo(session.lastActivity, t)}</span>
-                    <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${STATUS_STYLES[session.status] || STATUS_STYLES.completed}`}>
-                      {t(statusKey) || session.status}
-                    </span>
-                    {totalTokens > 0 && (
-                      <>
-                        <span>&middot;</span>
-                        <span>{formatTokens(totalTokens)} tok</span>
-                      </>
-                    )}
-                    {session.usage?.totalCostUsd ? (
-                      <>
-                        <span>&middot;</span>
-                        <span>${session.usage.totalCostUsd.toFixed(3)}</span>
-                      </>
-                    ) : null}
-                    {session.usage?.durationMs ? (
-                      <>
-                        <span>&middot;</span>
-                        <span>{formatDuration(session.usage.durationMs)}</span>
-                      </>
-                    ) : null}
+                    <span>{formatDateTime(ts.lastModified)}</span>
+                    <span className="text-gray-300 dark:text-gray-600">&middot;</span>
+                    <span>{formatTimeAgo(ts.lastModified, t)}</span>
                   </div>
                 </div>
               </div>
             </button>
-          );
-        })}
+            {/* Individual delete button */}
+            {confirmDeleteId === ts.id ? (
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-white dark:bg-gray-800 rounded-lg shadow px-1.5 py-1 z-10">
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleDelete(ts.id); }}
+                  className="px-2 py-0.5 text-xs bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                >
+                  {t('session.delete')}
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(null); }}
+                  className="px-2 py-0.5 text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                >
+                  {t('plugin.cancel')}
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(ts.id); }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1 text-gray-300 dark:text-gray-600 hover:text-red-500 dark:hover:text-red-400 transition-all"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );

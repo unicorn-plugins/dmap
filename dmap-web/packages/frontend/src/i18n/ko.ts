@@ -182,7 +182,9 @@ const ko: Translations = {
   'session.resume': '이어하기',
   'session.resumed': '이전 대화를 이어갑니다',
   'session.delete': '삭제',
+  'session.deleteAll': '전체 삭제',
   'session.deleteConfirm': '이 대화를 삭제하시겠습니까?',
+  'session.deleteAllConfirm': '모든 대화를 삭제하시겠습니까?',
   'session.status.completed': '완료',
   'session.status.waiting': '대기',
   'session.status.error': '오류',
@@ -203,6 +205,11 @@ const ko: Translations = {
 
   // Setup Guard
   'setup.required': '플러그인 사용 전에 플러그인 초기설정이 반드시 필요합니다.',
+
+  // Transcript (integrated into SessionList)
+  'session.claudeCode': 'Claude Code 대화',
+  'session.transcriptView': '대화이력 보기',
+  'session.backToList': '돌아가기',
 };
 
 export default ko;

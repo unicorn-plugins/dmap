@@ -17,7 +17,7 @@ const MIN_ROWS = 2;
 const MAX_ROWS = 10;
 
 export function ChatPanel() {
-  const { selectedSkill, messages, isStreaming, pendingApproval, sessionId, selectedPlugin } = useAppStore();
+  const { selectedSkill, messages, isStreaming, pendingApproval, sessionId, selectedPlugin, isTranscriptView, clearTranscriptView } = useAppStore();
   const { executeSkill, respondToApproval, stopStream } = useSkillStream();
   const { lang } = useLangStore();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -34,7 +34,7 @@ export function ChatPanel() {
   const lastEscRef = useRef(0);
   const t = useT();
 
-  const hasStarted = messages.length > 0 || isStreaming;
+  const hasStarted = messages.length > 0 || isStreaming || isTranscriptView;
 
   const ALLOWED_EXTENSIONS = new Set([
     '.png', '.jpg', '.jpeg', '.gif', '.webp',
@@ -217,6 +217,10 @@ export function ChatPanel() {
 
   const handleBottomSend = () => {
     if (!selectedSkill || isStreaming || !bottomInputValue.trim()) return;
+    // Exit transcript view on send - conversation continues as multi-turn
+    if (isTranscriptView) {
+      useAppStore.setState({ isTranscriptView: false });
+    }
     useAppStore.getState().addMessage({ role: 'user', content: bottomInputValue.trim() });
     executeSkill(selectedSkill.name, bottomInputValue.trim(), attachedPaths.length > 0 ? attachedPaths : undefined);
     setBottomInputValue('');
@@ -279,19 +283,40 @@ export function ChatPanel() {
       <header className="px-6 py-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-              {selectedSkill.name === '__prompt__'
-                ? `${selectedSkill.icon} ${t('prompt.title')}`
-                : `${selectedSkill.icon} ${t(`skill.${selectedSkill.name}.name` as keyof Translations) || selectedSkill.displayName}`}
-            </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              {selectedSkill.name === '__prompt__'
-                ? t('prompt.description')
-                : t(`skill.${selectedSkill.name}.desc` as keyof Translations) || selectedSkill.description}
-            </p>
+            {isTranscriptView ? (
+              <>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  {'\uD83D\uDCDD'} {t('session.claudeCode')}
+                </h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {t('session.transcriptView')}
+                </p>
+              </>
+            ) : (
+              <>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  {selectedSkill.name === '__prompt__'
+                    ? `${selectedSkill.icon} ${t('prompt.title')}`
+                    : `${selectedSkill.icon} ${t(`skill.${selectedSkill.name}.name` as keyof Translations) || selectedSkill.displayName}`}
+                </h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {selectedSkill.name === '__prompt__'
+                    ? t('prompt.description')
+                    : t(`skill.${selectedSkill.name}.desc` as keyof Translations) || selectedSkill.description}
+                </p>
+              </>
+            )}
           </div>
           <div className="flex gap-2">
-            {messages.length > 0 && !isStreaming && (
+            {isTranscriptView && (
+              <button
+                onClick={clearTranscriptView}
+                className="px-4 py-2 text-sm bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              >
+                {t('session.backToList')}
+              </button>
+            )}
+            {!isTranscriptView && messages.length > 0 && !isStreaming && (
               <button
                 onClick={handleClear}
                 className="px-4 py-2 text-sm bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
@@ -309,7 +334,7 @@ export function ChatPanel() {
             )}
           </div>
         </div>
-        {!hasStarted && (
+        {!hasStarted && !isTranscriptView && (
           <>
             <textarea
               ref={textareaRef}

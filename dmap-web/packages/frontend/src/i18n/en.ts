@@ -182,7 +182,9 @@ const en: Translations = {
   'session.resume': 'Resume',
   'session.resumed': 'Resuming previous conversation',
   'session.delete': 'Delete',
+  'session.deleteAll': 'Delete All',
   'session.deleteConfirm': 'Delete this conversation?',
+  'session.deleteAllConfirm': 'Delete all conversations?',
   'session.status.completed': 'Done',
   'session.status.waiting': 'Waiting',
   'session.status.error': 'Error',
@@ -203,6 +205,11 @@ const en: Translations = {
 
   // Setup Guard
   'setup.required': 'Plugin initial setup is required before use.',
+
+  // Transcript (integrated into SessionList)
+  'session.claudeCode': 'Claude Code Conversations',
+  'session.transcriptView': 'View Transcript',
+  'session.backToList': 'Back',
 };
 
 export default en;
