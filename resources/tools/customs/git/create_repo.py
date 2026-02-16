@@ -225,8 +225,26 @@ def get_remote_url(directory, remote_name="origin"):
         return None
 
 
+def sanitize_remote_url(url):
+    """
+    원격 URL에서 토큰 제거 (보안)
+    https://TOKEN@github.com/... → https://github.com/...
+    """
+    import re
+    # 토큰 패턴: https://TOKEN@github.com 형태
+    pattern = r'https://[^@]+@github\.com/'
+    if re.search(pattern, url):
+        sanitized = re.sub(r'https://[^@]+@', 'https://', url)
+        print_info(f"⚠️  보안: 원격 URL에서 토큰을 제거했습니다.")
+        return sanitized
+    return url
+
+
 def add_remote(directory, remote_url, remote_name="origin"):
     """원격 저장소 추가 또는 업데이트"""
+    # 보안: URL에서 토큰 제거
+    remote_url = sanitize_remote_url(remote_url)
+
     existing_url = get_remote_url(directory, remote_name)
 
     if existing_url:
@@ -324,17 +342,47 @@ def create_initial_commit(directory):
         return False
 
 
-def push_to_remote(directory, branch, remote_name="origin"):
-    """원격 저장소로 푸시"""
+def push_to_remote(directory, branch, remote_name="origin", token=None):
+    """
+    원격 저장소로 푸시
+    토큰이 제공되면 일회성으로 사용 (원격 URL에 저장하지 않음)
+    """
     try:
         print_info(f"원격 저장소로 푸시 중: {remote_name}/{branch}")
-        result = subprocess.run(
-            ["git", "push", "-u", remote_name, branch],
-            cwd=directory,
-            capture_output=True,
-            check=True,
-            text=True
-        )
+
+        # 토큰이 있으면 일회성 URL 생성
+        if token:
+            # 현재 원격 URL 가져오기
+            remote_url = get_remote_url(directory, remote_name)
+            if not remote_url:
+                print_error(f"원격 저장소 '{remote_name}'을(를) 찾을 수 없습니다.")
+                return False
+
+            # 토큰을 포함한 일회성 URL 생성
+            # https://github.com/... → https://TOKEN@github.com/...
+            if remote_url.startswith("https://github.com/"):
+                push_url = remote_url.replace("https://github.com/", f"https://{token}@github.com/")
+            else:
+                push_url = remote_name  # SSH 등 다른 프로토콜
+
+            # 일회성 URL로 푸시
+            result = subprocess.run(
+                ["git", "push", "-u", push_url, branch],
+                cwd=directory,
+                capture_output=True,
+                check=True,
+                text=True
+            )
+        else:
+            # 토큰 없으면 일반 푸시 (credential helper 사용)
+            result = subprocess.run(
+                ["git", "push", "-u", remote_name, branch],
+                cwd=directory,
+                capture_output=True,
+                check=True,
+                text=True
+            )
+
         print_success(f"원격 저장소로 푸시 완료: {remote_name}/{branch}")
         return True
     except subprocess.CalledProcessError as e:
@@ -452,8 +500,8 @@ def main():
         # 현재 브랜치 확인
         branch = get_current_branch(directory)
 
-        # 푸시
-        if not push_to_remote(directory, branch):
+        # 푸시 (토큰을 일회성으로 사용)
+        if not push_to_remote(directory, branch, token=token):
             return 1
 
         print_success(f"🎉 모든 작업이 완료되었습니다!")
