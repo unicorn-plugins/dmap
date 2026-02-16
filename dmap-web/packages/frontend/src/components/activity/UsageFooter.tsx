@@ -12,14 +12,6 @@ function formatCost(usd: number): string {
   return '$' + usd.toFixed(2);
 }
 
-function formatDuration(ms: number): string {
-  const secs = Math.floor(ms / 1000);
-  if (secs < 60) return `${secs}s`;
-  const mins = Math.floor(secs / 60);
-  const remainSecs = secs % 60;
-  return `${mins}m ${remainSecs}s`;
-}
-
 export function UsageFooter() {
   const { usage } = useActivityStore();
   const t = useT();

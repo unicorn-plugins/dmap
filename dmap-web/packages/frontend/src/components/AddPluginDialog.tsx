@@ -3,20 +3,9 @@ import { useAppStore } from '../stores/appStore.js';
 import { useLangStore } from '../stores/langStore.js';
 import { useT } from '../i18n/index.js';
 import { DraggableResizableDialog } from './DraggableResizableDialog.js';
-
-const API_BASE = '/api';
+import { API_BASE } from '@dmap-web/shared';
+import type { DirListing } from '../types/filesystem.js';
 const LAST_DIR_KEY = 'dmap-plugin-last-dir';
-
-interface DirEntry {
-  name: string;
-  path: string;
-}
-
-interface DirListing {
-  current: string;
-  parent: string | null;
-  directories: DirEntry[];
-}
 
 interface AddPluginDialogProps {
   onClose: () => void;

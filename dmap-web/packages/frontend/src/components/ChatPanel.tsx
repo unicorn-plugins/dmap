@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
 import { useAppStore } from '../stores/appStore.js';
 import { useSkillStream } from '../hooks/useSkillStream.js';
+import { useFileAttachment } from '../hooks/useFileAttachment.js';
 import { useT } from '../i18n/index.js';
 import { useLangStore } from '../stores/langStore.js';
 import type { Translations } from '../i18n/types.js';
@@ -20,149 +21,19 @@ export function ChatPanel() {
   const { selectedSkill, messages, isStreaming, pendingApproval, sessionId, selectedPlugin, isTranscriptView, clearTranscriptView } = useAppStore();
   const { executeSkill, respondToApproval, stopStream } = useSkillStream();
   const { lang } = useLangStore();
+  const {
+    attachedPaths, showFileBrowser, setShowFileBrowser, isDragging, toast,
+    dragProps, handlePaste, handleFilesSelected, removePath, clearAttachments, getFileName,
+  } = useFileAttachment();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const bottomTextareaRef = useRef<HTMLTextAreaElement>(null);
   const [inputValue, setInputValue] = useState('');
   const [bottomInputValue, setBottomInputValue] = useState('');
-  const [attachedPaths, setAttachedPaths] = useState<string[]>([]);
-  const [showFileBrowser, setShowFileBrowser] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
-  const dragCounterRef = useRef(0);
-  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastEscRef = useRef(0);
   const t = useT();
 
   const hasStarted = messages.length > 0 || isStreaming || isTranscriptView;
-
-  const ALLOWED_EXTENSIONS = new Set([
-    '.png', '.jpg', '.jpeg', '.gif', '.webp',
-    '.pdf', '.txt', '.md', '.csv', '.json',
-    '.yaml', '.yml', '.xml',
-  ]);
-
-  const showToast = useCallback((msg: string) => {
-    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
-    setToast(msg);
-    toastTimerRef.current = setTimeout(() => setToast(null), 2000);
-  }, []);
-
-  const handleDragEnter = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    dragCounterRef.current++;
-    if (e.dataTransfer.types.includes('Files')) {
-      setIsDragging(true);
-    }
-  }, []);
-
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    dragCounterRef.current--;
-    if (dragCounterRef.current === 0) {
-      setIsDragging(false);
-    }
-  }, []);
-
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  }, []);
-
-  const uploadFiles = useCallback(async (files: { name: string; data: string }[]) => {
-    if (files.length === 0) return;
-    try {
-      const res = await fetch('/api/filesystem/upload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ files }),
-      });
-      if (res.ok) {
-        const { paths } = await res.json();
-        setAttachedPaths((prev) => [...prev, ...paths.filter((p: string) => !prev.includes(p))]);
-      }
-    } catch {
-      // ignore upload errors
-    }
-  }, []);
-
-  const fileToBase64 = useCallback(async (file: Blob, name: string) => {
-    const buffer = await file.arrayBuffer();
-    const bytes = new Uint8Array(buffer);
-    let binary = '';
-    for (let i = 0; i < bytes.length; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
-    return { name, data: btoa(binary) };
-  }, []);
-
-  const handleDrop = useCallback(async (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    dragCounterRef.current = 0;
-    setIsDragging(false);
-
-    const files = Array.from(e.dataTransfer.files);
-    if (files.length === 0) return;
-
-    const allowed: File[] = [];
-    let hasRejected = false;
-
-    for (const file of files) {
-      const ext = '.' + file.name.split('.').pop()?.toLowerCase();
-      if (ALLOWED_EXTENSIONS.has(ext)) {
-        allowed.push(file);
-      } else {
-        hasRejected = true;
-      }
-    }
-
-    if (hasRejected) {
-      showToast(t('fileBrowser.unsupportedType'));
-    }
-
-    if (allowed.length === 0) return;
-
-    const fileData = await Promise.all(
-      allowed.map((file) => fileToBase64(file, file.name)),
-    );
-    await uploadFiles(fileData);
-  }, [showToast, t, fileToBase64, uploadFiles]);
-
-  const handlePaste = useCallback(async (e: React.ClipboardEvent) => {
-    const items = Array.from(e.clipboardData.items);
-    const imageItems = items.filter((item) => item.type.startsWith('image/'));
-
-    if (imageItems.length === 0) return; // text paste — let default behavior happen
-
-    e.preventDefault(); // prevent image data from being pasted as text
-
-    const fileData = await Promise.all(
-      imageItems.map(async (item) => {
-        const blob = item.getAsFile();
-        if (!blob) return null;
-        const ext = item.type.split('/')[1] || 'png';
-        const name = `clipboard-${Date.now()}.${ext}`;
-        return fileToBase64(blob, name);
-      }),
-    );
-
-    const validFiles = fileData.filter((f): f is { name: string; data: string } => f !== null);
-    await uploadFiles(validFiles);
-  }, [fileToBase64, uploadFiles]);
-
-  const handleFilesSelected = (filePaths: string[]) => {
-    setAttachedPaths((prev) => [...prev, ...filePaths.filter((p) => !prev.includes(p))]);
-    setShowFileBrowser(false);
-  };
-
-  const removePath = (index: number) => {
-    setAttachedPaths((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const getFileName = (filePath: string) => filePath.split(/[\\/]/).pop() || filePath;
 
   const autoResize = useCallback((el: HTMLTextAreaElement | null) => {
     if (!el) return;
@@ -200,7 +71,7 @@ export function ChatPanel() {
     }
     executeSkill(selectedSkill.name, inputValue.trim() || undefined, attachedPaths.length > 0 ? attachedPaths : undefined);
     setInputValue('');
-    setAttachedPaths([]);
+    clearAttachments();
   };
 
   const handleClear = () => {
@@ -224,7 +95,7 @@ export function ChatPanel() {
     useAppStore.getState().addMessage({ role: 'user', content: bottomInputValue.trim() });
     executeSkill(selectedSkill.name, bottomInputValue.trim(), attachedPaths.length > 0 ? attachedPaths : undefined);
     setBottomInputValue('');
-    setAttachedPaths([]);
+    clearAttachments();
     if (bottomTextareaRef.current) {
       bottomTextareaRef.current.style.height = 'auto';
     }
@@ -252,10 +123,7 @@ export function ChatPanel() {
   return (
     <div
       className="flex-1 flex flex-col min-h-0 relative"
-      onDragEnter={handleDragEnter}
-      onDragLeave={handleDragLeave}
-      onDragOver={handleDragOver}
-      onDrop={handleDrop}
+      {...dragProps}
     >
       {/* Drag overlay */}
       {isDragging && (

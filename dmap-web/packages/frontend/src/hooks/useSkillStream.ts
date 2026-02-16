@@ -3,9 +3,8 @@ import { useAppStore } from '../stores/appStore.js';
 import { useT } from '../i18n/index.js';
 import { useLangStore } from '../stores/langStore.js';
 import { useActivityStore } from '../stores/activityStore.js';
+import { API_BASE } from '@dmap-web/shared';
 import type { QuestionItem, SSEEvent } from '@dmap-web/shared';
-
-const API_BASE = '/api';
 
 export function useSkillStream() {
   const {

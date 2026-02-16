@@ -1,27 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useT } from '../i18n/index.js';
 import { DraggableResizableDialog } from './DraggableResizableDialog.js';
-
-const API_BASE = '/api';
+import { API_BASE } from '@dmap-web/shared';
+import type { DirListing } from '../types/filesystem.js';
 const LAST_DIR_KEY = 'dmap-file-browser-last-dir';
-
-interface DirEntry {
-  name: string;
-  path: string;
-}
-
-interface FileEntry {
-  name: string;
-  path: string;
-  size: number;
-}
-
-interface DirListing {
-  current: string;
-  parent: string | null;
-  directories: DirEntry[];
-  files?: FileEntry[];
-}
 
 interface FileBrowserDialogProps {
   onSelect: (filePaths: string[]) => void;

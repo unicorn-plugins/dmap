@@ -132,6 +132,32 @@ function detectSkillChainCommand(text: string): { skillName: string; input?: str
   return null;
 }
 
+async function loadAllAgents(pluginId?: string) {
+  const omcAgents = await loadOmcAgents();
+  const pluginAgents = pluginId ? loadRegisteredAgents(pluginId) : {};
+  const pluginAgentCount = Object.keys(pluginAgents).length;
+  const allAgents = { ...(omcAgents || {}), ...pluginAgents };
+  const allAgentCount = Object.keys(allAgents).length;
+
+  let pluginAgentGuide = '';
+  if (pluginAgentCount > 0) {
+    const pluginList = (Object.entries(pluginAgents) as [string, OmcAgentDef][])
+      .map(([fqn, def]) => `  - "${fqn}" (${def.model || 'sonnet'}): ${def.description}`)
+      .join('\n');
+    pluginAgentGuide = `\nPLUGIN AGENTS:\n${pluginList}\nUse the full FQN as subagent_type.`;
+  }
+
+  return { omcAgents, pluginAgents, pluginAgentCount, allAgents, allAgentCount, pluginAgentGuide };
+}
+
+function buildFileAttachment(filePaths: string[] | undefined, isEnglish: boolean): string {
+  if (!filePaths || filePaths.length === 0) return '';
+  const fileList = filePaths.map((f) => `- ${f}`).join('\n');
+  return isEnglish
+    ? `\n\nAttached files:\n${fileList}\n\nRead the above files using the Read tool and refer to their contents.`
+    : `\n\n첨부 파일:\n${fileList}\n\n위 파일들을 Read 도구로 읽어서 참고하세요.`;
+}
+
 const ASK_USER_INSTRUCTION = `
 CRITICAL INSTRUCTION - USER INTERACTION FORMAT:
 You do NOT have access to the AskUserQuestion tool. It is disabled in this environment.
@@ -375,31 +401,15 @@ export async function executeSkill(
     callbacks.onEvent({ type: 'progress', steps: parsedSkillSteps.steps, activeStep: 1 });
   }
 
-  // Load OMC agents if available
-  const omcAgents = await loadOmcAgents();
-  if (omcAgents) {
-    console.log(`[SDK] Loaded ${Object.keys(omcAgents).length} OMC agents`);
-  }
+  // Load all agents (OMC + plugin)
+  const { omcAgents, pluginAgentCount, allAgents, allAgentCount, pluginAgentGuide: basePluginGuide } = await loadAllAgents(pluginId);
+  if (omcAgents) console.log(`[SDK] Loaded ${Object.keys(omcAgents).length} OMC agents`);
+  if (pluginAgentCount > 0) console.log(`[SDK] Loaded ${pluginAgentCount} registered agents for plugin "${pluginId}"`);
 
-  // Load registered plugin agents for the active plugin (from dmap-web/agents/{pluginId}/)
-  const pluginAgents = pluginId ? loadRegisteredAgents(pluginId) : {};
-  const pluginAgentCount = Object.keys(pluginAgents).length;
-  if (pluginAgentCount > 0) {
-    console.log(`[SDK] Loaded ${pluginAgentCount} registered agents for plugin "${pluginId}"`);
-  }
-
-  // Merge all agents: OMC (permanent) + active plugin agents
-  const allAgents = { ...(omcAgents || {}), ...pluginAgents };
-  const allAgentCount = Object.keys(allAgents).length;
-
-  // Build plugin agent description for system prompt
-  let pluginAgentGuide = '';
-  if (pluginAgentCount > 0) {
-    const pluginList = (Object.entries(pluginAgents) as [string, OmcAgentDef][])
-      .map(([fqn, def]) => `  - "${fqn}" (${def.model || 'sonnet'}): ${def.description}`)
-      .join('\n');
-    pluginAgentGuide = `\nPLUGIN AGENTS: The following plugin-specific agents are also available via the Task tool:\n${pluginList}\nUse the full FQN as subagent_type (e.g., Task(subagent_type="${Object.keys(pluginAgents)[0] || 'scope:agent:agent'}", model="sonnet", prompt="...")).`;
-  }
+  // Enrich plugin agent guide with usage example for skill context
+  const pluginAgentGuide = pluginAgentCount > 0
+    ? basePluginGuide.replace('Use the full FQN as subagent_type.', `Use the full FQN as subagent_type (e.g., Task(subagent_type="${Object.keys(allAgents)[0] || 'scope:agent:agent'}", model="sonnet", prompt="...")).`)
+    : '';
 
   const options: Record<string, unknown> = {
     model: 'claude-sonnet-4-5-20250929',
@@ -438,15 +448,7 @@ ${skillContent}${omcAgents ? `\n\n=== AGENT ORCHESTRATION PATTERNS ===\n${getSki
     await log('options', { model: options.model, maxTurns: options.maxTurns, resumeSessionId, disallowedTools: options.disallowedTools, hasAppendSystemPrompt: !!options.appendSystemPrompt, omcAgentCount: omcAgents ? Object.keys(omcAgents).length : 0, pluginAgentCount, totalAgentCount: allAgentCount, payloadBytes: agentsSize + promptSize });
 
     const isEnglish = lang && lang !== 'ko';
-
-    // Build file attachment suffix
-    let fileAttachment = '';
-    if (filePaths && filePaths.length > 0) {
-      const fileList = filePaths.map((f) => `- ${f}`).join('\n');
-      fileAttachment = isEnglish
-        ? `\n\nAttached files:\n${fileList}\n\nRead the above files using the Read tool and refer to their contents.`
-        : `\n\n첨부 파일:\n${fileList}\n\n위 파일들을 Read 도구로 읽어서 참고하세요.`;
-    }
+    const fileAttachment = buildFileAttachment(filePaths, !!isEnglish);
 
     let currentPrompt: string;
     if (resumeSessionId && input) {
@@ -569,26 +571,9 @@ export async function executePrompt(
   filePaths?: string[],
   abortController?: AbortController,
 ): Promise<ExecuteSkillResult> {
-  // Load OMC agents if available
-  const omcAgents = await loadOmcAgents();
-  if (omcAgents) {
-    console.log(`[SDK] Loaded ${Object.keys(omcAgents).length} OMC agents for prompt mode`);
-  }
-
-  // Load registered plugin agents
-  const pluginAgents = pluginId ? loadRegisteredAgents(pluginId) : {};
-  const pluginAgentCount = Object.keys(pluginAgents).length;
-
-  const allAgents = { ...(omcAgents || {}), ...pluginAgents };
-  const allAgentCount = Object.keys(allAgents).length;
-
-  let pluginAgentGuide = '';
-  if (pluginAgentCount > 0) {
-    const pluginList = (Object.entries(pluginAgents) as [string, OmcAgentDef][])
-      .map(([fqn, def]) => `  - "${fqn}" (${def.model || 'sonnet'}): ${def.description}`)
-      .join('\n');
-    pluginAgentGuide = `\nPLUGIN AGENTS:\n${pluginList}\nUse the full FQN as subagent_type.`;
-  }
+  // Load all agents (OMC + plugin)
+  const { omcAgents, allAgents, allAgentCount, pluginAgentGuide } = await loadAllAgents(pluginId);
+  if (omcAgents) console.log(`[SDK] Loaded ${Object.keys(omcAgents).length} OMC agents for prompt mode`);
 
   const isEnglish = lang && lang !== 'ko';
 
@@ -611,13 +596,7 @@ ${ASK_USER_INSTRUCTION}`,
   try {
     const log = await createLogger(dmapProjectDir, '__prompt__');
 
-    let fileAttachment = '';
-    if (filePaths && filePaths.length > 0) {
-      const fileList = filePaths.map((f) => `- ${f}`).join('\n');
-      fileAttachment = isEnglish
-        ? `\n\nAttached files:\n${fileList}\n\nRead the above files using the Read tool and refer to their contents.`
-        : `\n\n첨부 파일:\n${fileList}\n\n위 파일들을 Read 도구로 읽어서 참고하세요.`;
-    }
+    const fileAttachment = buildFileAttachment(filePaths, !!isEnglish);
 
     let currentPrompt: string;
     if (resumeSessionId && input) {

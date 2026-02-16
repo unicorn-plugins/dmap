@@ -3,6 +3,7 @@ import { useThemeStore } from '../stores/themeStore.js';
 import { useLangStore } from '../stores/langStore.js';
 import { useT, LANGUAGES } from '../i18n/index.js';
 import { AboutDialog } from './AboutDialog.js';
+import { Tooltip } from './Tooltip.js';
 
 interface SettingsMenuProps {
   version: string;
@@ -39,11 +40,7 @@ export function SettingsMenu({ version }: SettingsMenuProps) {
           <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
         </svg>
       </button>
-      {!open && (
-        <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 px-2 py-1 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap pointer-events-none z-[100]">
-          {t('settings.title')}
-        </div>
-      )}
+      {!open && <Tooltip text={t('settings.title')} />}
 
       {open && !submenu && (
         <div className="absolute left-0 top-full mt-1 w-44 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 py-1">

@@ -1,9 +1,7 @@
 import { create } from 'zustand';
 import type { ChatMessage, SkillMeta, ApprovalOption, QuestionItem, PluginInfo, Session } from '@dmap-web/shared';
-import { PROMPT_SKILL } from '@dmap-web/shared';
+import { PROMPT_SKILL, API_BASE } from '@dmap-web/shared';
 import { useActivityStore } from './activityStore.js';
-
-const API_BASE = '/api';
 const SELECTED_PLUGIN_KEY = 'dmap-selected-plugin';
 
 const DEFAULT_PLUGIN: PluginInfo = {

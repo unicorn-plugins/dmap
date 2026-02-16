@@ -4,6 +4,7 @@ import { promisify } from 'util';
 import fs from 'fs';
 import path from 'path';
 import { DMAP_PROJECT_DIR } from '../config.js';
+import { initSSE } from '../middleware/sse-handler.js';
 
 const execAsync = promisify(exec);
 
@@ -156,10 +157,7 @@ function checkDmap(marketplaces: string[], plugins: string[]): CheckResult {
 
 // GET /api/startup-check (SSE streaming, ordered)
 startupRouter.get('/', async (_req, res) => {
-  res.setHeader('Content-Type', 'text/event-stream');
-  res.setHeader('Cache-Control', 'no-cache');
-  res.setHeader('Connection', 'keep-alive');
-  res.flushHeaders();
+  initSSE(res);
 
   // Fixed order: checks are emitted in this sequence regardless of completion order
   const TOTAL = 7;

@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync, rmSync, readdirSync
 import path from 'path';
 import { DATA_DIR } from '../config.js';
 import type { OmcAgentDef } from './omc-integration.js';
+import { TIER_MODEL_MAP, parseFrontmatterField, parseYamlTier } from './agent-utils.js';
 
 const AGENTS_DIR = path.join(DATA_DIR, 'agents');
 
@@ -9,26 +10,6 @@ interface RegisteredAgents {
   pluginName: string;
   registeredAt: string;
   agents: Record<string, { description: string; prompt: string; model: string; disallowedTools?: string[] }>;
-}
-
-// Tier → model mapping (same as omc-integration.ts)
-const TIER_MODEL_MAP: Record<string, string> = {
-  HEAVY: 'opus',
-  HIGH: 'opus',
-  MEDIUM: 'sonnet',
-  LOW: 'haiku',
-};
-
-function parseFrontmatterField(content: string, field: string): string | undefined {
-  const match = content.match(/^---[\s\S]*?---/);
-  if (!match) return undefined;
-  const fieldMatch = match[0].match(new RegExp(`^${field}:\\s*(.+)`, 'm'));
-  return fieldMatch ? fieldMatch[1].trim().replace(/^["']|["']$/g, '') : undefined;
-}
-
-function parseYamlTier(content: string): string | undefined {
-  const match = content.match(/^tier:\s*(\w+)/m);
-  return match ? match[1].trim() : undefined;
 }
 
 /**
@@ -54,8 +35,9 @@ function scanLocalAgents(projectDir: string, pluginId: string): Record<string, O
 
     let model = 'sonnet';
     const agentCard = path.join(agentPath, 'agentcard.yaml');
-    if (existsSync(agentCard)) {
-      const cardContent = readFileSync(agentCard, 'utf-8');
+    const cardContent = existsSync(agentCard) ? readFileSync(agentCard, 'utf-8') : null;
+
+    if (cardContent) {
       const tier = parseYamlTier(cardContent);
       if (tier && TIER_MODEL_MAP[tier]) {
         model = TIER_MODEL_MAP[tier];
@@ -64,8 +46,7 @@ function scanLocalAgents(projectDir: string, pluginId: string): Record<string, O
 
     // Build full prompt: AGENT.md content + agentcard.yaml (if exists)
     let prompt = mdContent;
-    if (existsSync(agentCard)) {
-      const cardContent = readFileSync(agentCard, 'utf-8');
+    if (cardContent) {
       prompt += `\n\n--- agentcard.yaml ---\n${cardContent}`;
     }
 

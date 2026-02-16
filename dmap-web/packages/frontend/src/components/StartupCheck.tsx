@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useT } from '../i18n/index.js';
-
-const API_BASE = '/api';
+import { API_BASE } from '@dmap-web/shared';
 
 interface CheckResult {
   id: string;

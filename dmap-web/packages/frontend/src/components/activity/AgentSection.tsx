@@ -1,5 +1,6 @@
 import { useActivityStore } from '../../stores/activityStore.js';
 import { useT } from '../../i18n/index.js';
+import { formatTime } from '../../utils/format.js';
 
 const MODEL_COLORS: Record<string, string> = {
   haiku: 'bg-gray-500',
@@ -11,11 +12,6 @@ function parseAgentName(subagentType: string): string {
   // "oh-my-claudecode:executor" → "executor"
   const parts = subagentType.split(':');
   return parts[parts.length - 1] || subagentType;
-}
-
-function formatTime(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
 }
 
 export function AgentSection() {

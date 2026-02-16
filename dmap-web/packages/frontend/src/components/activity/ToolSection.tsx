@@ -1,6 +1,7 @@
 import { useRef, useEffect } from 'react';
 import { useActivityStore } from '../../stores/activityStore.js';
 import { useT } from '../../i18n/index.js';
+import { formatTime } from '../../utils/format.js';
 
 const TOOL_COLORS: Record<string, string> = {
   Read: 'bg-green-500',
@@ -16,11 +17,6 @@ const TOOL_COLORS: Record<string, string> = {
 
 function getToolColor(name: string): string {
   return TOOL_COLORS[name] || 'bg-gray-400';
-}
-
-function formatTime(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
 }
 
 export function ToolSection() {

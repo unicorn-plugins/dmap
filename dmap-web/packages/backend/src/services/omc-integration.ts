@@ -1,6 +1,7 @@
 import { readdirSync, existsSync, readFileSync } from 'fs';
 import path from 'path';
 import os from 'os';
+import { parseFrontmatterField } from './agent-utils.js';
 
 export interface OmcAgentDef {
   description: string;
@@ -56,17 +57,10 @@ const AGENT_DESCRIPTIONS: Record<string, string> = {
   researcher: 'External SDK/API/package evaluation and documentation research (Sonnet)',
 };
 
-function parseFrontmatterDisallowedTools(
-  content: string
-): string[] | undefined {
-  const match = content.match(/^---[\s\S]*?---/);
-  if (!match) return undefined;
-  const disallowedMatch = match[0].match(/^disallowedTools:\s*(.+)/m);
-  if (!disallowedMatch) return undefined;
-  return disallowedMatch[1]
-    .split(',')
-    .map((t) => t.trim())
-    .filter(Boolean);
+function parseFrontmatterDisallowedTools(content: string): string[] | undefined {
+  const value = parseFrontmatterField(content, 'disallowedTools');
+  if (!value) return undefined;
+  return value.split(',').map((t) => t.trim()).filter(Boolean);
 }
 
 function compareVersions(a: string, b: string): number {

@@ -2,17 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAppStore } from '../../stores/appStore.js';
 import { useActivityStore } from '../../stores/activityStore.js';
 import { useT } from '../../i18n/index.js';
-
-function formatElapsed(ms: number): string {
-  const secs = Math.floor(ms / 1000);
-  if (secs < 60) return `${secs}s`;
-  const mins = Math.floor(secs / 60);
-  const remainSecs = secs % 60;
-  if (mins < 60) return `${mins}m ${remainSecs}s`;
-  const hrs = Math.floor(mins / 60);
-  const remainMins = mins % 60;
-  return `${hrs}h ${remainMins}m`;
-}
+import { formatElapsed } from '../../utils/format.js';
 
 export function StatusHeader() {
   const { isStreaming } = useAppStore();
