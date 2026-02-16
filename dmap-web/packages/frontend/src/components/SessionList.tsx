@@ -40,8 +40,6 @@ export function SessionList({ skillName }: SessionListProps) {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
 
-  const isPromptSkill = skillName === '__prompt__';
-
   useEffect(() => {
     fetchSessions();
     // Always fetch transcripts - filter by sdkSessionId matching
@@ -61,14 +59,12 @@ export function SessionList({ skillName }: SessionListProps) {
   const skillSdkIds = new Set(
     filtered.filter(s => s.sdkSessionId).map(s => s.sdkSessionId!)
   );
-  // Collect ALL sdkSessionIds to identify orphan transcripts
-  const allSdkIds = new Set(
-    sessions.filter(s => s.sdkSessionId).map(s => s.sdkSessionId!)
-  );
-  // Filter transcripts: skill-matched + orphans for prompt skill
+  // Filter transcripts: only show skill-matched transcripts
+  // (no longer include orphan transcripts for prompt skill -
+  //  orphans are CLI sessions not created through dmap-web)
   // Sort descending by lastModified (newest first)
   const filteredTranscripts = transcriptSessions
-    .filter(ts => skillSdkIds.has(ts.id) || (isPromptSkill && !allSdkIds.has(ts.id)))
+    .filter(ts => skillSdkIds.has(ts.id))
     .sort((a, b) => new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime());
 
   const handleTranscriptClick = useCallback((ts: TranscriptSession) => {

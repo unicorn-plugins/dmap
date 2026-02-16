@@ -180,7 +180,7 @@ export const useAppStore = create<AppState>((set) => ({
 
   selectSkill: (skill) => {
     useActivityStore.getState().clearActivity();
-    set({ selectedSkill: skill, messages: [], sessionId: null, pendingApproval: null });
+    set({ selectedSkill: skill, messages: [], sessionId: null, pendingApproval: null, isTranscriptView: false });
   },
 
   setSessionId: (id) => set({ sessionId: id }),
