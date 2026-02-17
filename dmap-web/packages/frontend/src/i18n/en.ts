@@ -194,6 +194,8 @@ const en: Translations = {
   'session.timeAgo.minutes': '{{n}}m ago',
   'session.timeAgo.hours': '{{n}}h ago',
   'session.timeAgo.days': '{{n}}d ago',
+  'session.editTitle': 'Edit Title',
+  'session.editPlaceholder': 'Enter title',
 
   // Skill Switch Dialog
   'switchDialog.title': 'Switch Skill',

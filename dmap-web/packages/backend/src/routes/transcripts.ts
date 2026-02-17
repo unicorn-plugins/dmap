@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { listTranscriptSessions, getTranscriptMessages, deleteTranscriptSession, deleteBatchTranscriptSessions } from '../services/transcript-service.js';
+import { listTranscriptSessions, getTranscriptMessages, deleteTranscriptSession, deleteBatchTranscriptSessions, saveTitleOverride } from '../services/transcript-service.js';
 import { resolveProjectDir } from '../services/plugin-manager.js';
 
 export const transcriptsRouter = Router();
@@ -49,6 +49,27 @@ transcriptsRouter.delete('/:sessionId', async (req, res) => {
       res.status(400).json({ error: err.message });
     } else {
       res.status(500).json({ error: 'Failed to delete transcript' });
+    }
+  }
+});
+
+// PATCH /api/transcripts/:sessionId/title - Update transcript title
+transcriptsRouter.patch('/:sessionId/title', async (req, res) => {
+  try {
+    const { title } = req.body || {};
+    if (typeof title !== 'string') {
+      res.status(400).json({ error: 'title string is required' });
+      return;
+    }
+    const pluginId = req.query.pluginId as string | undefined;
+    const projectDir = await resolveProjectDir(pluginId);
+    await saveTitleOverride(req.params.sessionId, title, projectDir);
+    res.json({ success: true });
+  } catch (err: any) {
+    if (err.message?.includes('Invalid session ID')) {
+      res.status(400).json({ error: err.message });
+    } else {
+      res.status(500).json({ error: 'Failed to update title' });
     }
   }
 });

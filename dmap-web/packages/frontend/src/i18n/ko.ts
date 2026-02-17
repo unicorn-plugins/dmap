@@ -194,6 +194,8 @@ const ko: Translations = {
   'session.timeAgo.minutes': '{{n}}분 전',
   'session.timeAgo.hours': '{{n}}시간 전',
   'session.timeAgo.days': '{{n}}일 전',
+  'session.editTitle': '제목 수정',
+  'session.editPlaceholder': '대화 제목 입력',
 
   // Skill Switch Dialog
   'switchDialog.title': '스킬 전환',

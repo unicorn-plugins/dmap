@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useState } from 'react';
+import { useEffect, useCallback, useState, useRef } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { useAppStore } from '../stores/appStore.js';
 import { useT } from '../i18n/index.js';
@@ -29,6 +29,68 @@ function formatDateTime(dateStr: string): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+/** 제목 수정 팝업 */
+function EditTitlePopup({
+  currentTitle,
+  onSave,
+  onCancel,
+}: {
+  currentTitle: string;
+  onSave: (title: string) => void;
+  onCancel: () => void;
+}) {
+  const [value, setValue] = useState(currentTitle);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const t = useT();
+
+  useEffect(() => {
+    inputRef.current?.select();
+  }, []);
+
+  const handleSave = () => {
+    const trimmed = value.trim();
+    if (trimmed) onSave(trimmed);
+    else onCancel();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={onCancel}>
+      <div
+        className="bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 p-4 w-80 max-w-[90vw]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">{t('session.editTitle')}</h4>
+        <input
+          ref={inputRef}
+          autoFocus
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') { e.preventDefault(); handleSave(); }
+            if (e.key === 'Escape') onCancel();
+          }}
+          className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 outline-none focus:border-blue-400 dark:focus:border-blue-500 transition-colors"
+          placeholder={t('session.editPlaceholder')}
+        />
+        <div className="flex justify-end gap-2 mt-3">
+          <button
+            onClick={onCancel}
+            className="px-3 py-1.5 text-xs font-medium rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+          >
+            {t('plugin.cancel')}
+          </button>
+          <button
+            onClick={handleSave}
+            className="px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors"
+          >
+            {t('common.send')}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 interface SessionListProps {
   skillName?: string;
 }
@@ -47,6 +109,7 @@ export function SessionList({ skillName }: SessionListProps) {
   const [transcriptLoading, setTranscriptLoading] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchSessions();
@@ -84,6 +147,25 @@ export function SessionList({ skillName }: SessionListProps) {
     loadTranscriptSession(ts.id, ts.summary);
   }, [isStreaming, loadTranscriptSession]);
 
+  const handleEditSave = useCallback(async (id: string, newTitle: string) => {
+    try {
+      const url = pluginId
+        ? `/api/transcripts/${id}/title?pluginId=${pluginId}`
+        : `/api/transcripts/${id}/title`;
+      const res = await fetch(url, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: newTitle }),
+      });
+      if (res.ok) {
+        setTranscriptSessions(prev =>
+          prev.map(ts => ts.id === id ? { ...ts, summary: newTitle } : ts)
+        );
+      }
+    } catch { /* ignore */ }
+    setEditingId(null);
+  }, [pluginId]);
+
   const handleDelete = useCallback(async (id: string) => {
     try {
       const deleteUrl = pluginId ? `/api/transcripts/${id}?pluginId=${pluginId}` : `/api/transcripts/${id}`;
@@ -112,6 +194,9 @@ export function SessionList({ skillName }: SessionListProps) {
     setConfirmDeleteAll(false);
   }, [filteredTranscripts]);
 
+  // Find the session being edited for passing current title to popup
+  const editingSession = editingId ? filteredTranscripts.find(ts => ts.id === editingId) : null;
+
   if (filteredTranscripts.length === 0 && !transcriptLoading) {
     return (
       <div className="text-center text-gray-400 dark:text-gray-500 py-12">
@@ -122,6 +207,15 @@ export function SessionList({ skillName }: SessionListProps) {
 
   return (
     <div className="py-4">
+      {/* Title edit popup */}
+      {editingSession && (
+        <EditTitlePopup
+          currentTitle={editingSession.summary}
+          onSave={(title) => handleEditSave(editingSession.id, title)}
+          onCancel={() => setEditingId(null)}
+        />
+      )}
+
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
           {t('session.history')}
@@ -176,7 +270,7 @@ export function SessionList({ skillName }: SessionListProps) {
                 </div>
               </div>
             </button>
-            {/* Individual delete button */}
+            {/* Action buttons */}
             {confirmDeleteId === ts.id ? (
               <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-white dark:bg-gray-800 rounded-lg shadow px-1.5 py-1 z-10">
                 <button
@@ -193,14 +287,25 @@ export function SessionList({ skillName }: SessionListProps) {
                 </button>
               </div>
             ) : (
-              <button
-                onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(ts.id); }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1 text-gray-300 dark:text-gray-600 hover:text-red-500 dark:hover:text-red-400 transition-all"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 flex items-center gap-0.5 transition-all">
+                <button
+                  onClick={(e) => { e.stopPropagation(); setEditingId(ts.id); }}
+                  className="p-1 text-gray-300 dark:text-gray-600 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
+                  title={t('session.editTitle')}
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(ts.id); }}
+                  className="p-1 text-gray-300 dark:text-gray-600 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             )}
           </div>
         ))}

@@ -7,6 +7,47 @@ import { createLogger } from '../utils/logger.js';
 
 const log = createLogger('Transcript');
 
+/**
+ * 타이틀 오버라이드 파일 경로 반환
+ * 사용자가 수정한 대화 타이틀을 저장하는 JSON 파일
+ */
+function getTitleOverridesPath(projectDir: string): string {
+  return path.join(projectDir, '.dmap', 'transcript-titles.json');
+}
+
+/** 타이틀 오버라이드 맵 로드 */
+async function loadTitleOverrides(projectDir: string): Promise<Record<string, string>> {
+  try {
+    const data = await fs.readFile(getTitleOverridesPath(projectDir), 'utf-8');
+    return JSON.parse(data);
+  } catch {
+    return {};
+  }
+}
+
+/** 타이틀 오버라이드 저장 - 빈 문자열이면 오버라이드 삭제 (원본 복원) */
+export async function saveTitleOverride(sessionId: string, title: string, projectDir: string): Promise<void> {
+  if (!isValidSessionId(sessionId)) {
+    throw new Error(`Invalid session ID: ${sessionId}`);
+  }
+  const overridesPath = getTitleOverridesPath(projectDir);
+  await fs.mkdir(path.dirname(overridesPath), { recursive: true });
+
+  let overrides: Record<string, string> = {};
+  try {
+    overrides = JSON.parse(await fs.readFile(overridesPath, 'utf-8'));
+  } catch { /* new file */ }
+
+  const trimmed = title.trim();
+  if (trimmed) {
+    overrides[sessionId] = trimmed;
+  } else {
+    delete overrides[sessionId];
+  }
+
+  await fs.writeFile(overridesPath, JSON.stringify(overrides, null, 2), 'utf-8');
+}
+
 export interface TranscriptSession {
   id: string;           // filename without .jsonl
   summary: string;      // from first line summary field
@@ -125,6 +166,14 @@ export async function listTranscriptSessions(projectDir: string): Promise<Transc
       } catch (err) {
         // Skip files that can't be read
         log.error(`Failed to read ${file}:`, err);
+      }
+    }
+
+    // Apply title overrides (user-edited titles)
+    const overrides = await loadTitleOverrides(projectDir);
+    for (const session of sessions) {
+      if (overrides[session.id]) {
+        session.summary = overrides[session.id];
       }
     }
 

@@ -31,7 +31,7 @@ const MAX_ROWS = 10;
  * 구조: 헤더(스킬 정보+초기 입력) → 메시지 목록(스크롤) → 하단 입력(멀티턴) → 승인 다이얼로그
  */
 export function ChatPanel() {
-  const { selectedSkill, messages, isStreaming, pendingApproval, sessionId, selectedPlugin, isTranscriptView, clearTranscriptView, skillSuggestion } = useAppStore(useShallow((s) => ({
+  const { selectedSkill, messages, isStreaming, pendingApproval, sessionId, selectedPlugin, isTranscriptView, clearTranscriptView, skillSuggestion, transcriptId, transcriptSummary } = useAppStore(useShallow((s) => ({
     selectedSkill: s.selectedSkill,
     messages: s.messages,
     isStreaming: s.isStreaming,
@@ -41,6 +41,8 @@ export function ChatPanel() {
     isTranscriptView: s.isTranscriptView,
     clearTranscriptView: s.clearTranscriptView,
     skillSuggestion: s.skillSuggestion,
+    transcriptId: s.transcriptId,
+    transcriptSummary: s.transcriptSummary,
   })));
   const { executeSkill, respondToApproval, stopStream } = useSkillStream();
   const { lang } = useLangStore();
@@ -54,10 +56,36 @@ export function ChatPanel() {
   const [inputValue, setInputValue] = useState('');
   const [bottomInputValue, setBottomInputValue] = useState('');
   const lastEscRef = useRef(0);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [editTitleValue, setEditTitleValue] = useState('');
   const t = useT();
 
   // 대화 시작 여부 판별 - 메시지 존재 or 스트리밍 중 or 트랜스크립트 뷰
   const hasStarted = messages.length > 0 || isStreaming || isTranscriptView;
+
+  /** 트랜스크립트 제목 인라인 저장 */
+  const handleTitleSave = useCallback(async () => {
+    const trimmed = editTitleValue.trim();
+    if (!trimmed || !transcriptId) {
+      setIsEditingTitle(false);
+      return;
+    }
+    try {
+      const pluginId = selectedPlugin?.id;
+      const url = pluginId
+        ? `/api/transcripts/${transcriptId}/title?pluginId=${pluginId}`
+        : `/api/transcripts/${transcriptId}/title`;
+      const res = await fetch(url, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: trimmed }),
+      });
+      if (res.ok) {
+        useAppStore.setState({ transcriptSummary: trimmed });
+      }
+    } catch { /* ignore */ }
+    setIsEditingTitle(false);
+  }, [editTitleValue, transcriptId, selectedPlugin?.id]);
 
   /**
    * textarea 자동 높이 조절 - 내용에 따라 MIN~MAX 행 범위 내에서 동적 리사이즈
@@ -195,9 +223,34 @@ export function ChatPanel() {
           <div>
             {isTranscriptView ? (
               <>
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                  {'\uD83D\uDCDD'} {t('session.claudeCode')}
-                </h2>
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">{'\uD83D\uDCDD'}</span>
+                  {isEditingTitle ? (
+                    <input
+                      autoFocus
+                      value={editTitleValue}
+                      onChange={(e) => setEditTitleValue(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') { e.preventDefault(); handleTitleSave(); }
+                        if (e.key === 'Escape') setIsEditingTitle(false);
+                      }}
+                      onBlur={handleTitleSave}
+                      className="text-lg font-semibold text-gray-900 dark:text-gray-100 bg-transparent border-b-2 border-blue-400 dark:border-blue-500 outline-none py-0 min-w-[200px]"
+                      placeholder={t('session.editPlaceholder')}
+                    />
+                  ) : (
+                    <h2
+                      className="text-lg font-semibold text-gray-900 dark:text-gray-100 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors group/title"
+                      onClick={() => { setEditTitleValue(transcriptSummary); setIsEditingTitle(true); }}
+                      title={t('session.editTitle')}
+                    >
+                      {transcriptSummary || t('session.claudeCode')}
+                      <svg className="w-3.5 h-3.5 inline-block ml-1.5 opacity-0 group-hover/title:opacity-60 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                      </svg>
+                    </h2>
+                  )}
+                </div>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                   {t('session.transcriptView')}
                 </p>

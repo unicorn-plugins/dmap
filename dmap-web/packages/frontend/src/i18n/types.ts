@@ -190,6 +190,8 @@ export interface Translations {
   'session.timeAgo.minutes': string;
   'session.timeAgo.hours': string;
   'session.timeAgo.days': string;
+  'session.editTitle': string;
+  'session.editPlaceholder': string;
 
   // Skill Switch Dialog
   'switchDialog.title': string;

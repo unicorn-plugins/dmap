@@ -57,6 +57,8 @@ interface AppState {
   messages: ChatMessage[];
   isStreaming: boolean;
   isTranscriptView: boolean;
+  transcriptId: string | null;
+  transcriptSummary: string;
 
   // Session History
   sessions: Session[];
@@ -119,6 +121,8 @@ export const useAppStore = create<AppState>((set) => ({
   messages: [],
   isStreaming: false,
   isTranscriptView: false,
+  transcriptId: null,
+  transcriptSummary: '',
   sessions: [],
   pendingApproval: null,
   pendingSkillSwitch: null,
@@ -364,6 +368,8 @@ export const useAppStore = create<AppState>((set) => ({
     const dmapSession = useAppStore.getState().sessions.find(s => s.sdkSessionId === transcriptId);
     set({
       isTranscriptView: true,
+      transcriptId,
+      transcriptSummary: summary,
       sessionId: dmapSession?.id || null,
       messages: [{ id: 'transcript-loading', role: 'system' as const, content: '...', timestamp: new Date().toISOString() }],
       pendingApproval: null,
@@ -392,7 +398,7 @@ export const useAppStore = create<AppState>((set) => ({
   },
 
   clearTranscriptView: () => {
-    set({ isTranscriptView: false, messages: [], sessionId: null, pendingApproval: null });
+    set({ isTranscriptView: false, transcriptId: null, transcriptSummary: '', messages: [], sessionId: null, pendingApproval: null });
   },
 
   setSkillSuggestion: (suggestion) => set({ skillSuggestion: suggestion }),
