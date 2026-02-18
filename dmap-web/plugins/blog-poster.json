@@ -1,6 +1,6 @@
 {
   "pluginName": "blog-poster",
-  "registeredAt": "2026-02-16T23:31:39.518Z",
+  "registeredAt": "2026-02-18T17:34:51.685Z",
   "agents": {
     "blog-poster:image-creator:image-creator": {
       "description": "AI 기반 블로그 삽화 및 썸네일 이미지 생성",
