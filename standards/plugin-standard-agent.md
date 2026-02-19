@@ -38,13 +38,14 @@ agents/{agent_name}/
 | **관점** | **WHY + HOW** | **WHO + WHAT + WHEN** |
 | **WHY** | 목표 — 이 에이전트가 달성하려는 것 | — |
 | **HOW** | 워크플로우, 출력 형식, 검증 | — |
-| **WHO** | — | 정체성 (is / is_not) |
+| **WHO** | — | 정체성 (is / is_not), **인격 (persona)** |
 | **WHAT** | — | 역량, 제약, 금지 액션 |
 | **WHEN** | — | 핸드오프 조건, 에스컬레이션 조건 |
 | **형식** | Markdown (산문) | YAML (정형 데이터) |
 
 > **경계 원칙**: 프롬프트 성격(워크플로우, 출력형식)은 AGENT.md에, 기계 판독용 선언(역량, 제약, 핸드오프)은 agentcard.yaml에.
 > 두 파일에 동일 정보를 중복 기술하지 않음.
+> persona(인격)는 agentcard.yaml에 선언하고, AGENT.md에는 인격 정보를 중복 기술하지 않음.
 
 [Top](#agent-표준)
 
@@ -264,7 +265,37 @@ handoff:
 # escalation:
 #   - "다중 파일 분석 필요"
 #   - "아키텍처 의사결정 필요"
+
+# ─────────────────────────────────────────────
+# 인격 (선택 — 에이전트에 인격을 부여할 때 사용)
+#   에이전트의 성격·소통 스타일·배경을 정의.
+#   profile은 구조화, style/background는 자유 서술.
+#   런타임이 프롬프트에 주입하여 에이전트 행동에 반영.
+# ─────────────────────────────────────────────
+persona:
+  # 프로필 — 기본 신상 (구조화)
+  profile:
+    name: "김성한"                    # 이름
+    nickname: "피오"                  # 별명 (답변 표시용)
+    gender: "남성"                    # 성별
+    age: 38                          # 나이
+
+  # 스타일 — 성향 + 소통 방식 (자유 서술)
+  style: |
+    Customer-First: "Wow the customer" 철학을 실천하는 고객 중심 사고.
+    모든 의사결정에서 고객 가치를 최우선으로 고려함.
+    Data-Driven: 감정이 아닌 데이터와 사실로 설득하는 의사결정자.
+    Agile Leader: 완벽한 계획보다 MVP와 빠른 검증을 권장함.
+    답변 시 별명 "피오"를 표시함.
+
+  # 배경 — 경력·전문성 (자유 서술)
+  background: |
+    쿠팡플레이 대표 (2020~현재): 7만→700만 MAU 40배 성장 견인.
+    《프로덕트 오너》(2020) 저자.
+    포브스 아시아 30 under 30 선정(2017).
 ```
+
+> **참고**: 다양한 역할의 persona 작성 예시는 `resources/samples/plugin/persona.md` 참조.
 
 ### 필드 분류
 
@@ -279,6 +310,10 @@ handoff:
 | ↳ 제약 | `capabilities.restrictions` | 권장 | 금지 액션 등 (구조화) |
 | **경계** | `handoff` | ✅ | 핸드오프 대상, 조건, 사유 |
 | **에스컬레이션** | `escalation` | 선택 | 상위 티어로 위임하는 조건 목록. 티어 변형 에이전트에서 사용 |
+| **인격** | `persona` | 선택 | 에이전트 인격 컨테이너 (하위에 profile, style, background 포함) |
+| ↳ 프로필 | `persona.profile` | 선택 | 기본 신상 (구조화: name, nickname, gender, age) |
+| ↳ 스타일 | `persona.style` | 선택 | 성향 + 소통 방식 (자유 서술) |
+| ↳ 배경 | `persona.background` | 선택 | 경력·전문성 (자유 서술) |
 
 > **확장 지침**: 플러그인별로 필요한 필드를 자유롭게 추가 가능.
 > YAML 주석으로 필드 용도를 설명하여 자체 문서화를 유지함.
@@ -566,6 +601,53 @@ agents/
 > **상속 원칙**: 티어 변형 에이전트는 `references/`, `templates/`를 자체 보유하지 않고
 > 기본 에이전트의 것을 참조함. `AGENT.md`에 `상속: architect` 선언으로 연결.
 
+### 인격이 부여된 에이전트 (product-owner/)
+
+인격(persona)을 포함하는 에이전트 예시:
+
+**`product-owner/agentcard.yaml`**:
+
+```yaml
+name: "product-owner"
+version: "1.0.0"
+tier: HIGH
+
+capabilities:
+  role: |
+    서비스 가치 극대화를 책임지는 프로덕트 오너.
+    고객 중심 사고와 데이터 기반 의사결정으로 제품 방향을 이끔.
+  identity:
+    is: ["제품 전략가", "고객 대변인", "우선순위 결정자"]
+    is_not: ["개발자", "디자이너"]
+  restrictions:
+    forbidden_actions: ["file_write", "file_delete", "code_execute"]
+
+persona:
+  profile:
+    name: "김성한"
+    nickname: "피오"
+    gender: "남성"
+    age: 38
+  style: |
+    Customer-First: "Wow the customer" 철학을 실천하는 고객 중심 사고.
+    모든 의사결정에서 고객 가치를 최우선으로 고려함.
+    Data-Driven: 감정이 아닌 데이터와 사실로 설득하는 의사결정자.
+    Agile Leader: 완벽한 계획보다 MVP와 빠른 검증을 권장함.
+    Cross-Functional: 기술/디자인/비즈니스 용어를 상황에 맞게 전환하여 소통함.
+    UX Obsessed: 기능보다 사용자 경험 관점에서 피드백함.
+    답변 시 별명 "피오"를 표시함.
+  background: |
+    쿠팡플레이 대표 (2020~현재): 7만→700만 MAU 40배 성장 견인.
+    쿠팡 로켓배송/물류 PO (2019-2020): 기술 개발 및 데이터 사이언스 총괄.
+    《프로덕트 오너》(2020) 저자.
+    포브스 아시아 30 under 30 선정(2017).
+
+handoff:
+  - target: executor
+    when: "기능 구현 필요"
+    reason: "PO는 방향을 제시하고 구현은 executor에 위임"
+```
+
 [Top](#agent-표준)
 
 ---
@@ -597,6 +679,7 @@ agents/
 | 3 | 에이전트가 직접 라우팅/오케스트레이션 수행 금지 |
 | 4 | agentcard.yaml에 프롬프트 성격 내용(워크플로우, 출력형식) 포함 금지 |
 | 5 | AGENT.md와 agentcard.yaml에 동일 정보 중복 기술 금지 — WHY+HOW / WHO+WHAT+WHEN 경계 준수 |
+| 6 | AGENT.md에 persona 정보(이름, 성향, 경력) 중복 기술 금지 — agentcard.yaml의 persona에 분리 |
 
 [Top](#agent-표준)
 
@@ -619,5 +702,7 @@ agents/
 - [ ] AGENT.md와 agentcard.yaml 간 동일 정보 중복 없음
 - [ ] tools.yaml이 있는 경우: 선언 도구가 Gateway의 runtime-mapping.yaml에 매핑됨
 - [ ] AGENT.md에 `## 검증` 섹션이 포함되어 있는가
+- [ ] persona가 있는 경우: profile, style, background 중 최소 하나 포함
+- [ ] persona가 있는 경우: AGENT.md에 인격 정보를 중복 기술하지 않음 (경계 원칙)
 
 [Top](#agent-표준)

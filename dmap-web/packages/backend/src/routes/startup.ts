@@ -62,8 +62,9 @@ async function runCommand(cmd: string, timeoutMs = 10000, cwd?: string): Promise
 /** claude plugin list 명령으로 설치된 플러그인 목록 조회 + CLI 가용성 확인 */
 async function getInstalledPlugins(): Promise<{ plugins: string[]; cliAvailable: boolean }> {
   const { stdout, stderr } = await runCommand('claude plugin list', 15000);
-  const notFound = stderr.includes('not found') || stderr.includes('not recognized') ||
-    stdout.includes('not found') || stdout.includes('not recognized');
+  // CLI 자체가 없는 경우만 감지 (플러그인 로드 에러의 "not found in marketplace"는 무시)
+  const combined = (stderr + '\n' + stdout.split('\n').filter((l) => !l.includes('marketplace')).join('\n')).toLowerCase();
+  const notFound = combined.includes('not found') || combined.includes('not recognized');
   const matches = [...stdout.matchAll(/❯\s+(\S+)/g)];
   return { plugins: matches.map((m) => m[1]), cliAvailable: !notFound };
 }
@@ -132,12 +133,17 @@ async function checkClaudeAuth(): Promise<CheckResult> {
   };
 }
 
-/** Oh My Claudecode 설치 확인 */
-async function checkOmc(): Promise<CheckResult> {
+/** Oh My Claudecode 설치 확인 - CLI 또는 claude plugin list에서 감지 */
+async function checkOmc(plugins: string[]): Promise<CheckResult> {
+  // 1차: oh-my-claudecode CLI 확인
   const { stdout, stderr } = await runCommand('oh-my-claudecode --version');
   const output = (stdout || stderr).trim();
   if (output && !output.includes('not found') && !output.includes('not recognized')) {
     return { id: 'omc', label: 'Oh My Claudecode', status: 'pass', detail: output.split('\n')[0], fixable: false };
+  }
+  // 2차: claude plugin list에서 oh-my-claudecode 플러그인 존재 확인
+  if (plugins.some((p) => p.startsWith('oh-my-claudecode'))) {
+    return { id: 'omc', label: 'Oh My Claudecode', status: 'pass', detail: 'Installed (plugin)', fixable: false };
   }
   return { id: 'omc', label: 'Oh My Claudecode', status: 'fail', detail: 'Not installed', fixable: true, fixAction: 'setup_omc' };
 }
@@ -212,8 +218,8 @@ startupRouter.get('/', async (_req, res) => {
     pluginPromise.then(({ cliAvailable }) => setSlot(2, checkClaudeCli(cliAvailable))),
     // 3: Claude Authentication
     checkClaudeAuth().then((c) => setSlot(3, c)),
-    // 4: Oh My Claudecode
-    checkOmc().then((c) => setSlot(4, c)),
+    // 4: Oh My Claudecode (depends on plugin list)
+    pluginPromise.then(({ plugins }) => checkOmc(plugins)).then((c) => setSlot(4, c)),
     // 5: OMC Setup
     checkOmcSetup().then((c) => setSlot(5, c)),
     // 6: DMAP Plugin (cache directory check)

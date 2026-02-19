@@ -48,24 +48,34 @@ app.use('/api/transcripts', transcriptsRouter);
 app.use(errorHandler);
 
 /**
- * Windows 포트 충돌 해결 - 지정 포트를 점유 중인 프로세스를 강제 종료
- * netstat로 LISTENING 상태 PID 탐색 → taskkill로 강제 종료
+ * 포트 충돌 해결 - 지정 포트를 점유 중인 프로세스를 강제 종료
+ * Windows: netstat/taskkill, Linux/Mac: lsof/kill
  */
 function killPortProcess(port: number): boolean {
   try {
-    const result = execSync(`netstat -ano | findstr :${port} | findstr LISTENING`, { encoding: 'utf-8' });
-    const lines = result.trim().split('\n');
-    const pids = new Set<string>();
-    for (const line of lines) {
-      const parts = line.trim().split(/\s+/);
-      const pid = parts[parts.length - 1];
-      if (pid && pid !== '0') pids.add(pid);
+    if (process.platform === 'win32') {
+      const result = execSync(`netstat -ano | findstr :${port} | findstr LISTENING`, { encoding: 'utf-8' });
+      const lines = result.trim().split('\n');
+      const pids = new Set<string>();
+      for (const line of lines) {
+        const parts = line.trim().split(/\s+/);
+        const pid = parts[parts.length - 1];
+        if (pid && pid !== '0') pids.add(pid);
+      }
+      for (const pid of pids) {
+        log.info(`Killing existing process on port ${port} (PID: ${pid})`);
+        try { execSync(`taskkill /PID ${pid} /F`, { encoding: 'utf-8' }); } catch { /* already dead */ }
+      }
+      return pids.size > 0;
+    } else {
+      const result = execSync(`lsof -ti :${port}`, { encoding: 'utf-8' });
+      const pids = result.trim().split('\n').filter(Boolean);
+      for (const pid of pids) {
+        log.info(`Killing existing process on port ${port} (PID: ${pid})`);
+        try { execSync(`kill -9 ${pid}`, { encoding: 'utf-8' }); } catch { /* already dead */ }
+      }
+      return pids.length > 0;
     }
-    for (const pid of pids) {
-      log.info(`Killing existing process on port ${port} (PID: ${pid})`);
-      try { execSync(`taskkill /PID ${pid} /F`, { encoding: 'utf-8' }); } catch { /* already dead */ }
-    }
-    return pids.size > 0;
   } catch {
     return false;
   }

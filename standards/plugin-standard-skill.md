@@ -286,7 +286,8 @@ Core 스킬은 요청의 의도를 판별하고 적절한 스킬로 라우팅하
    └── tools.yaml     → 도구 해석 + 프롬프트에 첨부
 2. tier → runtime-mapping.yaml로 모델 매핑
 3. 프롬프트 조립: AGENT.md + agentcard.yaml + tools.yaml
-4. Task(subagent_type=FQN, model=매핑된모델, prompt=조립된 프롬프트) 호출
+4. 인격 주입: agentcard.yaml에 persona가 있으면 프롬프트 앞에 인격 컨텍스트 추가
+5. Task(subagent_type=FQN, model=매핑된모델, prompt=조립된 프롬프트) 호출
 ```
 
 > **프롬프트 조립**: AGENT.md의 "참조" 섹션이 agentcard.yaml과 tools.yaml을 참조하도록 지시하므로,
@@ -329,7 +330,10 @@ Task(
      - **금지액션 구체화**: agentcard.yaml의 `forbidden_actions` → `action_mapping`에서 제외할 실제 도구 결정
      - **최종 도구** = (구체화된 도구) - (제외 도구)
    - 3파일을 합쳐 하나의 프롬프트로 조립
-   - **프롬프트 구성 순서**: 공통 정적(runtime-mapping) → 에이전트별 정적(3파일) → 동적(작업 지시)
+   - **인격 구체화**: agentcard.yaml에 `persona`가 존재하면,
+     프롬프트 앞에 인격 컨텍스트를 주입:
+     "당신은 {persona.profile.nickname}입니다. 답변 시 별명 '{persona.profile.nickname}'를 표시하세요. {persona.style} {persona.background}"
+   - **프롬프트 구성 순서**: 공통 정적(runtime-mapping) → 에이전트별 정적(3파일) → 인격 주입(persona) → 동적(작업 지시)
      순서로 배치 (런타임의 prefix 캐시 적중률 극대화)
    - `Task(subagent_type=FQN, model=구체화된 모델, prompt=조립된 프롬프트)` 호출
 
