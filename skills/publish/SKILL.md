@@ -47,6 +47,7 @@ user-invocable: true
 | 단계 | 부스팅 스킬 | 용도 |
 |------|------------|------|
 | Step 1 (인증 정보 수집) | `/oh-my-claudecode:security-review` | 토큰 저장 및 .gitignore 처리 보안 검증 |
+| Step 2.5 (원격 URL 검증) | `/oh-my-claudecode:security-review` | 원격 URL 토큰 노출 자동 감지 및 수정 |
 | Step 2~3 (Push + 완료) | `/oh-my-claudecode:ultraqa` | 배포 결과 검증 (저장소 접근, README 확인) |
 
 [Top](#publish)
@@ -114,6 +115,24 @@ AskUserQuestion 도구로 다음 정보를 순차적으로 문의:
 
 > `create_repo.py`가 수행하는 작업: 저장소 존재 여부 확인 → 원격 저장소 생성 →
 > `git init` → `git remote add origin` → 초기 커밋 → `git push -u origin main`
+
+### Step 2.5: 원격 URL 보안 검증 (자동)
+
+`create_repo.py` 또는 수동 Push 완료 후 즉시 실행:
+
+1. 원격 URL 확인:
+   ```
+   git remote -v
+   ```
+2. 토큰 패턴 감지 (`ghp_`, `github_pat_`, `gho_`, `ghu_` 등):
+   - 정규식: `https://[^@]+@github\.com/`
+3. 토큰 발견 시 자동 수정:
+   ```
+   git remote set-url origin https://github.com/{owner}/{repo}.git
+   ```
+4. 수정 후 사용자에게 알림 및 PAT 폐기 안내:
+   > ⚠️ 원격 URL에서 토큰이 발견되어 제거했습니다. 해당 토큰을 즉시 폐기하세요.
+   > GitHub → Settings → Developer settings → Personal access tokens → 해당 토큰 삭제
 
 ### Step 3: 완료 메시지 및 플러그인 등록 안내
 
@@ -203,6 +222,7 @@ claude plugin list
 | 1 | 인증 토큰을 로그/출력에 노출 금지 |
 | 2 | 사용자 확인 없이 기존 저장소를 덮어쓰지 않음 |
 | 3 | `.dmap/secrets/` 디렉토리를 Git에 커밋하지 않음 |
+| 4 | 원격 URL에 토큰을 포함한 채로 저장하지 않음 (Step 2.5 자동 검증 필수) |
 
 [Top](#publish)
 
@@ -217,5 +237,7 @@ claude plugin list
 - [ ] 완료 메시지에 설치 명령어가 포함되어 있는가
 - [ ] 문제 해결 가이드가 포함되어 있는가
 - [ ] 토큰이 출력/로그에 노출되지 않도록 하는 규칙이 있는가
+- [ ] Step 2.5 원격 URL 보안 검증이 포함되어 있는가
+- [ ] 토큰 발견 시 자동 수정 및 PAT 폐기 안내 로직이 있는가
 
 [Top](#publish)
