@@ -277,6 +277,7 @@ persona:
   profile:
     name: "김성한"                    # 이름
     nickname: "피오"                  # 별명 (답변 표시용)
+    role: "제품 책임자 (PO)"          # 대표 역할
     gender: "남성"                    # 성별
     age: 38                          # 나이
 
@@ -310,13 +311,14 @@ persona:
 | ↳ 제약 | `capabilities.restrictions` | 권장 | 금지 액션 등 (구조화) |
 | **경계** | `handoff` | ✅ | 핸드오프 대상, 조건, 사유 |
 | **에스컬레이션** | `escalation` | 선택 | 상위 티어로 위임하는 조건 목록. 티어 변형 에이전트에서 사용 |
-| **인격** | `persona` | 선택 | 에이전트 인격 컨테이너 (하위에 profile, style, background 포함) |
-| ↳ 프로필 | `persona.profile` | 선택 | 기본 신상 (구조화: name, nickname, gender, age) |
-| ↳ 스타일 | `persona.style` | 선택 | 성향 + 소통 방식 (자유 서술) |
-| ↳ 배경 | `persona.background` | 선택 | 경력·전문성 (자유 서술) |
+| **인격** | `persona` | 필수 | 에이전트 인격 컨테이너 (하위에 profile, style, background 포함) |
+| ↳ 프로필 | `persona.profile` | 필수 | 기본 신상 (구조화: name, nickname, role, gender, age) |
+| ↳ 스타일 | `persona.style` | 필수 | 성향 + 소통 방식 (자유 서술) |
+| ↳ 배경 | `persona.background` | 필수 | 경력·전문성 (자유 서술) |
 
 > **확장 지침**: 플러그인별로 필요한 필드를 자유롭게 추가 가능.
 > YAML 주석으로 필드 용도를 설명하여 자체 문서화를 유지함.
+> persona.profile.nickname은 역할을 나타내는 짧은 별명으로 작성.   
 
 ### 표준 액션 카테고리
 
