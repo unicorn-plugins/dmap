@@ -600,11 +600,16 @@ export function refreshExternalMenus(pluginId: string, projectDir: string): Menu
   const data = loadPluginData(pluginId);
   const currentSkills = discoverSkillsForMenus(projectDir);
 
-  // 디스크에서 현재 external 스킬 목록 구성
+  // 기존 사용자 커스텀 라벨 보존을 위한 맵 구성
+  const existingLabels = new Map(
+    data?.menus?.external?.map(s => [s.name, s.labels]) || [],
+  );
+
+  // 디스크에서 현재 external 스킬 목록 구성 (기존 라벨 우선, 신규 스킬만 SKILL.md 기본 라벨 사용)
   const freshExternal: MenuSkillItem[] = currentSkills
     .filter(s => s.category === 'external')
     .sort((a, b) => a.name.localeCompare(b.name))
-    .map(s => ({ name: s.name, labels: s.labels }));
+    .map(s => ({ name: s.name, labels: existingLabels.get(s.name) || s.labels }));
 
   if (data?.menus) {
     // core/utility 보존, external만 갱신

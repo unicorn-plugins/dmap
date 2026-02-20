@@ -111,6 +111,23 @@ export interface Translations {
   'plugin.dirBrowser.title': string;
   'plugin.dirBrowser.parent': string;
   'plugin.dirBrowser.empty': string;
+  'plugin.tab.github': string;
+  'plugin.tab.local': string;
+  'plugin.githubRepo': string;
+  'plugin.githubRepoPlaceholder': string;
+  'plugin.step.marketplaceAdd': string;
+  'plugin.step.pluginInstall': string;
+  'plugin.error.cliFailure': string;
+  'plugin.error.invalidGithubRepo': string;
+  'plugin.error.installInProgress': string;
+  'plugin.warning.registryFailed': string;
+  'plugin.workingDirReadonly': string;
+  'plugin.workingDirEdit': string;
+  'plugin.workingDirUpdated': string;
+  'plugin.error.updateFailed': string;
+  'plugin.dirBrowser.newFolder': string;
+  'plugin.dirBrowser.newFolderPlaceholder': string;
+  'plugin.dirBrowser.newFolderError': string;
 
   // File Browser
   'fileBrowser.title': string;

@@ -73,7 +73,6 @@
 | ai-agent | abra | Dify 워크플로우 기반 AI Agent 개발 자동화 플러그인 | [상세](plugins/ai-agent/abra.md) |
 | devops | github-release-manager | GitHub Release 문서 자동 생성·수정·삭제 및 구성 추천 플러그인 | [상세](plugins/devops/github-release-manager.md) |
 | education | gen-ai-curriculum | 교재 분석 기반 AI교육 커리큘럼 자동 생성 및 PPTX 프리젠테이션 작성 플러그인 | [상세](plugins/education/gen-ai-curriculum.md) |
-| research | math-research | arXiv와 주요 수학 저널에서 최신 논문을 자동으로 검색하고, AI 요약 및 일일 리포트를 제공하는 플러그인 | [상세](plugins/research/math-research.md) |
 | npd | npd | 사람과 AI가 협업하여 새로운 프로젝트의 기획-설계-개발-배포 전 과정을 지원하는 플러그인 | [상세](plugins/npd/npd.md) |
 
 [Top](#리소스-마켓플레이스)

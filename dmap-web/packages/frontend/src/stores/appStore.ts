@@ -83,8 +83,10 @@ interface AppState {
   fetchPlugins: () => Promise<void>;
   selectPlugin: (plugin: PluginInfo) => void;
   addPlugin: (projectDir: string, displayNames: { ko: string; en: string }) => Promise<PluginInfo>;
+  installPlugin: (type: 'github' | 'local', source: string, displayNames?: { ko: string; en: string }) => Promise<any>;
   removePlugin: (pluginId: string) => Promise<void>;
   syncAgents: (pluginId: string) => Promise<{ count: number; agents: string[] }>;
+  updatePluginDir: (pluginId: string, workingDir: string) => Promise<void>;
   fetchSkills: () => Promise<void>;
   fetchMenus: () => Promise<void>;
   refreshMenus: () => Promise<void>;
@@ -171,6 +173,22 @@ export const useAppStore = create<AppState>((set) => ({
     return plugin;
   },
 
+  /** CLI 기반 플러그인 설치 (GitHub 또는 로컬) */
+  installPlugin: async (type: 'github' | 'local', source: string, displayNames?: { ko: string; en: string }) => {
+    const res = await fetch(`${API_BASE}/plugins/install`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type, source, displayNames }),
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error);
+    }
+    const result = await res.json();
+    await useAppStore.getState().fetchPlugins();
+    return result;
+  },
+
   /** 플러그인 삭제 → 삭제된 플러그인이 선택 중이면 첫 번째 플러그인으로 자동 전환 */
   removePlugin: async (pluginId: string) => {
     const res = await fetch(`${API_BASE}/plugins/${pluginId}`, { method: 'DELETE' });
@@ -199,6 +217,28 @@ export const useAppStore = create<AppState>((set) => ({
       throw new Error(err.error);
     }
     return res.json();
+  },
+
+  /** 외부 플러그인의 workingDir 변경 → 해당 플러그인의 작업 디렉토리만 로컬 갱신 (메뉴/스킬 재로드 없음) */
+  updatePluginDir: async (pluginId: string, workingDir: string) => {
+    const res = await fetch(`${API_BASE}/plugins/${pluginId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ workingDir }),
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error);
+    }
+    set((state) => {
+      const updatedPlugins = state.plugins.map(p =>
+        p.id === pluginId ? { ...p, workingDir } : p
+      );
+      const updatedSelected = state.selectedPlugin?.id === pluginId
+        ? { ...state.selectedPlugin, workingDir }
+        : state.selectedPlugin;
+      return { plugins: updatedPlugins, selectedPlugin: updatedSelected };
+    });
   },
 
   fetchSkills: async () => {

@@ -125,7 +125,7 @@ irm https://claude.ai/install.ps1 | iex
 설치 후 초기 구성:
 
 ```bash
-claude config
+claude
 ```
 
 **4. Oh My ClaudeCode (OMC) 설치**

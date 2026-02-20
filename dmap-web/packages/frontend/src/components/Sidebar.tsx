@@ -15,14 +15,26 @@ import { MenuManageDialog } from './MenuManageDialog.js';
 import { Tooltip } from './Tooltip.js';
 import { useT } from '../i18n/index.js';
 import { useLangStore } from '../stores/langStore.js';
-import { SKILL_CATEGORIES, PROMPT_SKILL } from '@dmap-web/shared';
+import { SKILL_CATEGORIES, PROMPT_SKILL, API_BASE } from '@dmap-web/shared';
 import type { SkillMeta, MenuSkillItem } from '@dmap-web/shared';
+import type { DirListing } from '../types/filesystem.js';
+import { DraggableResizableDialog } from './DraggableResizableDialog.js';
+
+/** 경로 표시 정규화: 백슬래시→슬래시, 홈 디렉토리→'~' */
+function formatDisplayPath(p: string): string {
+  let s = p.replace(/\\/g, '/');
+  // Windows: C:/Users/{name}, macOS: /Users/{name}, Linux: /home/{name}
+  s = s.replace(/^[A-Za-z]:\/Users\/[^/]+/, '~');
+  s = s.replace(/^\/Users\/[^/]+/, '~');
+  s = s.replace(/^\/home\/[^/]+/, '~');
+  return s;
+}
 
 /**
  * 사이드바 - 플러그인 선택기 + 도구 버튼(추가/프롬프트/설정) + 에이전트 동기화 + 스킬 메뉴 목록
  */
 export function Sidebar() {
-  const { skills, selectedSkill, selectSkill, isStreaming, fetchSkills, fetchMenus, menus, selectedPlugin, fetchPlugins, syncAgents, pendingApproval, setPendingSkillSwitch } = useAppStore(useShallow((s) => ({
+  const { skills, selectedSkill, selectSkill, isStreaming, fetchSkills, fetchMenus, menus, selectedPlugin, plugins, fetchPlugins, syncAgents, updatePluginDir, pendingApproval, setPendingSkillSwitch } = useAppStore(useShallow((s) => ({
     skills: s.skills,
     selectedSkill: s.selectedSkill,
     selectSkill: s.selectSkill,
@@ -31,8 +43,10 @@ export function Sidebar() {
     fetchMenus: s.fetchMenus,
     menus: s.menus,
     selectedPlugin: s.selectedPlugin,
+    plugins: s.plugins,
     fetchPlugins: s.fetchPlugins,
     syncAgents: s.syncAgents,
+    updatePluginDir: s.updatePluginDir,
     pendingApproval: s.pendingApproval,
     setPendingSkillSwitch: s.setPendingSkillSwitch,
   })));
@@ -41,7 +55,76 @@ export function Sidebar() {
   const [showMenuDialog, setShowMenuDialog] = useState(false);
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'fail'>('idle');
   const [syncMessage, setSyncMessage] = useState('');
+  const [showDirBrowser, setShowDirBrowser] = useState(false);
+  const [dirInput, setDirInput] = useState('');
+  const [dirError, setDirError] = useState('');
+  const [dirListing, setDirListing] = useState<DirListing | null>(null);
+  const [browseLoading, setBrowseLoading] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
+  const [showNewFolderInput, setShowNewFolderInput] = useState(false);
+  const [newFolderError, setNewFolderError] = useState('');
   const t = useT();
+
+  // 기본 플러그인 여부 판별: 플러그인 목록의 첫 번째(DMAP 기본)인지 확인
+  const isDefaultPlugin = selectedPlugin && plugins.length > 0 && plugins[0]?.id === selectedPlugin.id;
+  // 작업 디렉토리 표시용: workingDir 우선, 없으면 projectDir
+  const displayDir = selectedPlugin?.workingDir || selectedPlugin?.projectDir || '';
+
+  /** 디렉토리 목록 조회 */
+  const fetchDirListing = async (path?: string) => {
+    setBrowseLoading(true);
+    try {
+      const url = path
+        ? `${API_BASE}/filesystem/list?path=${encodeURIComponent(path)}`
+        : `${API_BASE}/filesystem/list`;
+      const res = await fetch(url);
+      if (res.ok) setDirListing(await res.json());
+    } catch { /* ignore */ }
+    finally { setBrowseLoading(false); }
+  };
+
+  /** 디렉토리 브라우저 열기 */
+  const openDirBrowser = () => {
+    if (!selectedPlugin) return;
+    const currentDir = selectedPlugin.workingDir || selectedPlugin.projectDir;
+    setDirInput(currentDir);
+    setDirError('');
+    setShowDirBrowser(true);
+    fetchDirListing(currentDir);
+  };
+
+  /** workingDir 변경 저장 핸들러 */
+  const handleDirUpdate = async () => {
+    if (!selectedPlugin || !dirInput.trim()) return;
+    setDirError('');
+    try {
+      await updatePluginDir(selectedPlugin.id, dirInput.trim());
+      setShowDirBrowser(false);
+      setDirInput('');
+    } catch (err: unknown) {
+      setDirError(t('plugin.error.updateFailed'));
+    }
+  };
+
+  /** 새 폴더 생성 핸들러 */
+  const handleCreateFolder = async () => {
+    if (!newFolderName.trim() || !dirInput.trim()) return;
+    setNewFolderError('');
+    try {
+      const newPath = dirInput.trim().replace(/[\\/]+$/, '') + '/' + newFolderName.trim();
+      const res = await fetch(`${API_BASE}/filesystem/mkdir`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: newPath }),
+      });
+      if (!res.ok) throw new Error();
+      setNewFolderName('');
+      setShowNewFolderInput(false);
+      fetchDirListing(dirInput.trim());
+    } catch {
+      setNewFolderError(t('plugin.dirBrowser.newFolderError'));
+    }
+  };
 
   useEffect(() => {
     fetchPlugins().then(() => {
@@ -246,6 +329,31 @@ export function Sidebar() {
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 truncate">
           {selectedPlugin?.description || t('sidebar.subtitle')}
         </p>
+        {/* workingDir 표시: 바탕색 구분 + 기본 플러그인=읽기 전용, 외부 플러그인=변경 버튼 */}
+        {displayDir && (
+          <div className="mt-2 px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center gap-2">
+              <svg className="w-4 h-4 text-gray-500 dark:text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
+              </svg>
+              <span className="text-xs text-gray-600 dark:text-gray-300 truncate flex-1" title={formatDisplayPath(displayDir)}>
+                {formatDisplayPath(displayDir)}
+              </span>
+              {isDefaultPlugin ? (
+                <span className="text-[10px] text-gray-400 dark:text-gray-500 flex-shrink-0 whitespace-nowrap" title={t('plugin.workingDirReadonly')}>
+                  {t('plugin.workingDirReadonly')}
+                </span>
+              ) : (
+                <button
+                  onClick={openDirBrowser}
+                  className="text-[11px] px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-700 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors flex-shrink-0"
+                >
+                  {t('plugin.workingDirEdit')}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       <nav className="flex-1 overflow-y-auto p-3 space-y-4">
@@ -323,6 +431,138 @@ export function Sidebar() {
             fetchMenus();
           }}
         />
+      )}
+
+      {/* 디렉토리 변경 다이얼로그 */}
+      {showDirBrowser && (
+        <DraggableResizableDialog
+          initialWidth={480}
+          initialHeight={440}
+          storageKey="change-plugin-dir"
+          onClose={() => { setShowDirBrowser(false); setDirError(''); setShowNewFolderInput(false); setNewFolderError(''); }}
+        >
+          <div data-drag-handle className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 cursor-move flex-shrink-0">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              {t('plugin.workingDirEdit')}
+            </h2>
+          </div>
+
+          <div className="px-6 py-4 flex-1 min-h-0 flex flex-col gap-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                {t('plugin.projectDir')}
+              </label>
+              <input
+                type="text"
+                value={dirInput}
+                onChange={(e) => { setDirInput(e.target.value); setDirError(''); }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && dirInput.trim()) {
+                    e.preventDefault();
+                    fetchDirListing(dirInput.trim());
+                  }
+                }}
+                className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              {dirError && <p className="mt-1.5 text-sm text-red-500 dark:text-red-400">{dirError}</p>}
+            </div>
+
+            <div className="border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden flex-1 min-h-0 flex flex-col">
+              <div className="px-3 py-2 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-600 flex-shrink-0 flex items-center justify-between gap-2">
+                <span className="text-xs font-medium text-gray-500 dark:text-gray-400 truncate">
+                  {dirListing?.current || '...'}
+                </span>
+                <button
+                  onClick={() => { setShowNewFolderInput(true); setNewFolderName(''); setNewFolderError(''); }}
+                  className="text-xs px-2 py-0.5 rounded bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors flex-shrink-0 flex items-center gap-1"
+                  title={t('plugin.dirBrowser.newFolder')}
+                >
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                  </svg>
+                  {t('plugin.dirBrowser.newFolder')}
+                </button>
+              </div>
+              <div className="overflow-y-auto flex-1">
+                {browseLoading ? (
+                  <div className="px-3 py-4 text-center text-sm text-gray-400">{t('plugin.validating')}</div>
+                ) : (
+                  <>
+                    {dirListing?.parent && (
+                      <button
+                        onClick={() => { setDirInput(dirListing.parent!); fetchDirListing(dirListing.parent!); setShowNewFolderInput(false); }}
+                        className="w-full text-left px-3 py-1.5 text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center gap-2"
+                      >
+                        <span>{'\u2190'}</span> {t('plugin.dirBrowser.parent')}
+                      </button>
+                    )}
+                    {showNewFolderInput && (
+                      <div className="px-3 py-1.5 flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-100 dark:border-blue-800">
+                        <svg className="w-4 h-4 text-blue-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 10.5v6m3-3H9m4.06-7.19-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" />
+                        </svg>
+                        <input
+                          type="text"
+                          autoFocus
+                          value={newFolderName}
+                          onChange={(e) => { setNewFolderName(e.target.value); setNewFolderError(''); }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') { e.preventDefault(); handleCreateFolder(); }
+                            if (e.key === 'Escape') { setShowNewFolderInput(false); setNewFolderError(''); }
+                          }}
+                          placeholder={t('plugin.dirBrowser.newFolderPlaceholder')}
+                          className="flex-1 text-sm px-2 py-1 border border-blue-200 dark:border-blue-700 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded focus:outline-none focus:ring-1 focus:ring-blue-400"
+                        />
+                        <button onClick={handleCreateFolder} className="text-xs px-2 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 transition-colors">OK</button>
+                        <button onClick={() => { setShowNewFolderInput(false); setNewFolderError(''); }} className="text-xs px-2 py-1 rounded text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    )}
+                    {newFolderError && (
+                      <div className="px-3 py-1 text-xs text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-900/20">{newFolderError}</div>
+                    )}
+                    {dirListing?.directories.length === 0 && !showNewFolderInput && (
+                      <div className="px-3 py-3 text-center text-sm text-gray-400 dark:text-gray-500">
+                        {t('plugin.dirBrowser.empty')}
+                      </div>
+                    )}
+                    {dirListing?.directories.map((dir) => (
+                      <button
+                        key={dir.path}
+                        onClick={() => { setDirInput(dir.path); setDirError(''); fetchDirListing(dir.path); }}
+                        className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center gap-2"
+                      >
+                        <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" />
+                        </svg>
+                        <span className="truncate">{dir.name}</span>
+                      </button>
+                    ))}
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-2 flex-shrink-0">
+            <button
+              onClick={() => { setShowDirBrowser(false); setDirError(''); }}
+              className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+            >
+              {t('common.cancel')}
+            </button>
+            <button
+              onClick={handleDirUpdate}
+              disabled={!dirInput.trim() || dirInput.trim() === displayDir}
+              className="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {t('plugin.select')}
+            </button>
+          </div>
+        </DraggableResizableDialog>
       )}
     </aside>
   );

@@ -17,9 +17,17 @@ import path from 'path';
 import type { SSEEvent, QuestionItem } from '@dmap-web/shared';
 import { loadOmcAgents, getSkillPatterns, getSkillPatternsFallback, type OmcAgentDef } from './omc-integration.js';
 import { loadRegisteredPlugin } from './agent-registry.js';
+import { getDefaultSdkModel } from './model-versions.js';
 import { createLogger } from '../utils/logger.js';
 
 const log = createLogger('SDK');
+
+/** 시스템 설치된 Claude Code 네이티브 바이너리 경로 해석 */
+function resolveClaudeBinary(): string {
+  const home = process.env.USERPROFILE || process.env.HOME || '';
+  const ext = process.platform === 'win32' ? '.exe' : '';
+  return path.join(home, '.local', 'bin', `claude${ext}`);
+}
 
 type LogFn = (label: string, data?: unknown) => Promise<void>;
 
@@ -608,12 +616,16 @@ export async function executeSkill(
         .join('\n')
     : '- __prompt__: 자유 프롬프트 (Free prompt mode)';
 
-  // SDK 호출 옵션 구성 - permissionMode: bypassPermissions로 도구 승인 생략
+  // SDK 호출 옵션 구성 - acceptEdits: 파일 편집 자동 수락 + OAuth 인증 호환
+  // NOTE: bypassPermissions는 --dangerously-skip-permissions 플래그를 사용하며 API 키 필수.
+  //       Max 구독(OAuth) 환경에서는 acceptEdits를 사용해야 함.
   const options: Record<string, unknown> = {
-    model: 'claude-sonnet-4-5-20250929',
-    permissionMode: 'bypassPermissions',
+    model: getDefaultSdkModel(),
+    permissionMode: 'acceptEdits',
     cwd: dmapProjectDir,
     maxTurns: 50,
+    // 시스템 설치된 Claude Code CLI 사용 (Max 구독 OAuth 인증 공유)
+    pathToClaudeCodeExecutable: process.env.CLAUDE_CODE_PATH || resolveClaudeBinary(),
     // Prevent the model from delegating to agents/skills instead of working directly
     disallowedTools: ['EnterPlanMode', 'ExitPlanMode', 'TodoWrite'],
     ...(allAgentCount > 0 ? { agents: allAgents } : {}),
@@ -798,10 +810,12 @@ export async function executePrompt(
   const isEnglish = lang && lang !== 'ko';
 
   const options: Record<string, unknown> = {
-    model: 'claude-sonnet-4-5-20250929',
-    permissionMode: 'bypassPermissions',
+    model: getDefaultSdkModel(),
+    permissionMode: 'acceptEdits',
     cwd: dmapProjectDir,
     maxTurns: 50,
+    // 시스템 설치된 Claude Code CLI 사용 (Max 구독 OAuth 인증 공유)
+    pathToClaudeCodeExecutable: process.env.CLAUDE_CODE_PATH || resolveClaudeBinary(),
     disallowedTools: ['EnterPlanMode', 'ExitPlanMode', 'TodoWrite'],
     ...(allAgentCount > 0 ? { agents: allAgents } : {}),
     appendSystemPrompt: `${isEnglish ? `You MUST respond ONLY in English.\n\n` : ''}You are a helpful assistant working in the project directory. Execute the user's request using available tools (Read, Write, Edit, Bash, Glob, Grep, WebFetch, WebSearch, Task, etc.). Do NOT invoke other skills. Do NOT enter plan mode. Do NOT use TodoWrite.

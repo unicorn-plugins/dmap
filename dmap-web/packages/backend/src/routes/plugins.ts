@@ -8,12 +8,14 @@
  * - POST /api/plugins/:id/sync: 에이전트 동기화 (agents/ 디렉토리 스캔)
  * - GET/PUT /api/plugins/:id/menus: 메뉴 설정 조회/저장
  * - POST /api/plugins/:id/menus/ai-recommend: Claude AI 기반 메뉴 자동 분류
+ * - PATCH /api/plugins/:id: 외부 플러그인 projectDir 변경
  * - DELETE /api/plugins/:id: 플러그인 삭제
  *
  * @module routes/plugins
  */
 import { Router } from 'express';
-import { getAllPlugins, addPlugin, removePlugin, validatePluginDir, resolveProjectDir, isSetupCompleted } from '../services/plugin-manager.js';
+import { getAllPlugins, addPlugin, removePlugin, updateWorkingDir, validatePluginDir, resolveProjectDir, isSetupCompleted, installPluginViaCli, validateOrgRepo } from '../services/plugin-manager.js';
+import { getDefaultSdkModel } from '../services/model-versions.js';
 import { syncPluginAgents, removeRegisteredPlugin, getMenus, saveMenus, generateDefaultMenus, refreshExternalMenus } from '../services/agent-registry.js';
 import { existsSync, readFileSync, readdirSync } from 'fs';
 import path from 'path';
@@ -21,6 +23,7 @@ import type { MenuConfig, MenuSubcategory, MenuSkillItem } from '@dmap-web/share
 import { createLogger } from '../utils/logger.js';
 
 const log = createLogger('Plugins');
+let installInProgress = false;
 
 export const pluginsRouter = Router();
 
@@ -62,6 +65,75 @@ pluginsRouter.post('/', async (req, res) => {
     const msg = (error as Error).message;
     const status = msg === 'already_registered' ? 409 : 400;
     res.status(status).json({ error: msg });
+  }
+});
+
+// POST /api/plugins/install - CLI 기반 플러그인 설치 (GitHub 또는 로컬)
+pluginsRouter.post('/install', async (req, res) => {
+  const { type, source, displayNames } = req.body as {
+    type: 'github' | 'local';
+    source: string;
+    displayNames?: { ko: string; en: string };
+  };
+
+  if (!type || !source) {
+    res.status(400).json({ error: 'type and source are required' });
+    return;
+  }
+
+  if (type === 'github' && !validateOrgRepo(source)) {
+    res.status(400).json({ error: 'invalid_repo_format' });
+    return;
+  }
+
+  if (type === 'local') {
+    const validation = await validatePluginDir(source);
+    if (!validation.valid) {
+      res.status(400).json({ error: validation.error || 'invalid_plugin' });
+      return;
+    }
+  }
+
+  if (installInProgress) {
+    res.status(429).json({ error: 'install_in_progress' });
+    return;
+  }
+
+  installInProgress = true;
+  try {
+    log.info(`Plugin install: type=${type}, source=${source}`);
+    const result = await installPluginViaCli(type, source);
+
+    if (!result.success) {
+      log.error(`Plugin install failed: ${result.error}`);
+      res.status(400).json(result);
+      return;
+    }
+
+    // CLI 성공 후 plugins.json에도 저장 (GitHub: marketplace installLocation, 로컬: source 경로)
+    let warning: string | undefined;
+    const pluginDir = result.projectDir || source;
+    try {
+      const names = displayNames || { ko: result.pluginName, en: result.pluginName };
+      await addPlugin(pluginDir, names);
+      try { syncPluginAgents(result.pluginName, pluginDir); } catch { /* ignore */ }
+    } catch (regError: unknown) {
+      const msg = (regError as Error).message;
+      if (msg === 'already_registered') {
+        log.info('Plugin already in registry, skipping duplicate registration');
+      } else {
+        warning = 'cli_success_but_registry_failed';
+        log.warn(`Registry save failed: ${msg}`);
+      }
+    }
+
+    log.info(`Plugin install success: ${result.pluginName}`);
+    res.status(201).json({ ...result, warning });
+  } catch (error: unknown) {
+    log.error('Plugin install error:', error);
+    res.status(500).json({ error: (error as Error).message });
+  } finally {
+    installInProgress = false;
   }
 });
 
@@ -323,7 +395,7 @@ RESPONSE FORMAT (JSON only):
       const conversation = query({
         prompt: aiPrompt,
         options: {
-          model: 'claude-sonnet-4-5-20250929',
+          model: getDefaultSdkModel(),
           maxTurns: 1,
           systemPrompt: 'You are a JSON-only responder. Return only valid JSON without any markdown formatting or explanation.',
           permissionMode: 'bypassPermissions' as const,
@@ -405,6 +477,25 @@ RESPONSE FORMAT (JSON only):
     }
   } catch (error: unknown) {
     res.status(500).json({ error: (error as Error).message });
+  }
+});
+
+// PATCH /api/plugins/:id - 작업 디렉토리(workingDir) 변경
+pluginsRouter.patch('/:id', async (req, res) => {
+  const { workingDir } = req.body as { workingDir?: string };
+  if (!workingDir) {
+    res.status(400).json({ error: 'workingDir is required' });
+    return;
+  }
+  try {
+    await updateWorkingDir(req.params.id, workingDir);
+    res.json({ success: true });
+  } catch (error: unknown) {
+    const msg = (error as Error).message;
+    const status = msg === 'not_found' ? 404
+      : msg === 'cannot_update_default' ? 403
+      : msg === 'already_registered' ? 409 : 400;
+    res.status(status).json({ error: msg });
   }
 });
 

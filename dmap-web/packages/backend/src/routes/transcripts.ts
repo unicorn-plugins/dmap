@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { listTranscriptSessions, getTranscriptMessages, deleteTranscriptSession, deleteBatchTranscriptSessions, saveTitleOverride } from '../services/transcript-service.js';
-import { resolveProjectDir } from '../services/plugin-manager.js';
+import { resolveWorkingDir } from '../services/plugin-manager.js';
 
 export const transcriptsRouter = Router();
 
@@ -9,7 +9,7 @@ export const transcriptsRouter = Router();
 transcriptsRouter.get('/', async (req, res) => {
   try {
     const pluginId = req.query.pluginId as string | undefined;
-    const projectDir = await resolveProjectDir(pluginId);
+    const projectDir = await resolveWorkingDir(pluginId);
     const sessions = await listTranscriptSessions(projectDir);
     res.json({ sessions });
   } catch (err) {
@@ -25,7 +25,7 @@ transcriptsRouter.delete('/', async (req, res) => {
       res.status(400).json({ error: 'ids array is required' });
       return;
     }
-    const projectDir = await resolveProjectDir(pluginId);
+    const projectDir = await resolveWorkingDir(pluginId);
     const deleted = await deleteBatchTranscriptSessions(ids, projectDir);
     res.json({ deleted });
   } catch (err) {
@@ -37,7 +37,7 @@ transcriptsRouter.delete('/', async (req, res) => {
 transcriptsRouter.delete('/:sessionId', async (req, res) => {
   try {
     const pluginId = req.query.pluginId as string | undefined;
-    const projectDir = await resolveProjectDir(pluginId);
+    const projectDir = await resolveWorkingDir(pluginId);
     const success = await deleteTranscriptSession(req.params.sessionId, projectDir);
     if (success) {
       res.json({ deleted: true });
@@ -62,7 +62,7 @@ transcriptsRouter.patch('/:sessionId/title', async (req, res) => {
       return;
     }
     const pluginId = req.query.pluginId as string | undefined;
-    const projectDir = await resolveProjectDir(pluginId);
+    const projectDir = await resolveWorkingDir(pluginId);
     await saveTitleOverride(req.params.sessionId, title, projectDir);
     res.json({ success: true });
   } catch (err: any) {
@@ -78,7 +78,7 @@ transcriptsRouter.patch('/:sessionId/title', async (req, res) => {
 transcriptsRouter.get('/:sessionId', async (req, res) => {
   try {
     const pluginId = req.query.pluginId as string | undefined;
-    const projectDir = await resolveProjectDir(pluginId);
+    const projectDir = await resolveWorkingDir(pluginId);
     const messages = await getTranscriptMessages(req.params.sessionId, projectDir);
     res.json({ messages, count: messages.length });
   } catch (err: any) {

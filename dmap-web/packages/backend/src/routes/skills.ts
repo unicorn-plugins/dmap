@@ -20,7 +20,7 @@ import { sessionManager } from '../services/session-manager.js';
 import { executeSkill, executePrompt } from '../services/claude-sdk-client.js';
 import { initSSE, sendSSE, endSSE } from '../middleware/sse-handler.js';
 import { DMAP_PROJECT_DIR } from '../config.js';
-import { resolveProjectDir, markSetupCompleted } from '../services/plugin-manager.js';
+import { resolveProjectDir, resolveWorkingDir, markSetupCompleted } from '../services/plugin-manager.js';
 import fs from 'fs';
 import path from 'path';
 import { createLogger } from '../utils/logger.js';
@@ -203,8 +203,9 @@ skillsRouter.post('/:name/execute', async (req: Request, res: Response) => {
   const skillName = String(req.params.name);
   const { input, sessionId: existingSessionId, pluginId, lang, filePaths } = req.body as SkillExecuteRequest;
 
-  // Resolve project directory
+  // Resolve directories: projectDir=플러그인 소스(스킬 발견), workingDir=작업 디렉토리(SDK cwd)
   const dmapProjectDir = await resolveProjectDir(pluginId);
+  const workingDir = await resolveWorkingDir(pluginId);
 
   // 자유 프롬프트 모드: SKILL.md 없이 직접 Claude SDK에 프롬프트 전달
   if (skillName === '__prompt__') {
@@ -249,7 +250,7 @@ skillsRouter.post('/:name/execute', async (req: Request, res: Response) => {
       let lastUsage: SSEUsageEvent | null = null;
       const result = await executePrompt(
         input,
-        dmapProjectDir,
+        workingDir,
         lang,
         {
           onEvent: (event) => {
@@ -343,7 +344,7 @@ skillsRouter.post('/:name/execute', async (req: Request, res: Response) => {
     const result = await executeSkill(
       skillName,
       input,
-      dmapProjectDir,
+      workingDir,
       lang,
       {
         onEvent: (event) => {

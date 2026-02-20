@@ -74,6 +74,26 @@ filesystemRouter.get('/list', async (req, res) => {
   }
 });
 
+// POST /api/filesystem/mkdir - Create a new directory
+filesystemRouter.post('/mkdir', async (req, res) => {
+  const { path: dirPath } = req.body as { path: string };
+  if (!dirPath) {
+    res.status(400).json({ error: 'path is required' });
+    return;
+  }
+  const resolved = path.resolve(dirPath);
+  if (!resolved.startsWith(HOME_DIR + path.sep)) {
+    res.status(403).json({ error: 'Access denied' });
+    return;
+  }
+  try {
+    await mkdir(resolved, { recursive: true });
+    res.json({ success: true, path: resolved });
+  } catch {
+    res.status(400).json({ error: 'Failed to create directory' });
+  }
+});
+
 // POST /api/filesystem/upload - Save dropped files to temp directory, return paths
 filesystemRouter.post('/upload', async (req, res) => {
   const { files } = req.body as { files: { name: string; data: string }[] };

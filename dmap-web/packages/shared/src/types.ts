@@ -231,6 +231,7 @@ export interface PluginInfo {
   description: string;
   version: string;
   projectDir: string;
+  workingDir?: string;
   setupCompleted?: boolean;
 }
 

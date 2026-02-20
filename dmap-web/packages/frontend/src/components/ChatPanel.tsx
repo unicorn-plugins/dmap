@@ -125,11 +125,34 @@ export function ChatPanel() {
    */
   const handleExecute = () => {
     if (!selectedSkill || isStreaming) return;
-    if (selectedSkill.name === '__prompt__' && !inputValue.trim()) return;
-    if (inputValue.trim()) {
-      useAppStore.getState().addMessage({ role: 'user', content: inputValue.trim() });
+    const trimmed = inputValue.trim();
+    if (selectedSkill.name === '__prompt__' && !trimmed) return;
+
+    // 프롬프트 모드에서 슬래시 커맨드 감지 → 해당 스킬로 라우팅
+    if (selectedSkill.name === PROMPT_SKILL.name && trimmed.startsWith('/')) {
+      const slashMatch = trimmed.match(/^\/([a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+)(?:\s+(.*))?$/);
+      if (slashMatch) {
+        const skillName = slashMatch[1];
+        const { skills } = useAppStore.getState();
+        const targetSkill = skills.find(s => s.name === skillName);
+        if (targetSkill) {
+          const args = slashMatch[2]?.trim() || undefined;
+          useAppStore.getState().selectSkill(targetSkill);
+          if (args) {
+            useAppStore.getState().addMessage({ role: 'user', content: args });
+          }
+          executeSkill(targetSkill.name, args, attachedPaths.length > 0 ? attachedPaths : undefined);
+          setInputValue('');
+          clearAttachments();
+          return;
+        }
+      }
     }
-    executeSkill(selectedSkill.name, inputValue.trim() || undefined, attachedPaths.length > 0 ? attachedPaths : undefined);
+
+    if (trimmed) {
+      useAppStore.getState().addMessage({ role: 'user', content: trimmed });
+    }
+    executeSkill(selectedSkill.name, trimmed || undefined, attachedPaths.length > 0 ? attachedPaths : undefined);
     setInputValue('');
     clearAttachments();
   };

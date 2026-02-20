@@ -2,7 +2,7 @@
  * 시작 점검 라우트 - DMAP Web 실행 환경 사전 점검
  *
  * 엔드포인트:
- * - GET /api/startup-check: SSE 스트리밍으로 7개 항목 순차 점검 결과 전송
+ * - GET /api/startup-check: SSE 스트리밍으로 8개 항목 순차 점검 결과 전송
  * - POST /api/startup-check/fix: 실패 항목 자동 수정 실행
  *
  * 점검 항목 (고정 순서):
@@ -13,20 +13,19 @@
  * 4. Oh My Claudecode 설치
  * 5. OMC 설정 (CLAUDE.md 내 OMC 구성)
  * 6. DMAP 플러그인 (cache 디렉토리)
+ * 7. Model Versions (모델 버전 자동 갱신)
  *
  * 병렬 실행 + 슬롯 기반 순서 보장: 모든 점검을 병렬로 실행하되, 결과는 고정 순서로 SSE 전송
  *
  * @module routes/startup
  */
 import { Router } from 'express';
-import { exec } from 'child_process';
-import { promisify } from 'util';
 import fs from 'fs';
 import path from 'path';
 import { DMAP_PROJECT_DIR } from '../config.js';
 import { initSSE } from '../middleware/sse-handler.js';
-
-const execAsync = promisify(exec);
+import { runCommand } from '../utils/cli-runner.js';
+import { refreshModelVersions } from '../services/model-versions.js';
 
 export const startupRouter = Router();
 
@@ -42,22 +41,6 @@ interface CheckResult {
 
 const HOME_DIR = process.env.HOME || process.env.USERPROFILE || '';
 const CLAUDE_DIR = path.join(HOME_DIR, '.claude');
-const LOCAL_BIN = path.join(HOME_DIR, '.local', 'bin');
-
-const SHELL = process.env.SHELL || '/bin/sh';
-const extendedEnv = {
-  ...process.env,
-  PATH: `${LOCAL_BIN}${path.delimiter}${process.env.PATH || ''}`,
-};
-
-async function runCommand(cmd: string, timeoutMs = 10000, cwd?: string): Promise<{ stdout: string; stderr: string }> {
-  try {
-    return await execAsync(cmd, { timeout: timeoutMs, shell: SHELL, env: extendedEnv, ...(cwd && { cwd }) });
-  } catch (error: unknown) {
-    const e = error as Record<string, unknown>;
-    return { stdout: (e.stdout as string) || '', stderr: (e.stderr as string) || (e instanceof Error ? e.message : String(error)) || '' };
-  }
-}
 
 /** claude plugin list 명령으로 설치된 플러그인 목록 조회 + CLI 가용성 확인 */
 async function getInstalledPlugins(): Promise<{ plugins: string[]; cliAvailable: boolean }> {
@@ -182,14 +165,33 @@ function checkDmap(): CheckResult {
   return { id: 'dmap', label: 'DMAP Plugin', status: 'fail', detail: 'Not installed', fixable: true, fixAction: 'setup_dmap' };
 }
 
+/** 모델 버전 자동 갱신 — Anthropic API로 최신 모델 ID 감지 후 model-versions.json 저장 */
+async function checkModelVersions(): Promise<CheckResult> {
+  try {
+    const versions = await refreshModelVersions();
+    const src = versions.source === 'api' ? 'API' : versions.source === 'cached' ? 'cached' : 'default';
+    const detail = `${versions.models.sonnet} (${src})`;
+    return {
+      id: 'model_versions', label: 'Model Versions',
+      status: versions.source === 'api' ? 'pass' : 'pass',
+      detail, fixable: false,
+    };
+  } catch {
+    return {
+      id: 'model_versions', label: 'Model Versions',
+      status: 'warning', detail: 'Refresh failed — using defaults', fixable: false,
+    };
+  }
+}
+
 // --- Routes ---
 
 // GET /api/startup-check (SSE streaming, ordered)
 startupRouter.get('/', async (_req, res) => {
   initSSE(res);
 
-  // 슬롯 기반 순서 보장: 병렬 완료되는 점검 결과를 고정 순서(0~6)로 SSE 전송
-  const TOTAL = 7;
+  // 슬롯 기반 순서 보장: 병렬 완료되는 점검 결과를 고정 순서(0~7)로 SSE 전송
+  const TOTAL = 8;
   const slots: (CheckResult | null)[] = new Array(TOTAL).fill(null);
   let nextToEmit = 0;
 
@@ -224,6 +226,8 @@ startupRouter.get('/', async (_req, res) => {
     checkOmcSetup().then((c) => setSlot(5, c)),
     // 6: DMAP Plugin (cache directory check)
     Promise.resolve(setSlot(6, checkDmap())),
+    // 7: Model Versions (자동 갱신)
+    checkModelVersions().then((c) => setSlot(7, c)),
   ]);
 
   const allPassed = slots.every((c) => c !== null && c.status !== 'fail');

@@ -318,7 +318,7 @@ action_mapping:
 |------|------|
 | HEAVY | claude-opus-4-6 |
 | HIGH | claude-opus-4-6 |
-| MEDIUM | claude-sonnet-4-5 |
+| MEDIUM | claude-sonnet-4-6 |
 | LOW | claude-haiku-4-5 |
 
 ### 작성 가이드: tool_mapping
