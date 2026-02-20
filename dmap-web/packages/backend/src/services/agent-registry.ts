@@ -286,8 +286,9 @@ export function loadRegisteredPlugin(pluginId: string, skillName?: string): Reco
 
     const agents: Record<string, OmcAgentDef> = {};
 
-    // 현재 스킬에 필요한 에이전트만 full prompt 로드 (토큰 절약 + Windows 32KB CLI 한계 대응)
-    // skillName 기반 필터링: skillAgentMap에서 full prompt 대상 에이전트 결정
+    // 현재 스킬에 필요한 에이전트만 로드 (토큰 절약 + Windows 32KB CLI 한계 대응)
+    // skillAgentMap 존재 시: 해당 스킬이 참조하는 에이전트만 full prompt로 포함, 나머지는 제외
+    // skillAgentMap 미존재 시: 전체 에이전트를 description-only로 포함 (fallback)
     const skillAgents = skillName && data.skillAgentMap?.[skillName];
     const fullPromptSet = skillAgents ? new Set(skillAgents) : null;
 
@@ -298,18 +299,31 @@ export function loadRegisteredPlugin(pluginId: string, skillName?: string): Reco
     for (const [fqn, entry] of Object.entries(data.agents)) {
       // FQN에서 에이전트명 추출: "pluginId:agentName:agentName" → "agentName"
       const agentName = fqn.split(':')[1] || fqn;
-      const useFullPrompt = fullPromptSet?.has(agentName) ?? false;
 
-      agents[fqn] = {
-        description: entry.description,
-        prompt: useFullPrompt ? (entry.prompt || entry.description) : entry.description,
-        model: entry.model,
-        disallowedTools: entry.disallowedTools,
-      };
+      if (fullPromptSet) {
+        // skillAgentMap 있음: 해당 스킬이 참조하는 에이전트만 포함 (나머지 완전 제외)
+        if (!fullPromptSet.has(agentName)) continue;
+        agents[fqn] = {
+          description: entry.description,
+          prompt: entry.prompt || entry.description,
+          model: entry.model,
+          disallowedTools: entry.disallowedTools,
+        };
+      } else {
+        // skillAgentMap 없음: 전체 에이전트를 description-only로 포함 (fallback)
+        agents[fqn] = {
+          description: entry.description,
+          prompt: entry.description,
+          model: entry.model,
+          disallowedTools: entry.disallowedTools,
+        };
+      }
     }
 
+    const totalAgents = Object.keys(data.agents).length;
+    const loadedAgents = Object.keys(agents).length;
     if (skillName && fullPromptSet) {
-      log.info(`Selective load for skill "${skillName}": ${fullPromptSet.size} full-prompt agents out of ${Object.keys(data.agents).length}`);
+      log.info(`Selective load for skill "${skillName}": ${loadedAgents} agents loaded (${totalAgents - loadedAgents} excluded)`);
     }
 
     return agents;

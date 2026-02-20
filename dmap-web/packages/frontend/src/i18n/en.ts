@@ -240,6 +240,11 @@ const en: Translations = {
   'relevance.switch': 'Switch Skill',
   'relevance.dismiss': 'Dismiss',
 
+  // Permission
+  'permission.title': 'Tool Permission',
+  'permission.allow': 'Allow',
+  'permission.deny': 'Deny',
+
   // Menu Management
   'menu.manage': 'Manage Menu',
   'menu.manage.tooltip': 'Customize skill menu',

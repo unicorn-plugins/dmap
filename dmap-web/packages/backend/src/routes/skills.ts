@@ -17,7 +17,7 @@ import { Router, Request, Response } from 'express';
 import { DMAP_SKILLS } from '@dmap-web/shared';
 import type { SkillExecuteRequest, SkillMeta, SSESkillChangedEvent, SSEUsageEvent } from '@dmap-web/shared';
 import { sessionManager } from '../services/session-manager.js';
-import { executeSkill, executePrompt } from '../services/claude-sdk-client.js';
+import { executeSkill, executePrompt, resolvePermissionRequest } from '../services/claude-sdk-client.js';
 import { initSSE, sendSSE, endSSE } from '../middleware/sse-handler.js';
 import { DMAP_PROJECT_DIR } from '../config.js';
 import { resolveProjectDir, resolveWorkingDir, markSetupCompleted } from '../services/plugin-manager.js';
@@ -427,4 +427,19 @@ skillsRouter.post('/:name/execute', async (req: Request, res: Response) => {
     }
     endSSE(res);
   }
+});
+
+// POST /api/skills/permission-response - 도구 실행 권한 요청에 대한 사용자 응답
+skillsRouter.post('/permission-response', (req: Request, res: Response) => {
+  const { requestId, decision, message } = req.body;
+  if (!requestId || !['allow', 'deny'].includes(decision)) {
+    res.status(400).json({ error: 'Invalid request: requestId and decision (allow|deny) required' });
+    return;
+  }
+  const resolved = resolvePermissionRequest(requestId, decision, message);
+  if (!resolved) {
+    res.status(404).json({ error: 'No pending permission request found' });
+    return;
+  }
+  res.json({ success: true });
 });

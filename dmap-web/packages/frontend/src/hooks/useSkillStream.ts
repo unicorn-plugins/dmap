@@ -133,6 +133,15 @@ export function useSkillStream() {
           }
           break;
         }
+        case 'permission_request': {
+          useAppStore.getState().setPendingPermission({
+            requestId: event.requestId,
+            toolName: event.toolName,
+            description: event.description,
+            riskLevel: event.riskLevel,
+          });
+          break;
+        }
         case 'skill_suggestion': {
           const allSkills = useAppStore.getState().skills;
           const suggested = allSkills.find((s) => s.name === event.suggestedSkill);
@@ -330,6 +339,23 @@ export function useSkillStream() {
     [setPendingApproval, addMessage],
   );
 
+  /** 도구 실행 권한 요청에 대한 사용자 응답 전달 */
+  const respondToPermission = useCallback(
+    async (requestId: string, decision: 'allow' | 'deny') => {
+      useAppStore.getState().setPendingPermission(null);
+      addMessage({
+        role: 'system',
+        content: `${decision === 'allow' ? '\u2705' : '\u274C'} Bash: ${decision === 'allow' ? 'approved' : 'denied'}`,
+      });
+      await fetch(`${API_BASE}/skills/permission-response`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ requestId, decision }),
+      });
+    },
+    [addMessage],
+  );
+
   /** 현재 스트림 강제 중단 - abortRef + appStore.abortCurrentStream 양쪽 abort */
   const stopStream = useCallback(() => {
     abortRef.current?.abort();
@@ -337,5 +363,5 @@ export function useSkillStream() {
     setStreaming(false);
   }, [setStreaming]);
 
-  return { executeSkill, respondToApproval, stopStream };
+  return { executeSkill, respondToApproval, respondToPermission, stopStream };
 }

@@ -19,7 +19,9 @@ import { TurnApprovalBar } from './TurnApprovalBar.js';
 import { FileBrowserDialog } from './FileBrowserDialog.js';
 import { SessionList } from './SessionList.js';
 import { RelevanceBanner } from './RelevanceBanner.js';
+import { PermissionDialog } from './PermissionDialog.js';
 import { PROMPT_SKILL } from '@dmap-web/shared';
+import { useSlashCommandMenu } from './SlashCommandMenu.js';
 
 /** textarea 자동 크기 조절 상수 - 줄 높이(px), 최소/최대 행 수 */
 const LINE_HEIGHT = 22;
@@ -31,11 +33,12 @@ const MAX_ROWS = 10;
  * 구조: 헤더(스킬 정보+초기 입력) → 메시지 목록(스크롤) → 하단 입력(멀티턴) → 승인 다이얼로그
  */
 export function ChatPanel() {
-  const { selectedSkill, messages, isStreaming, pendingApproval, sessionId, selectedPlugin, isTranscriptView, clearTranscriptView, skillSuggestion, transcriptId, transcriptSummary } = useAppStore(useShallow((s) => ({
+  const { selectedSkill, messages, isStreaming, pendingApproval, pendingPermission, sessionId, selectedPlugin, isTranscriptView, clearTranscriptView, skillSuggestion, transcriptId, transcriptSummary } = useAppStore(useShallow((s) => ({
     selectedSkill: s.selectedSkill,
     messages: s.messages,
     isStreaming: s.isStreaming,
     pendingApproval: s.pendingApproval,
+    pendingPermission: s.pendingPermission,
     sessionId: s.sessionId,
     selectedPlugin: s.selectedPlugin,
     isTranscriptView: s.isTranscriptView,
@@ -44,7 +47,7 @@ export function ChatPanel() {
     transcriptId: s.transcriptId,
     transcriptSummary: s.transcriptSummary,
   })));
-  const { executeSkill, respondToApproval, stopStream } = useSkillStream();
+  const { executeSkill, respondToApproval, respondToPermission, stopStream } = useSkillStream();
   const { lang } = useLangStore();
   const {
     attachedPaths, showFileBrowser, setShowFileBrowser, isDragging, toast,
@@ -59,6 +62,14 @@ export function ChatPanel() {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editTitleValue, setEditTitleValue] = useState('');
   const t = useT();
+
+  // 슬래시 명령 자동완성
+  const { menuElement: slashMenu, handleKeyDown: handleSlashKeyDown } = useSlashCommandMenu({
+    inputValue,
+    skills: useAppStore.getState().skills,
+    isPromptMode: selectedSkill?.name === '__prompt__',
+    onSelect: (cmd) => setInputValue(cmd),
+  });
 
   // 대화 시작 여부 판별 - 메시지 존재 or 스트리밍 중 or 트랜스크립트 뷰
   const hasStarted = messages.length > 0 || isStreaming || isTranscriptView;
@@ -130,23 +141,29 @@ export function ChatPanel() {
 
     // 프롬프트 모드에서 슬래시 커맨드 감지 → 해당 스킬로 라우팅
     if (selectedSkill.name === PROMPT_SKILL.name && trimmed.startsWith('/')) {
-      const slashMatch = trimmed.match(/^\/([a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+)(?:\s+(.*))?$/);
-      if (slashMatch) {
-        const skillName = slashMatch[1];
+      // 1차: 콜론 포함 패턴 /pluginId:skillName (예: /dmap:help)
+      const colonMatch = trimmed.match(/^\/([a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+)(?:\s+(.*))?$/);
+      // 2차: 콜론 없는 패턴 /skillName (예: /help, /develop-plugin)
+      const bareMatch = !colonMatch ? trimmed.match(/^\/([a-zA-Z0-9_-]+)(?:\s+(.*))?$/) : null;
+      const matchedName = colonMatch?.[1] || bareMatch?.[1];
+      const matchedArgs = (colonMatch?.[2] || bareMatch?.[2])?.trim() || undefined;
+
+      if (matchedName) {
         const { skills } = useAppStore.getState();
-        const targetSkill = skills.find(s => s.name === skillName);
+        const targetSkill = skills.find(s => s.name === matchedName);
         if (targetSkill) {
-          const args = slashMatch[2]?.trim() || undefined;
           useAppStore.getState().selectSkill(targetSkill);
-          if (args) {
-            useAppStore.getState().addMessage({ role: 'user', content: args });
+          if (matchedArgs) {
+            useAppStore.getState().addMessage({ role: 'user', content: matchedArgs });
           }
-          executeSkill(targetSkill.name, args, attachedPaths.length > 0 ? attachedPaths : undefined);
+          executeSkill(targetSkill.name, matchedArgs, attachedPaths.length > 0 ? attachedPaths : undefined);
           setInputValue('');
           clearAttachments();
           return;
         }
       }
+      // DMAP 스킬에 없는 슬래시 커맨드(OMC, Claude Code 내장 등)는
+      // __prompt__ 경로로 진행 → 백엔드에서 Skill 도구 호출로 변환
     }
 
     if (trimmed) {
@@ -169,6 +186,8 @@ export function ChatPanel() {
    * 키보드 단축키 - Ctrl+Enter로 실행 트리거
    */
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    // 슬래시 명령 메뉴가 열려있으면 메뉴 키보드 이벤트 우선 처리
+    if (handleSlashKeyDown(e)) return;
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
       e.preventDefault();
       handleExecute();
@@ -322,20 +341,23 @@ export function ChatPanel() {
         </div>
         {!hasStarted && !isTranscriptView && (
           <>
-            <textarea
-              ref={textareaRef}
-              value={inputValue}
-              onChange={(e) => {
-                setInputValue(e.target.value);
-                autoResize(textareaRef.current);
-              }}
-              onKeyDown={handleKeyDown}
-              onPaste={handlePaste}
-              placeholder={selectedSkill.name === '__prompt__' ? t('prompt.placeholder') : t('chat.inputPlaceholder')}
-              rows={MIN_ROWS}
-              style={{ lineHeight: `${LINE_HEIGHT}px`, maxHeight: LINE_HEIGHT * MAX_ROWS + 16 }}
-              className="w-full px-4 py-3 text-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-y-auto"
-            />
+            <div className="relative">
+              {slashMenu}
+              <textarea
+                ref={textareaRef}
+                value={inputValue}
+                onChange={(e) => {
+                  setInputValue(e.target.value);
+                  autoResize(textareaRef.current);
+                }}
+                onKeyDown={handleKeyDown}
+                onPaste={handlePaste}
+                placeholder={selectedSkill.name === '__prompt__' ? t('prompt.placeholder') : t('chat.inputPlaceholder')}
+                rows={MIN_ROWS}
+                style={{ lineHeight: `${LINE_HEIGHT}px`, maxHeight: LINE_HEIGHT * MAX_ROWS + 16 }}
+                className="w-full px-4 py-3 text-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-y-auto"
+              />
+            </div>
             <div className="flex items-center gap-2 mt-2">
               <button
                 onClick={handleExecute}
@@ -472,6 +494,17 @@ export function ChatPanel() {
             )}
           </div>
         </div>
+      )}
+
+      {/* 도구 실행 권한 요청 다이얼로그 */}
+      {pendingPermission && (
+        <PermissionDialog
+          requestId={pendingPermission.requestId}
+          toolName={pendingPermission.toolName}
+          description={pendingPermission.description}
+          riskLevel={pendingPermission.riskLevel}
+          onRespond={respondToPermission}
+        />
       )}
 
       {/* 승인 다이얼로그: QuestionFormDialog(구조화 질문) / TurnApprovalBar(턴 승인) / ApprovalDialog(일반 승인) */}

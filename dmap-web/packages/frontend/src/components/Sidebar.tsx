@@ -323,7 +323,7 @@ export function Sidebar() {
               </button>
               <Tooltip text={t('resume.tooltip')} />
             </div>
-            <SettingsMenu version={selectedPlugin?.version || ''} />
+            <SettingsMenu version={plugins.find(p => p.id === 'dmap')?.version || selectedPlugin?.version || ''} />
           </div>
         </div>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 truncate">

@@ -1,0 +1,9 @@
+{
+  "models": {
+    "opus": "opus",
+    "sonnet": "sonnet",
+    "haiku": "haiku"
+  },
+  "lastRefreshed": "2026-02-20T13:41:17.229Z",
+  "source": "default"
+}

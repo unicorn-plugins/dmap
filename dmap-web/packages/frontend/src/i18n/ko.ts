@@ -240,6 +240,11 @@ const ko: Translations = {
   'relevance.switch': '스킬 전환',
   'relevance.dismiss': '무시',
 
+  // Permission
+  'permission.title': '도구 실행 승인',
+  'permission.allow': '승인',
+  'permission.deny': '거부',
+
   // Menu Management
   'menu.manage': '메뉴 관리',
   'menu.manage.tooltip': '스킬 메뉴를 커스터마이즈합니다',

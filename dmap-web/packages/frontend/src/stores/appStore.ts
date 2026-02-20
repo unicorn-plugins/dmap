@@ -79,6 +79,14 @@ interface AppState {
     isPromptMode: boolean;
   } | null;
 
+  // Permission request
+  pendingPermission: {
+    requestId: string;
+    toolName: string;
+    description: string;
+    riskLevel: 'warning' | 'danger';
+  } | null;
+
   // Actions
   fetchPlugins: () => Promise<void>;
   selectPlugin: (plugin: PluginInfo) => void;
@@ -111,6 +119,7 @@ interface AppState {
   switchSkillChain: (newSkill: SkillMeta, newSessionId: string) => void;
   setSkillSuggestion: (suggestion: AppState['skillSuggestion']) => void;
   dismissSkillSuggestion: () => void;
+  setPendingPermission: (p: AppState['pendingPermission']) => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -130,6 +139,7 @@ export const useAppStore = create<AppState>((set) => ({
   pendingSkillSwitch: null,
   streamAbortController: null,
   skillSuggestion: null,
+  pendingPermission: null,
 
   fetchPlugins: async () => {
     try {
@@ -154,7 +164,7 @@ export const useAppStore = create<AppState>((set) => ({
     localStorage.setItem(SELECTED_PLUGIN_KEY, plugin.id);
     // 플러그인 전환 시 전체 상태 초기화: 스킬/메시지/세션/승인/메뉴 + activityStore 클리어
     useActivityStore.getState().clearActivity();
-    set({ selectedPlugin: plugin, selectedSkill: null, messages: [], sessionId: null, pendingApproval: null, skills: [], menus: null });
+    set({ selectedPlugin: plugin, selectedSkill: null, messages: [], sessionId: null, pendingApproval: null, pendingPermission: null, skills: [], menus: null });
   },
 
   /** 새 플러그인 등록 → 에이전트 자동 동기화 → 플러그인 목록 새로고침 */
@@ -302,7 +312,7 @@ export const useAppStore = create<AppState>((set) => ({
   selectSkill: (skill) => {
     // 스킬 전환 시 메시지/세션/승인 초기화 + activityStore 클리어
     useActivityStore.getState().clearActivity();
-    set({ selectedSkill: skill, messages: [], sessionId: null, pendingApproval: null, isTranscriptView: false, skillSuggestion: null });
+    set({ selectedSkill: skill, messages: [], sessionId: null, pendingApproval: null, pendingPermission: null, isTranscriptView: false, skillSuggestion: null });
   },
 
   setSessionId: (id) => set({ sessionId: id }),
@@ -338,7 +348,7 @@ export const useAppStore = create<AppState>((set) => ({
   setStreaming: (streaming) => set({ isStreaming: streaming }),
   setPendingApproval: (approval) => set({ pendingApproval: approval }),
   clearChat: () =>
-    set({ messages: [], sessionId: null, pendingApproval: null, isStreaming: false, isTranscriptView: false, skillSuggestion: null }),
+    set({ messages: [], sessionId: null, pendingApproval: null, pendingPermission: null, isStreaming: false, isTranscriptView: false, skillSuggestion: null }),
 
   setPendingSkillSwitch: (skill) => set({ pendingSkillSwitch: skill }),
 
@@ -443,6 +453,7 @@ export const useAppStore = create<AppState>((set) => ({
 
   setSkillSuggestion: (suggestion) => set({ skillSuggestion: suggestion }),
   dismissSkillSuggestion: () => set({ skillSuggestion: null }),
+  setPendingPermission: (p) => set({ pendingPermission: p }),
 
   /** 스킬 체인 전환 - 새 스킬/세션으로 전환 + 전환 마커 메시지 추가 + activityStore 클리어 */
   switchSkillChain: (newSkill, newSessionId) => {

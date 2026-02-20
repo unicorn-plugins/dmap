@@ -14,7 +14,7 @@
 
 // SSE Event Types (Flat structure matching backend implementation)
 /** SSE 이벤트 타입 유니온 - 백엔드 claude-sdk-client에서 생성, 프론트엔드 useSkillStream에서 소비 */
-export type SSEEventType = 'text' | 'tool' | 'agent' | 'usage' | 'progress' | 'approval' | 'questions' | 'complete' | 'error' | 'done' | 'skill_changed' | 'skill_suggestion';
+export type SSEEventType = 'text' | 'tool' | 'agent' | 'usage' | 'progress' | 'approval' | 'questions' | 'complete' | 'error' | 'done' | 'skill_changed' | 'skill_suggestion' | 'permission_request';
 
 /** 모델 텍스트 출력 이벤트 - ChatPanel의 MessageBubble에 렌더링 */
 export interface SSETextEvent {
@@ -125,7 +125,16 @@ export interface SSEQuestionsEvent {
   questions: QuestionItem[];
 }
 
-/** SSE 이벤트 유니온 타입 - 12종의 이벤트를 discriminated union으로 정의 */
+/** 도구 실행 권한 요청 이벤트 - 위험한 Bash 명령 실행 시 사용자 승인 요청 */
+export interface SSEPermissionRequestEvent {
+  type: 'permission_request';
+  requestId: string;
+  toolName: string;
+  description: string;
+  riskLevel: 'warning' | 'danger';
+}
+
+/** SSE 이벤트 유니온 타입 - 13종의 이벤트를 discriminated union으로 정의 */
 export type SSEEvent =
   | SSETextEvent
   | SSEToolEvent
@@ -138,7 +147,8 @@ export type SSEEvent =
   | SSEErrorEvent
   | SSEDoneEvent
   | SSESkillChangedEvent
-  | SSESkillSuggestionEvent;
+  | SSESkillSuggestionEvent
+  | SSEPermissionRequestEvent;
 
 // Activity Panel Types
 /** 도구 호출 활동 로그 - 타임스탬프 포함, ActivityPanel에서 시간순 표시 */

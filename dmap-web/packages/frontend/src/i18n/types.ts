@@ -236,6 +236,11 @@ export interface Translations {
   'relevance.switch': string;
   'relevance.dismiss': string;
 
+  // Permission
+  'permission.title': string;
+  'permission.allow': string;
+  'permission.deny': string;
+
   // Menu Management
   'menu.manage': string;
   'menu.manage.tooltip': string;

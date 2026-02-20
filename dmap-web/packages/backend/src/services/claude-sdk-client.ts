@@ -13,7 +13,9 @@
  * @module claude-sdk-client
  */
 import { readFile, mkdir, appendFile } from 'fs/promises';
+import { existsSync, readdirSync } from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 import type { SSEEvent, QuestionItem } from '@dmap-web/shared';
 import { loadOmcAgents, getSkillPatterns, getSkillPatternsFallback, type OmcAgentDef } from './omc-integration.js';
 import { loadRegisteredPlugin } from './agent-registry.js';
@@ -321,6 +323,137 @@ Rules:
 - Output your explanation text normally before the JSON block. Do NOT use numbered plain text questions.
 - If you need to ask even ONE question, use this format. No exceptions.`;
 
+/** 권한 자동 처리 안내 - 모델이 CLI 승인 다이얼로그를 언급하지 않도록 지시 */
+const PERMISSION_AUTO_INSTRUCTION = `
+PERMISSION HANDLING:
+All tool permissions are managed automatically. All tools including Bash commands are pre-approved.
+You can freely execute any Bash command (gh, git, npm, curl, etc.) without permission issues.
+Do NOT mention CLI terminal approval dialogs or sandbox restrictions. Simply execute commands directly.
+If a tool call fails, retry or use an alternative approach.
+IMPORTANT: For file/directory existence checks, ALWAYS use the Glob tool instead of Bash "test -d" or "ls". Glob works reliably in all environments.`;
+
+// ── canUseTool 도구 안전 분류 ──
+
+/** 항상 자동 승인하는 도구 */
+const AUTO_ALLOW_TOOLS = new Set([
+  'Read', 'Write', 'Edit', 'NotebookEdit',
+  'Glob', 'Grep', 'Task', 'WebFetch', 'WebSearch',
+  'EnterWorktree', 'AskUserQuestion',
+]);
+
+/** 안전한 Bash 명령 프리픽스 */
+const SAFE_BASH_PREFIXES = [
+  'gh ', 'git ', 'ls', 'cat ', 'head ', 'tail ', 'mkdir ',
+  'npm ', 'npx ', 'node ', 'curl ', 'echo ', 'pwd',
+  'cp ', 'mv ', 'find ', 'grep ', 'wc ', 'sort ',
+  'touch ', 'chmod ', 'which ', 'cd ', 'tar ', 'unzip ',
+];
+
+/** 위험한 Bash 패턴 */
+const DANGEROUS_BASH_PATTERNS = [
+  /rm\s+-[^\s]*r[^\s]*f/,  // rm -rf
+  /rm\s+-[^\s]*f[^\s]*r/,  // rm -fr
+  /shutdown|reboot|halt|poweroff/,
+  /DROP\s+(TABLE|DATABASE)/i,
+  /mkfs\./,
+  /dd\s+if=/,
+];
+
+function classifyBashCommand(command: string): 'allow' | 'danger' | 'warning' {
+  for (const p of DANGEROUS_BASH_PATTERNS) {
+    if (p.test(command)) return 'danger';
+  }
+  const trimmed = command.trim();
+  for (const prefix of SAFE_BASH_PREFIXES) {
+    if (trimmed.startsWith(prefix)) return 'allow';
+  }
+  // 파이프 명령: 각 세그먼트 검사
+  const segments = trimmed.split(/\s*[|&;]\s*/);
+  if (segments.every(seg => SAFE_BASH_PREFIXES.some(p => seg.trim().startsWith(p)))) {
+    return 'allow';
+  }
+  return 'warning'; // 미분류 → 사용자 확인
+}
+
+// ── 대기 중인 권한 요청 관리 ──
+
+const pendingPermissions = new Map<string, {
+  resolve: (result: { behavior: 'allow' } | { behavior: 'deny'; message: string }) => void;
+  timeoutId: ReturnType<typeof setTimeout>;
+}>();
+
+const PERMISSION_TIMEOUT_MS = 5 * 60 * 1000; // 5분
+
+export function resolvePermissionRequest(
+  requestId: string,
+  decision: 'allow' | 'deny',
+  message?: string,
+): boolean {
+  const pending = pendingPermissions.get(requestId);
+  if (!pending) return false;
+  clearTimeout(pending.timeoutId);
+  pendingPermissions.delete(requestId);
+  if (decision === 'allow') {
+    pending.resolve({ behavior: 'allow' });
+  } else {
+    pending.resolve({ behavior: 'deny', message: message || 'User denied' });
+  }
+  return true;
+}
+
+/** canUseTool 콜백 팩토리 - SSE 이벤트로 권한 요청을 프론트엔드에 전달 */
+function createCanUseTool(callbacks: StreamCallbacks) {
+  return async (
+    toolName: string,
+    input: Record<string, unknown>,
+    options: { signal: AbortSignal; [key: string]: unknown },
+  ) => {
+    // 1. 자동 승인 도구
+    if (AUTO_ALLOW_TOOLS.has(toolName)) {
+      return { behavior: 'allow' as const };
+    }
+    // MCP 도구 자동 승인
+    if (toolName.startsWith('mcp__')) {
+      return { behavior: 'allow' as const };
+    }
+    // 2. Bash 명령 분류
+    if (toolName === 'Bash') {
+      const command = String(input.command || '').trim();
+      const classification = classifyBashCommand(command);
+      if (classification === 'allow') {
+        return { behavior: 'allow' as const };
+      }
+      // 사용자 승인 필요 → SSE 이벤트 전송 + 응답 대기
+      const requestId = crypto.randomUUID();
+      callbacks.onEvent({
+        type: 'permission_request',
+        requestId,
+        toolName,
+        description: command.slice(0, 500),
+        riskLevel: classification, // 'warning' | 'danger'
+      });
+
+      return new Promise<{ behavior: 'allow' } | { behavior: 'deny'; message: string }>((resolve) => {
+        const timeoutId = setTimeout(() => {
+          pendingPermissions.delete(requestId);
+          resolve({ behavior: 'deny', message: 'Permission timed out (5min)' });
+        }, PERMISSION_TIMEOUT_MS);
+        pendingPermissions.set(requestId, { resolve, timeoutId });
+        options.signal.addEventListener('abort', () => {
+          const p = pendingPermissions.get(requestId);
+          if (p) {
+            clearTimeout(p.timeoutId);
+            pendingPermissions.delete(requestId);
+            resolve({ behavior: 'deny', message: 'Aborted' });
+          }
+        }, { once: true });
+      });
+    }
+    // 3. 기타 도구 → 자동 승인
+    return { behavior: 'allow' as const };
+  };
+}
+
 /** 스킬 체인 시 결과물 파일 저장 규약 - 다음 스킬이 이전 스킬 결과를 참조할 수 있도록 output/ 디렉토리에 저장 */
 const SKILL_CHAIN_FILE_CONVENTION = `
 SKILL CHAIN FILE CONVENTION:
@@ -597,9 +730,45 @@ export async function executeSkill(
   }
 
   // Load all agents (OMC + plugin, filtered by skillName for selective loading)
-  const { omcAgents, pluginAgentCount, allAgents, allAgentCount, pluginAgentGuide: basePluginGuide } = await loadAllAgents(pluginId, skillName);
-  if (omcAgents) log.info(`Loaded ${Object.keys(omcAgents).length} OMC agents`);
-  if (pluginAgentCount > 0) log.info(`Loaded ${pluginAgentCount} registered agents for plugin "${pluginId}"`);
+  // ext-* 스킬은 Skill 도구로 외부 위임하므로 에이전트 주입 불필요 (Windows 32KB CLI 한계 회피)
+  const isExtSkill = skillName.startsWith('ext-');
+  const { omcAgents, pluginAgentCount, allAgents, allAgentCount, pluginAgentGuide: basePluginGuide } = isExtSkill
+    ? { omcAgents: null, pluginAgentCount: 0, allAgents: {} as Record<string, OmcAgentDef>, allAgentCount: 0, pluginAgentGuide: '' }
+    : await loadAllAgents(pluginId, skillName);
+  if (!isExtSkill) {
+    if (omcAgents) log.info(`Loaded ${Object.keys(omcAgents).length} OMC agents`);
+    if (pluginAgentCount > 0) log.info(`Loaded ${pluginAgentCount} registered agents for plugin "${pluginId}"`);
+  } else {
+    log.info(`ext-* skill "${skillName}": skipping agent loading (Skill tool delegation)`);
+  }
+
+  // ext-* 스킬: 대상 플러그인 설치 여부를 백엔드에서 직접 확인하여 시스템 프롬프트에 주입
+  // (acceptEdits 환경에서 모델이 Bash/Glob으로 확인 시 실패하는 문제 해결)
+  let extPluginCheckResult = '';
+  if (isExtSkill) {
+    const targetPlugin = skillName.replace(/^ext-/, '');
+    const home = process.env.USERPROFILE || process.env.HOME || '';
+    const pluginCachePath = path.join(home, '.claude', 'plugins', 'cache', targetPlugin);
+    const pluginInstalled = existsSync(pluginCachePath);
+    if (pluginInstalled) {
+      // 설치된 버전 목록도 수집
+      let versions: string[] = [];
+      try {
+        const entries = readdirSync(pluginCachePath, { withFileTypes: true });
+        for (const entry of entries) {
+          if (entry.isDirectory()) {
+            const subEntries = readdirSync(path.join(pluginCachePath, entry.name), { withFileTypes: true });
+            versions = subEntries.filter(e => e.isDirectory()).map(e => e.name);
+          }
+        }
+      } catch { /* ignore */ }
+      extPluginCheckResult = `\nEXT-PLUGIN PRE-CHECK RESULT:\nThe target plugin "${targetPlugin}" is CONFIRMED INSTALLED at: ${pluginCachePath}\n${versions.length > 0 ? `Installed versions: ${versions.join(', ')}\n` : ''}SKIP the plugin installation check in Phase 0. Proceed directly to domain context collection and workflow execution.\nDo NOT tell the user to install the plugin. Do NOT show installation commands.`;
+      log.info(`ext-* plugin "${targetPlugin}" confirmed installed at ${pluginCachePath} (versions: ${versions.join(', ') || 'unknown'})`);
+    } else {
+      extPluginCheckResult = `\nEXT-PLUGIN PRE-CHECK RESULT:\nThe target plugin "${targetPlugin}" is NOT installed. Cache path not found: ${pluginCachePath}\nFollow the SKILL.md installation instructions and inform the user.`;
+      log.warn(`ext-* plugin "${targetPlugin}" NOT found at ${pluginCachePath}`);
+    }
+  }
 
   // Enrich plugin agent guide with usage example for skill context
   const pluginAgentGuide = pluginAgentCount > 0
@@ -615,9 +784,11 @@ export async function executeSkill(
         .join('\n')
     : '- __prompt__: 자유 프롬프트 (Free prompt mode)';
 
-  // SDK 호출 옵션 구성 - acceptEdits: 파일 편집 자동 수락 + OAuth 인증 호환
-  // NOTE: bypassPermissions는 --dangerously-skip-permissions 플래그를 사용하며 API 키 필수.
-  //       Max 구독(OAuth) 환경에서는 acceptEdits를 사용해야 함.
+  // SDK 호출 옵션 구성 - acceptEdits + allowedTools로 Bash 자동 승인
+  // NOTE: canUseTool 콜백은 SDK 내부 ZodError 및 headless 환경 호환성 문제로 비활성화.
+  //       대신 allowedTools: ['Bash']로 모든 Bash 명령을 자동 승인하여 데드락 방지.
+  // TODO: SDK의 canUseTool 버그 수정 시 createCanUseTool(callbacks)로 복원하여
+  //       위험한 명령 프론트엔드 UI 승인 기능 활성화
   // CLAUDECODE 환경변수 제거: Claude Code 세션 내부에서 서버 실행 시 중첩 세션 방지
   const cleanEnv = { ...process.env };
   delete cleanEnv.CLAUDECODE;
@@ -625,6 +796,7 @@ export async function executeSkill(
   const options: Record<string, unknown> = {
     model: getDefaultSdkModel(),
     permissionMode: 'acceptEdits',
+    allowedTools: ['Bash'],
     cwd: dmapProjectDir,
     maxTurns: 50,
     env: cleanEnv,
@@ -644,6 +816,7 @@ ${SKILL_RELEVANCE_INSTRUCTION}
 AVAILABLE SKILLS:
 ${skillListText}
 ${ASK_USER_INSTRUCTION}
+${PERMISSION_AUTO_INSTRUCTION}${extPluginCheckResult}
 ${SKILL_CHAIN_FILE_CONVENTION}${previousSkillName ? `\n\nPREVIOUS SKILL RESULT:\nThe previous skill "${previousSkillName}" may have saved results at: output/${previousSkillName}-result.md\nRead this file FIRST using the Read tool before starting your workflow.` : ''}
 
 === SKILL INSTRUCTIONS ===
@@ -825,6 +998,7 @@ export async function executePrompt(
   const options: Record<string, unknown> = {
     model: getDefaultSdkModel(),
     permissionMode: 'acceptEdits',
+    allowedTools: ['Bash'],
     cwd: dmapProjectDir,
     maxTurns: 50,
     env: cleanEnvPrompt,
@@ -834,7 +1008,8 @@ export async function executePrompt(
     ...(allAgentCount > 0 ? { agents: allAgents } : {}),
     systemPrompt: { type: 'preset' as const, preset: 'claude_code' as const, append: `${isEnglish ? `You MUST respond ONLY in English.\n\n` : ''}You are a helpful assistant working in the project directory. Execute the user's request using available tools (Read, Write, Edit, Bash, Glob, Grep, WebFetch, WebSearch, Task, etc.). Do NOT invoke other skills. Do NOT enter plan mode. Do NOT use TodoWrite.
 AGENT DELEGATION: You MAY use the Task tool for parallel or complex work. Available OMC agents are injected with "omc-" prefix.${pluginAgentGuide}
-${ASK_USER_INSTRUCTION}` },
+${ASK_USER_INSTRUCTION}
+${PERMISSION_AUTO_INSTRUCTION}` },
   };
 
   if (resumeSessionId) {
@@ -847,7 +1022,34 @@ ${ASK_USER_INSTRUCTION}` },
     const fileAttachment = buildFileAttachment(filePaths, !!isEnglish);
 
     let currentPrompt: string;
-    if (resumeSessionId && input) {
+    // Slash command detection: SDK interprets '/' prefix as native slash command,
+    // causing "Unknown skill" error. Rewrite to avoid SDK interception.
+    // NOTE: SDK sessions don't load user plugins (~/.claude/plugins/), so the
+    // Skill tool can't find OMC/plugin skills.
+    const slashMatch = input.trimStart().match(/^\/(\S+)(?:\s+(.*))?$/);
+    if (slashMatch) {
+      const skillRef = slashMatch[1];
+      const args = slashMatch[2]?.trim() || '';
+
+      // OMC 스킬 감지: oh-my-claudecode: 접두사 또는 omc- 접두사
+      // → OMC 플러그인 캐시에서 SKILL.md를 읽어 실행하도록 안내
+      const omcMatch = skillRef.match(/^(?:oh-my-claudecode:)?(.+)$/);
+      const omcSkillName = omcMatch?.[1] || skillRef;
+      const isOmcSkill = skillRef.startsWith('oh-my-claudecode:') || skillRef.startsWith('omc-');
+      const home = process.env.USERPROFILE || process.env.HOME || '~';
+      const omcCachePath = `${home}/.claude/plugins/cache/omc/oh-my-claudecode`;
+
+      if (isOmcSkill) {
+        currentPrompt = isEnglish
+          ? `The user wants to run the OMC slash command "/${skillRef}"${args ? ` with input: "${args}"` : ''}.\nThis OMC skill is not directly available via SDK. Find and execute its instructions:\n1. Use Glob to find: ${omcCachePath}/*/skills/${omcSkillName}/SKILL.md\n2. Read the SKILL.md file\n3. Follow the skill instructions using available tools (Bash, Read, Write, Glob, Grep, WebFetch, WebSearch, etc.)\nRespond in English.`
+          : `사용자가 OMC 슬래시 커맨드 "/${skillRef}"를 실행하려 합니다${args ? `. 입력: "${args}"` : ''}.\n이 OMC 스킬은 SDK에서 직접 사용할 수 없습니다. 다음 단계로 실행하세요:\n1. Glob 도구로 찾기: ${omcCachePath}/*/skills/${omcSkillName}/SKILL.md\n2. 찾은 SKILL.md 파일을 Read 도구로 읽기\n3. 스킬 지시사항에 따라 사용 가능한 도구(Bash, Read, Write, Glob, Grep, WebFetch, WebSearch 등)로 작업 실행`;
+      } else {
+        // 일반 슬래시 명령 (비-OMC): 도구를 활용해 의도를 수행하도록 안내
+        currentPrompt = isEnglish
+          ? `The user wants to run the "/${skillRef}" slash command${args ? ` with input: "${args}"` : ''}. This slash command is not directly available in this session. Use available tools (Bash, Read, Write, Glob, Grep, etc.) to accomplish what this command would do. If you cannot determine what this command does, inform the user that this slash command is only available in the Claude Code CLI terminal. Respond in English.`
+          : `사용자가 "/${skillRef}" 슬래시 커맨드를 실행하려 합니다${args ? `. 입력: "${args}"` : ''}. 이 슬래시 커맨드는 현재 세션에서 직접 사용할 수 없습니다. 사용 가능한 도구(Bash, Read, Write, Glob, Grep 등)를 활용하여 이 명령이 수행할 작업을 실행하세요. 명령의 기능을 알 수 없는 경우, 이 슬래시 커맨드는 Claude Code CLI 터미널에서만 사용 가능하다고 안내하세요.`;
+      }
+    } else if (resumeSessionId && input) {
       currentPrompt = isEnglish ? `${input}\n\nRespond in English.` : input;
     } else if (resumeSessionId) {
       currentPrompt = isEnglish
