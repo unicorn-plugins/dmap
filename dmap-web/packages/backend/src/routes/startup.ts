@@ -7,7 +7,7 @@
  *
  * 점검 항목 (고정 순서):
  * 0. Node.js 버전 (18+)
- * 1. Node Modules (@anthropic-ai/claude-code)
+ * 1. Node Modules (@anthropic-ai/claude-agent-sdk)
  * 2. Claude Code CLI
  * 3. Claude 인증 상태
  * 4. Oh My Claudecode 설치
@@ -66,18 +66,18 @@ async function checkNodeVersion(): Promise<CheckResult> {
   return { id: 'node', label: 'Node.js', status: 'fail', detail: `v${version} — requires 18+ (https://nodejs.org)`, fixable: false };
 }
 
-/** @anthropic-ai/claude-code 패키지 설치 확인 - dmap-web/ 또는 루트 node_modules 탐색 */
+/** @anthropic-ai/claude-agent-sdk 패키지 설치 확인 - dmap-web/ 또는 루트 node_modules 탐색 */
 async function checkNodeModules(): Promise<CheckResult> {
   const candidates = [
-    path.join(DMAP_PROJECT_DIR, 'dmap-web', 'node_modules', '@anthropic-ai', 'claude-code'),
-    path.join(DMAP_PROJECT_DIR, 'node_modules', '@anthropic-ai', 'claude-code'),
+    path.join(DMAP_PROJECT_DIR, 'dmap-web', 'node_modules', '@anthropic-ai', 'claude-agent-sdk'),
+    path.join(DMAP_PROJECT_DIR, 'node_modules', '@anthropic-ai', 'claude-agent-sdk'),
   ];
   for (const p of candidates) {
     if (fs.existsSync(p)) {
-      return { id: 'node_modules', label: 'Node Modules', status: 'pass', detail: '@anthropic-ai/claude-code', fixable: false };
+      return { id: 'node_modules', label: 'Node Modules', status: 'pass', detail: '@anthropic-ai/claude-agent-sdk', fixable: false };
     }
   }
-  return { id: 'node_modules', label: 'Node Modules', status: 'fail', detail: '@anthropic-ai/claude-code not found', fixable: true, fixAction: 'npm_install' };
+  return { id: 'node_modules', label: 'Node Modules', status: 'fail', detail: '@anthropic-ai/claude-agent-sdk not found', fixable: true, fixAction: 'npm_install' };
 }
 
 /** Claude Code CLI 설치 확인 */
