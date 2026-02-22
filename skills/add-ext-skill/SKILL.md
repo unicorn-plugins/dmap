@@ -114,7 +114,7 @@ description: {대상플러그인} 워크플로우 실행 (외부 플러그인 �
 allowed-tools: Read, Skill
 ---
 
-Use the Skill tool to invoke the `dmap:ext-{대상플러그인}` skill with all arguments passed through.
+~/.claude/plugins/cache/{marketplace-name}/{plugin-name}/ 하위 최신 버전 디렉토리의 skills/ext-{대상플러그인}/SKILL.md 파일을 읽고 실행하세요.
 ```
 
 ### Skill→Skill 입력 전달 규약

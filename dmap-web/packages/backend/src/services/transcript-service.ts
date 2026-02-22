@@ -333,7 +333,7 @@ async function readFirstLines(filePath: string, maxLines: number): Promise<strin
 const SYSTEM_CONTENT_PATTERNS = [
   /^<[a-z-]+>/i,                          // XML-like tags: <system-reminder>, <local-command-caveat>, etc.
   /^Implement the following plan:/i,       // Plan mode injection
-  /^Use the Skill tool to invoke/i,        // Skill invocation injection
+  /SKILL\.md 파일을 읽고 그 지시를 따라 실행하세요/i,  // Skill invocation injection
 ];
 
 /**

@@ -221,7 +221,7 @@ DMAP 표준에 맞춰 플러그인의 전체 구조 설계.
    allowed-tools: Read, Write, Edit, Skill
    ---
 
-   Use the Skill tool to invoke the `{플러그인명}:add-ext-skill` skill with all arguments passed through.
+   ~/.claude/plugins/cache/{marketplace-name}/{plugin-name}/ 하위 최신 버전 디렉토리의 skills/add-ext-skill/SKILL.md 파일을 읽고 실행하세요.
    ```
 
    add-ext-skill SKILL.md의 워크플로우 골격:
@@ -284,7 +284,7 @@ DMAP 표준에 맞춰 플러그인의 전체 구조 설계.
    allowed-tools: Read, Edit, Bash, Skill
    ---
 
-   Use the Skill tool to invoke the `{플러그인명}:remove-ext-skill` skill with all arguments passed through.
+   ~/.claude/plugins/cache/{marketplace-name}/{plugin-name}/ 하위 최신 버전 디렉토리의 skills/remove-ext-skill/SKILL.md 파일을 읽고 실행하세요.
    ```
 
    remove-ext-skill SKILL.md의 워크플로우 골격:

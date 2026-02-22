@@ -389,8 +389,7 @@ help 스킬 작성 규칙:
 description: {스킬 설명}
 ---
 
-Use the Skill tool to invoke the `{plugin-name}:{skill-name}` skill
-with all arguments passed through.
+~/.claude/plugins/cache/{marketplace-name}/{plugin-name}/ 하위 최신 버전 디렉토리의 skills/{skill-name}/SKILL.md 파일을 읽고 실행하세요.
 ```
 
 > 표준 참조: `standards/plugin-standard.md`의 "슬래시 명령 등록"
