@@ -50,7 +50,7 @@ export function ChatPanel() {
   const { executeSkill, respondToApproval, respondToPermission, stopStream } = useSkillStream();
   const { lang } = useLangStore();
   const {
-    attachedPaths, showFileBrowser, setShowFileBrowser, isDragging, toast,
+    attachedPaths, imagePreviews, showFileBrowser, setShowFileBrowser, isDragging, toast,
     dragProps, handlePaste, handleFilesSelected, removePath, clearAttachments, getFileName,
   } = useFileAttachment();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -376,8 +376,12 @@ export function ChatPanel() {
                 <div className="flex flex-wrap gap-1.5">
                   {attachedPaths.map((filePath, idx) => {
                     const name = getFileName(filePath);
+                    const preview = imagePreviews[filePath];
                     return (
                       <span key={idx} className="inline-flex items-center gap-1 px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-200 rounded-full">
+                        {preview
+                          ? <img src={preview} alt={name} className="w-5 h-5 object-cover rounded flex-shrink-0" />
+                          : null}
                         {name.length > 20 ? name.slice(0, 17) + '...' : name}
                         <button onClick={() => removePath(idx)} className="text-gray-400 hover:text-red-500">
                           <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -479,8 +483,12 @@ export function ChatPanel() {
               <div className="flex flex-wrap gap-1.5">
                 {attachedPaths.map((filePath, idx) => {
                   const name = getFileName(filePath);
+                  const preview = imagePreviews[filePath];
                   return (
                     <span key={idx} className="inline-flex items-center gap-1 px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full">
+                      {preview
+                        ? <img src={preview} alt={name} className="w-5 h-5 object-cover rounded flex-shrink-0" />
+                        : null}
                       {name.length > 20 ? name.slice(0, 17) + '...' : name}
                       <button onClick={() => removePath(idx)} className="text-gray-400 hover:text-red-500">
                         <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">

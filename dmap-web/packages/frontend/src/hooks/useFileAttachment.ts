@@ -9,6 +9,7 @@ const ALLOWED_EXTENSIONS = new Set([
 
 export function useFileAttachment() {
   const [attachedPaths, setAttachedPaths] = useState<string[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<Record<string, string>>({});
   const [showFileBrowser, setShowFileBrowser] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -22,8 +23,9 @@ export function useFileAttachment() {
     toastTimerRef.current = setTimeout(() => setToast(null), 2000);
   }, []);
 
-  const uploadFiles = useCallback(async (files: { name: string; data: string }[]) => {
-    if (files.length === 0) return;
+  /** 파일 업로드 후 서버 경로 반환 */
+  const uploadFiles = useCallback(async (files: { name: string; data: string }[]): Promise<string[]> => {
+    if (files.length === 0) return [];
     try {
       const res = await fetch('/api/filesystem/upload', {
         method: 'POST',
@@ -33,10 +35,12 @@ export function useFileAttachment() {
       if (res.ok) {
         const { paths } = await res.json();
         setAttachedPaths((prev) => [...prev, ...paths.filter((p: string) => !prev.includes(p))]);
+        return paths as string[];
       }
     } catch {
       // ignore upload errors
     }
+    return [];
   }, []);
 
   const fileToBase64 = useCallback(async (file: Blob, name: string) => {
@@ -99,33 +103,80 @@ export function useFileAttachment() {
 
     if (allowed.length === 0) return;
 
+    // 이미지 파일은 미리보기 URL 생성
+    const previewUrls = allowed.map((file) =>
+      file.type.startsWith('image/') ? URL.createObjectURL(file) : null,
+    );
+
     const fileData = await Promise.all(
       allowed.map((file) => fileToBase64(file, file.name)),
     );
-    await uploadFiles(fileData);
+    const paths = await uploadFiles(fileData);
+
+    if (paths.length > 0) {
+      setImagePreviews((prev) => {
+        const next = { ...prev };
+        paths.forEach((path, i) => {
+          if (previewUrls[i]) next[path] = previewUrls[i]!;
+        });
+        return next;
+      });
+    } else {
+      previewUrls.forEach((url) => { if (url) URL.revokeObjectURL(url); });
+    }
   }, [showToast, t, fileToBase64, uploadFiles]);
 
   const handlePaste = useCallback(async (e: React.ClipboardEvent) => {
-    const items = Array.from(e.clipboardData.items);
-    const imageItems = items.filter((item) => item.type.startsWith('image/'));
+    // 1) clipboardData.files: drag-and-drop 방식으로 접근 (일부 브라우저/OS에서 더 신뢰적)
+    let imageFiles = Array.from(e.clipboardData.files).filter((f) => f.type.startsWith('image/'));
 
-    if (imageItems.length === 0) return; // text paste — let default behavior happen
+    // 2) files가 비어있으면 items API로 fallback (macOS 스크린샷 등)
+    if (imageFiles.length === 0) {
+      const items = Array.from(e.clipboardData.items);
+      const imageItems = items.filter((item) => item.kind === 'file' && item.type.startsWith('image/'));
+      if (imageItems.length === 0) return; // 이미지 없음 → 텍스트 붙여넣기 허용
+      imageFiles = imageItems.map((item) => item.getAsFile()).filter((f): f is File => f !== null);
+    }
 
-    e.preventDefault(); // prevent image data from being pasted as text
+    if (imageFiles.length === 0) return;
+
+    e.preventDefault();
+
+    const blobs = imageFiles.map((file) => {
+      const subtype = file.type.split(';')[0].trim().split('/')[1] || 'png';
+      const ext = subtype === 'tiff' ? 'png' : subtype;
+      return { blob: file, ext };
+    });
+
+    if (blobs.length === 0) {
+      showToast(t('fileBrowser.unsupportedType'));
+      return;
+    }
+
+    const previewUrls = blobs.map(({ blob }) => URL.createObjectURL(blob));
 
     const fileData = await Promise.all(
-      imageItems.map(async (item) => {
-        const blob = item.getAsFile();
-        if (!blob) return null;
-        const ext = item.type.split('/')[1] || 'png';
-        const name = `clipboard-${Date.now()}.${ext}`;
+      blobs.map(({ blob, ext }, i) => {
+        const name = `clipboard-${Date.now()}-${i}.${ext}`;
         return fileToBase64(blob, name);
       }),
     );
 
-    const validFiles = fileData.filter((f): f is { name: string; data: string } => f !== null);
-    await uploadFiles(validFiles);
-  }, [fileToBase64, uploadFiles]);
+    const paths = await uploadFiles(fileData);
+
+    if (paths.length > 0) {
+      setImagePreviews((prev) => {
+        const next = { ...prev };
+        paths.forEach((path, i) => {
+          if (previewUrls[i]) next[path] = previewUrls[i];
+        });
+        return next;
+      });
+    } else {
+      previewUrls.forEach((url) => URL.revokeObjectURL(url));
+      showToast(t('fileBrowser.unsupportedType'));
+    }
+  }, [fileToBase64, uploadFiles, showToast, t]);
 
   const handleFilesSelected = useCallback((filePaths: string[]) => {
     setAttachedPaths((prev) => [...prev, ...filePaths.filter((p) => !prev.includes(p))]);
@@ -133,15 +184,30 @@ export function useFileAttachment() {
   }, []);
 
   const removePath = useCallback((index: number) => {
-    setAttachedPaths((prev) => prev.filter((_, i) => i !== index));
+    setAttachedPaths((prev) => {
+      const path = prev[index];
+      setImagePreviews((prevPreviews) => {
+        const url = prevPreviews[path];
+        if (url) URL.revokeObjectURL(url);
+        const next = { ...prevPreviews };
+        delete next[path];
+        return next;
+      });
+      return prev.filter((_, i) => i !== index);
+    });
   }, []);
 
   const clearAttachments = useCallback(() => {
+    setImagePreviews((prev) => {
+      Object.values(prev).forEach((url) => URL.revokeObjectURL(url));
+      return {};
+    });
     setAttachedPaths([]);
   }, []);
 
   return {
     attachedPaths,
+    imagePreviews,
     showFileBrowser,
     setShowFileBrowser,
     isDragging,
