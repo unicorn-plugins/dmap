@@ -1,14 +1,13 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
-  "name": "dmap",
+  "name": "unicorn",
   "owner": {
     "name": "Unicorn Inc."
   },
   "plugins": [
     {
       "name": "dmap",
-      "source": "./",
-      "category": "development"
+      "source": "./"
     }
   ]
 }
