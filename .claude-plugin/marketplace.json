@@ -1,6 +1,6 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
-  "name": "unicorn",
+  "name": "dmap",
   "owner": {
     "name": "Unicorn Inc."
   },
