@@ -7,10 +7,6 @@ user-invocable: true
 
 # Publish
 
-[PUBLISH 활성화]
-
----
-
 ## 목표
 
 개발 완료된 DMAP 플러그인을 GitHub 원격 저장소에 배포하고,
@@ -29,14 +25,25 @@ user-invocable: true
 
 ---
 
+## 작업 환경 변수 로드 
+CLAUDE.md에서 아래 환경변수 로드함. 없으면 '/dmap:team-panner'를 먼저 수행하도록 안내하고 종료.   
+- CLAUDE_RUNTIME: 런타임 종류. Claude Code 또는 Claude CoWork 
+- DMAP_PLUGIN_DIR: DMAP 플러그인의 루트 절대 경로 
+- PLUGIN_DIR: 생성할 플러그인의 루트 절대 경로 
+- PLUGIN_NAME: 생성할 플러그인 이름 
+
+[Top](#publish)
+
+---
+
 ## 참조
 
 | 문서 | 경로 | 용도 |
 |------|------|------|
-| GitHub 계정 가이드 | `resources/guides/github/github-account-setup.md` | 계정 생성 안내 |
-| GitHub 토큰 가이드 | `resources/guides/github/github-token-guide.md` | PAT 생성 안내 |
-| GitHub Organization 가이드 | `resources/guides/github/github-organization-guide.md` | Organization 생성 안내 |
-| create_repo 도구 | `resources/tools/customs/git/create_repo.py` | GitHub 저장소 생성 및 Push |
+| GitHub 계정 가이드 | `{DMAP_PLUGIN_DIR}/resources/guides/github/github-account-setup.md` | 계정 생성 안내 |
+| GitHub 토큰 가이드 | `{DMAP_PLUGIN_DIR}/resources/guides/github/github-token-guide.md` | PAT 생성 안내 |
+| GitHub Organization 가이드 | `{DMAP_PLUGIN_DIR}/resources/guides/github/github-organization-guide.md` | Organization 생성 안내 |
+| create_repo 도구 | `{DMAP_PLUGIN_DIR}/resources/tools/customs/git/create_repo.py` | GitHub 저장소 생성 및 Push |
 
 [Top](#publish)
 
@@ -65,24 +72,24 @@ AskUserQuestion 도구로 다음 정보를 순차적으로 문의:
 1. **GitHub 계정 보유 여부**
    - 보유: 다음 단계로 진행
    - 미보유: 계정 생성 가이드 링크 제공 후 대기
-     `resources/guides/github/github-account-setup.md` 참조 안내
+     `{DMAP_PLUGIN_DIR}/resources/guides/github/github-account-setup.md` 참조 안내
 
 2. **GitHub Username** 입력 요청
 
 3. **Personal Access Token (PAT)** 입력 요청
    - 미보유 시: 토큰 생성 가이드 링크 제공
-     `resources/guides/github/github-token-guide.md` 참조 안내
+     `{DMAP_PLUGIN_DIR}/resources/guides/github/github-token-guide.md` 참조 안내
    - PAT 필요 권한: `repo` (전체)
 
 4. **Organization 사용 여부**
    - 개인 계정 사용: username을 owner로 설정
    - Organization 사용: org 이름 입력 요청
    - Organization 미보유 시: 생성 가이드 링크 제공
-     `resources/guides/github/github-organization-guide.md` 참조 안내
+     `{DMAP_PLUGIN_DIR}/resources/guides/github/github-organization-guide.md` 참조 안내
 
 5. **토큰 저장**
-   - 플러그인 디렉토리에 `.dmap/secrets/` 디렉토리 생성
-   - `.dmap/secrets/git-token-{plugin-name}.env` 파일에 저장:
+   - 플러그인 디렉토리에 `{PLUGIN_DIR}/.dmap/secrets/` 디렉토리 생성
+   - `{PLUGIN_DIR}/.dmap/secrets/git-token-{plugin-name}.env` 파일에 저장:
      ```
      GITHUB_USERNAME={username}
      GITHUB_TOKEN={token}
@@ -92,14 +99,14 @@ AskUserQuestion 도구로 다음 정보를 순차적으로 문의:
 
 ### Step 2: 원격 저장소 생성 및 Push
 
-`create_repo.py` 도구를 사용하여 GitHub 저장소 생성 + 로컬 Git 초기화 + Push를 한번에 수행함.
+`{DMAP_PLUGIN_DIR}/resources/tools/customs/git/create_repo.py` 도구를 사용하여 GitHub 저장소 생성 + 로컬 Git 초기화 + Push를 한번에 수행함.
 `gh` CLI 설치가 불요하며, Python 표준 라이브러리만 사용.
 
 1. 저장소명 결정: 플러그인명 사용 (plugin.json의 name 필드)
 2. `.gitignore` 존재 확인 (develop-plugin에서 이미 생성됨)
 3. `create_repo.py` 실행:
    ```
-   python resources/tools/customs/git/create_repo.py \
+   python {DMAP_PLUGIN_DIR}/resources/tools/customs/git/create_repo.py \
      --name {repo-name} \
      --desc "{plugin description}" \
      --token {PAT} \
@@ -118,7 +125,7 @@ AskUserQuestion 도구로 다음 정보를 순차적으로 문의:
 
 ### Step 2.5: 원격 URL 보안 검증 (자동)
 
-`create_repo.py` 또는 수동 Push 완료 후 즉시 실행:
+`{DMAP_PLUGIN_DIR}/resources/tools/customs/git/create_repo.py` 또는 수동 Push 완료 후 즉시 실행:
 
 1. 원격 URL 확인:
    ```
@@ -207,7 +214,7 @@ claude plugin list
 | # | 규칙 |
 |---|------|
 | 1 | GitHub 인증 정보(username, PAT, owner)를 반드시 수집 후 진행 |
-| 2 | 토큰을 `.dmap/secrets/` 디렉토리에 저장하고 `.gitignore` 등록 확인 |
+| 2 | 토큰을 `{PLUGIN_DIR}/.dmap/secrets/` 디렉토리에 저장하고 `{PLUGIN_DIR}/.gitignore` 등록 확인 |
 | 3 | 저장소 존재 여부를 먼저 확인하여 멱등성 보장 |
 | 4 | 완료 메시지에 플러그인 설치 방법(마켓플레이스 등록 명령) 포함 |
 
@@ -221,7 +228,7 @@ claude plugin list
 |---|----------|
 | 1 | 인증 토큰을 로그/출력에 노출 금지 |
 | 2 | 사용자 확인 없이 기존 저장소를 덮어쓰지 않음 |
-| 3 | `.dmap/secrets/` 디렉토리를 Git에 커밋하지 않음 |
+| 3 | `{PLUGIN_DIR}/.dmap/secrets/` 디렉토리를 Git에 커밋하지 않음 |
 | 4 | 원격 URL에 토큰을 포함한 채로 저장하지 않음 (Step 2.5 자동 검증 필수) |
 
 [Top](#publish)
@@ -231,8 +238,8 @@ claude plugin list
 ## 검증 체크리스트
 
 - [ ] GitHub 인증 정보 수집 단계가 포함되어 있는가
-- [ ] `.dmap/secrets/` 저장 및 `.gitignore` 확인 로직이 있는가
-- [ ] `create_repo.py` 도구를 사용하여 저장소 생성 및 Push를 수행하는가
+- [ ] `{PLUGIN_DIR}/.dmap/secrets/` 저장 및 `{PLUGIN_DIR}/.gitignore` 확인 로직이 있는가
+- [ ] `{DMAP_PLUGIN_DIR}/resources/tools/customs/git/create_repo.py` 도구를 사용하여 저장소 생성 및 Push를 수행하는가
 - [ ] 저장소 존재 여부 사전 확인(멱등성)이 있는가
 - [ ] 완료 메시지에 설치 명령어가 포함되어 있는가
 - [ ] 문제 해결 가이드가 포함되어 있는가
