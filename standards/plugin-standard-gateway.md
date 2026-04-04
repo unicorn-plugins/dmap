@@ -1,9 +1,9 @@
 # Gateway 표준
 
 > **교차 참조**: 아래 상황에서 추가 문서를 로드할 것.
-> - 에이전트의 agentcard.yaml/tools.yaml 작성이 필요하면 → `standards/plugin-standard-agent.md`
-> - 리소스(도구·가이드·템플릿·샘플)가 필요하면 → `resources/plugin-resources.md`
-> - 전체 아키텍처 확인이 필요하면 → `standards/plugin-standard.md`
+> - 에이전트의 agentcard.yaml/tools.yaml 작성이 필요하면 → `{DMAP_PLUGIN_DIR}/standards/plugin-standard-agent.md`
+> - 리소스(도구·가이드·템플릿·샘플)가 필요하면 → `{DMAP_PLUGIN_DIR}/resources/plugin-resources.md`
+> - 전체 아키텍처 확인이 필요하면 → `{DMAP_PLUGIN_DIR}/standards/plugin-standard.md`
 
 ---
 

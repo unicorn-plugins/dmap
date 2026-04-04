@@ -1,11 +1,11 @@
 # Agent 표준
 
 > **교차 참조**: 아래 상황에서 추가 문서를 로드할 것.
-> - agentcard.yaml의 forbidden_actions 매핑이 필요하면 → `standards/plugin-standard-gateway.md`
-> - 에이전트를 호출하는 스킬을 함께 작성해야 하면 → `standards/plugin-standard-skill.md`
-> - tier의 실제 모델 변환이 필요하면 → `standards/plugin-standard-gateway.md`의 "runtime-mapping.yaml" 섹션
-> - 리소스(도구·가이드·템플릿·샘플)가 필요하면 → `resources/plugin-resources.md`
-> - 전체 아키텍처 확인이 필요하면 → `standards/plugin-standard.md`
+> - agentcard.yaml의 forbidden_actions 매핑이 필요하면 → `{DMAP_PLUGIN_DIR}/standards/plugin-standard-gateway.md`
+> - 에이전트를 호출하는 스킬을 함께 작성해야 하면 → `{DMAP_PLUGIN_DIR}/standards/plugin-standard-skill.md`
+> - tier의 실제 모델 변환이 필요하면 → `{DMAP_PLUGIN_DIR}/standards/plugin-standard-gateway.md`의 "runtime-mapping.yaml" 섹션
+> - 리소스(도구·가이드·템플릿·샘플)가 필요하면 → `{DMAP_PLUGIN_DIR}/resources/plugin-resources.md`
+> - 전체 아키텍처 확인이 필요하면 → `{DMAP_PLUGIN_DIR}/standards/plugin-standard.md`
 
 ---
 
@@ -297,7 +297,7 @@ persona:
     포브스 아시아 30 under 30 선정(2017).
 ```
 
-> **참고**: 다양한 역할의 persona 작성 예시는 `resources/samples/plugin/persona.md` 참조.
+> **참고**: 다양한 역할의 persona 작성 예시는 `{DMAP_PLUGIN_DIR}/resources/samples/plugin/persona.md` 참조.
 
 ### 필드 분류
 

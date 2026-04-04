@@ -1,11 +1,11 @@
 # Skill 표준
 
 > **교차 참조**: 아래 상황에서 추가 문서를 로드할 것.
-> - 에이전트를 함께 작성해야 하면 → `standards/plugin-standard-agent.md`
-> - 에이전트 이름 규칙(표준 식별자, FQN)이 필요하면 → `standards/plugin-standard-agent.md`의 "에이전트 이름 규칙"
-> - Gateway 매핑이 필요하면 → `standards/plugin-standard-gateway.md`
-> - 리소스(도구·가이드·템플릿·샘플)가 필요하면 → `resources/plugin-resources.md`
-> - 전체 아키텍처 확인이 필요하면 → `standards/plugin-standard.md`
+> - 에이전트를 함께 작성해야 하면 → `{DMAP_PLUGIN_DIR}/standards/plugin-standard-agent.md`
+> - 에이전트 이름 규칙(표준 식별자, FQN)이 필요하면 → `{DMAP_PLUGIN_DIR}/standards/plugin-standard-agent.md`의 "에이전트 이름 규칙"
+> - Gateway 매핑이 필요하면 → `{DMAP_PLUGIN_DIR}/standards/plugin-standard-gateway.md`
+> - 리소스(도구·가이드·템플릿·샘플)가 필요하면 → `{DMAP_PLUGIN_DIR}/resources/plugin-resources.md`
+> - 전체 아키텍처 확인이 필요하면 → `{DMAP_PLUGIN_DIR}/standards/plugin-standard.md`
 
 ---
 
@@ -77,7 +77,7 @@ Gateway 도구를 직접 사용(직결형)하는 Controller+UseCase 레이어의
 
 | 유형 | 영문명 | 실행 경로 | 역할 | 예시 |
 |------|--------|----------|------|------|
-| 핵심스킬 | Router | 위임형 | 요청의 의도를 판별하고 적절한 스킬로 라우팅 | router |
+| 라우팅스킬 | Router | 위임형 | 요청의 의도를 판별하고 적절한 스킬로 라우팅 | router |
 | 설정스킬 | Setup | 직결형 | 설치 · 설정 마법사 제공 | omc-setup, mcp-setup |
 | 계획스킬 | Planning | 위임형 | 전략적 계획 수립 · 검토 | plan, ralplan, review |
 | 지휘자스킬 | Orchestrator | 위임형 | 워크플로우 조율, 병렬 실행, 분석, 리뷰 | autopilot, ralph, analyze, tdd |
@@ -128,6 +128,7 @@ Gateway 도구를 직접 사용(직결형)하는 Controller+UseCase 레이어의
 | 경로 | 흐름 | 설명 |
 |------|------|------|
 | **직접 활성화** | 런타임 → 특정 스킬 | 슬래시 명령(`/plugin:skill`) 또는 자연어 매칭(frontmatter description 기반) |
+| **Router 경유 활성화** | 런타임 → Router → 특정 스킬 | 모호한 사용자 요청에 대해 Router 스킬이 요청의 의도를 판별하고 적절한 스킬로 라우팅  |
 
 ### 직접 활성화
 
@@ -314,7 +315,7 @@ Task(
 )
 ```
 
-> **상세 규칙**: 에이전트 이름 규칙의 전체 내용은 → `standards/plugin-standard-agent.md`의 "에이전트 이름 규칙" 참조.
+> **상세 규칙**: 에이전트 이름 규칙의 전체 내용은 → `{DMAP_PLUGIN_DIR}/standards/plugin-standard-agent.md`의 "에이전트 이름 규칙" 참조.
 
 ### 작성 가이드
 
@@ -401,9 +402,9 @@ Task(
 
 ## 유형별 필수/권장 섹션
 
-### Core (핵심스킬)
+### Router (라우팅스킬)
 
-항상 활성화되어 시스템 전체 행동 규범을 정의하는 스킬.
+항상 활성화되어 모호한 사용자 요청의 의도를 판별하여 적절한 스킬로 라우팅 
 
 #### 고유 섹션
 
@@ -1061,7 +1062,7 @@ user-invocable: true
 
 ## 도메인 컨텍스트 수집
 
-> **수집 대상 결정**: 대상 플러그인 명세서(`resources/plugins/{분류}/{name}.md`)의
+> **수집 대상 결정**: 대상 플러그인 명세서(`{DMAP_PLUGIN_DIR}/resources/plugins/{분류}/{name}.md`)의
 > "도메인 컨텍스트 수집 가이드" 섹션을 로드하여 수집 대상 테이블을 그대로 사용.
 
 | 수집 대상 | 소스 | 용도 |
