@@ -314,14 +314,14 @@ persona:
 | ↳ 세부역할.triggers | `sub_roles[].triggers` | 선택 | 호출 트리거 키워드 목록. 스킬이 세부역할 매칭 시 참고 |
 | ↳ 정체성 | `capabilities.identity` | ✅ | 무엇이다 / 무엇이 아니다 (구조화) |
 | ↳ 제약 | `capabilities.restrictions` | 권장 | 금지 액션 등 (구조화) |
-
-> *필수: sub_roles 사용 시 필수
 | **경계** | `handoff` | ✅ | 핸드오프 대상, 조건, 사유 |
 | **에스컬레이션** | `escalation` | 선택 | 상위 티어로 위임하는 조건 목록. 티어 변형 에이전트에서 사용 |
 | **인격** | `persona` | 필수 | 에이전트 인격 컨테이너 (하위에 profile, style, background 포함) |
 | ↳ 프로필 | `persona.profile` | 필수 | 기본 신상 (구조화: name, nickname, role, gender, age) |
 | ↳ 스타일 | `persona.style` | 필수 | 성향 + 소통 방식 (자유 서술) |
 | ↳ 배경 | `persona.background` | 필수 | 경력·전문성 (자유 서술) |
+
+> \*필수: sub_roles 사용 시 필수
 
 > **확장 지침**: 플러그인별로 필요한 필드를 자유롭게 추가 가능.
 > YAML 주석으로 필드 용도를 설명하여 자체 문서화를 유지함.
