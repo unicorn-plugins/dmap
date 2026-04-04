@@ -289,9 +289,23 @@ DMAP 표준에 맞춰 플러그인의 전체 구조 설계.
 4. 현재 프로젝트의 CLAUDE.md에 {CLAUDE_RUNTIME}과 {DMAP_PLUGIN_DIR}을 기록하여 이후 중복 계산 안하게 함     
    - CLAUDE_RUNTIME: Claude Code | Claude CoWork
    - DMAP_PLUGIN_DIR: '1번에서 결정한 절대경로'
+
+## {플러그인명} 플러그인
+`@{스킬명}` 입력 시 해당 스킬(`/{플러그인명}:{스킬명}`)을 즉시 실행함.
+
+- `@setup`: 플러그인 초기 설정
+- `@help`: 사용 안내
+- `@{스킬명}`: {skills/*/SKILL.md frontmatter description 값}
 ```
 
 ````
+
+**스킬 약어 구성 규칙:**
+- `skills/*/SKILL.md` frontmatter의 `name`과 `description`을 읽어 구성
+- `@{스킬명}` = frontmatter `name` 값
+- `{설명}` = frontmatter `description` 값
+- setup, help는 항상 첫 두 항목으로 고정, 나머지는 생성된 기능 스킬 순으로 나열
+- 외부호출 스킬(ext-*)은 목록에서 제외
 
 **멤버 구성 규칙:**
 - `agents/*/agentcard.yaml`에서 `persona.profile`과 `persona.style`, `persona.background`를 읽어 구성
