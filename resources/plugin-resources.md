@@ -92,6 +92,7 @@
 | 커스텀 CLI | check-mermaid | Docker 기반 Mermaid 다이어그램 문법 검증 | [상세](tools/check-mermaid.md) |
 | 커스텀 CLI | check-plantuml | Docker 기반 PlantUML 다이어그램 문법 검증 | [상세](tools/check-plantuml.md) |
 | 커스텀 앱 | email_sender | smtplib 기반 SMTP 이메일 발송 (텍스트/HTML 지원) | [상세](tools/email_sender.md) |
+| 커스텀 앱 | convert-to-markdown | Office 문서(pptx/docx/xlsx)를 Markdown으로 변환, Groq VLM으로 이미지 설명 자동 생성 | [상세](tools/convert-to-markdown.md) |
 
 [Top](#리소스-마켓플레이스)
 
