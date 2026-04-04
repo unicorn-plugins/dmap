@@ -66,6 +66,7 @@ agents/{agent_name}/
 | 원칙 | 설명 | 예시 |
 |------|------|------|
 | 단일 역할 | 하나의 전문 영역에 집중 | architect = 분석·설계만, 코드 수정 안 함 |
+| 세부역할 분화 | 동일 전문 영역 내에서 세부역할(sub-roles)로 분화 가능. 다른 전문 영역 침범 금지 | scenario-analyst = "요구사항 분석" + "시나리오 생성" (모두 분석 영역) |
 | 명확한 경계 | "나는 무엇이다 / 무엇이 아니다" 선언 | executor = 코드 작성, 요구사항 수집은 안 함 |
 | 핸드오프 규칙 | 자기 역할 밖의 요청은 적절한 에이전트로 위임 | architect → executor로 구현 위임 |
 
@@ -125,11 +126,43 @@ description: 에이전트 목표 설명      # 목표 요약 (한 줄)
 | 섹션 | 필수 | 내용 |
 |------|:----:|------|
 | 목표 및 지시 | ✅ | 에이전트가 달성하려는 목표, 행동 원칙, 지시사항 (산문) |
-| 워크플로우 | ✅ | 사고 절차 — 순서대로 수행할 단계 |
+| 워크플로우 | ✅ | 사고 절차 — 순서대로 수행할 단계. 아래 두 포맷 중 하나 사용 |
 | 참조 | ✅ | `agentcard.yaml`과 `tools.yaml` 참조 지시 |
 | 출력 형식 | 권장 | 결과물의 구조와 형식 |
 | 검증 | ✅ | 완료 전 자체 점검 항목 |
 | 예시 (Few-shot) | 선택 | 입력/출력 예시로 기대 품질 시연 |
+
+#### 워크플로우 포맷
+
+**단일 워크플로우** (기존 — 세부역할 없는 에이전트):
+
+```markdown
+## 워크플로우
+### STEP 1. 요구사항 분석
+...
+### STEP 2. 문서 작성
+...
+```
+
+**세부역할별 워크플로우** (신규 — sub_roles가 있는 에이전트):
+
+```markdown
+## 워크플로우
+
+### requirements-analysis
+#### STEP 1. 요구사항 수집
+...
+#### STEP 2. 핵심 기능 도출
+...
+
+### scenario-generation
+#### STEP 1. 시나리오 구조 설계
+...
+```
+
+- 세부역할이 없는 에이전트는 기존 단일 워크플로우 포맷 유지
+- 세부역할별 워크플로우의 `### {세부역할명}`은 agentcard.yaml의 `sub_roles[].name`과 일치해야 함
+- 각 세부역할 서브섹션 내의 Step은 `####` 레벨로 작성
 
 ### 작성 원칙
 
@@ -137,47 +170,6 @@ description: 에이전트 목표 설명      # 목표 요약 (한 줄)
 - **프롬프트에서 도구 참조** — 워크플로우에서 `{tool:name}` 표기법으로 `tools.yaml`에 정의된 추상 도구를 참조. 도구의 파라미터·호출 방법 등 명세는 `tools.yaml`에 분리
 - **역량·제약·핸드오프 분리** — 에이전트의 정체성, 역량, 제약, 핸드오프 등 WHO+WHAT+WHEN 선언은 `agentcard.yaml`에 분리
 - **참조 섹션 필수** — AGENT.md에 `agentcard.yaml`과 `tools.yaml` 참조 지시를 포함하여, 에이전트가 스폰 시 자신의 역할·제약·도구를 인식하도록 함
-
-### 예제
-
-````markdown
----
-name: scenario-analyst
-description: 시나리오 분석 및 위험 요소 도출
----
-
-# Scenario Analyst
-
-## 목표
-
-주어진 비즈니스 시나리오를 분석하여 위험 요소와 기회를 도출함.
-전략적 의사결정을 위한 근거 자료를 제공하며, 직접 구현하지 않음.
-
-## 참조
-
-- 첨부된 `agentcard.yaml`을 참조하여 역할, 역량, 제약, 핸드오프 조건을 준수할 것
-- 첨부된 `tools.yaml`을 참조하여 사용 가능한 도구와 입출력을 확인할 것
-
-## 워크플로우
-
-1. {tool:file_read}로 관련 문서·데이터 수집
-2. {tool:code_search}로 기존 구현 패턴 파악
-3. 시나리오별 위험 요소 식별 및 영향도 평가
-4. 기회 요소 도출 및 우선순위 제안
-
-## 출력 형식
-
-1. **시나리오 요약** — 분석 대상 개요
-2. **위험 요소** — 항목별 영향도(높음/중간/낮음)와 근거
-3. **기회 요소** — 항목별 기대 효과와 실현 조건
-4. **권장 조치** — 우선순위별 행동 제안
-
-## 검증
-
-- 모든 입력 문서를 빠짐없이 분석했는지 확인
-- 위험 요소에 영향도와 근거가 모두 포함되었는지 확인
-- 권장 조치가 실현 가능한 수준인지 확인
-````
 
 > **포인트**:
 > - Frontmatter의 `name`은 디렉토리명(`scenario-analyst/`)과 일치
@@ -230,6 +222,15 @@ capabilities:
     시스템 아키텍트.
     코드를 분석하고, 설계를 자문하고, 구현 방향을 제시함.
     직접 코드를 작성하거나 수정하지 않음.
+
+  # 세부역할 — 동일 전문 영역 내 하위 분화 (선택)
+  # sub_roles:
+  #   - name: requirements-analysis        # 필수, kebab-case
+  #     description: "요구사항을 분석하여 핵심 기능과 제약사항을 도출"  # 필수
+  #     triggers: ["요구사항", "분석"]     # 선택, 호출 트리거 키워드
+  #   - name: scenario-generation
+  #     description: "분석 결과를 기반으로 실행 가능한 시나리오를 생성"
+  #     triggers: ["시나리오", "생성"]
 
   # 정체성 — 무엇이다 / 무엇이 아니다 (구조화)
   identity:
@@ -307,8 +308,14 @@ persona:
 | **상속** | `inherits` | 선택 | 기본 에이전트 이름. 티어 변형 에이전트가 상위 설정을 상속받을 때 사용 |
 | **역량** | `capabilities` | ✅ | 에이전트 프로필 컨테이너 (하위에 role, identity, restrictions 포함) |
 | ↳ 역할 | `capabilities.role` | ✅ | 무엇을 하는가 (산문) |
+| ↳ 세부역할 | `capabilities.sub_roles` | 선택 | 동일 전문 영역 내 하위 분화 목록 |
+| ↳ 세부역할.name | `sub_roles[].name` | 필수* | 세부역할 식별자 (kebab-case). AGENT.md 워크플로우의 `### {name}` 서브섹션과 일치 |
+| ↳ 세부역할.description | `sub_roles[].description` | 필수* | 세부역할의 목적 설명 |
+| ↳ 세부역할.triggers | `sub_roles[].triggers` | 선택 | 호출 트리거 키워드 목록. 스킬이 세부역할 매칭 시 참고 |
 | ↳ 정체성 | `capabilities.identity` | ✅ | 무엇이다 / 무엇이 아니다 (구조화) |
 | ↳ 제약 | `capabilities.restrictions` | 권장 | 금지 액션 등 (구조화) |
+
+> *필수: sub_roles 사용 시 필수
 | **경계** | `handoff` | ✅ | 핸드오프 대상, 조건, 사유 |
 | **에스컬레이션** | `escalation` | 선택 | 상위 티어로 위임하는 조건 목록. 티어 변형 에이전트에서 사용 |
 | **인격** | `persona` | 필수 | 에이전트 인격 컨테이너 (하위에 profile, style, background 포함) |
@@ -459,7 +466,7 @@ Task(
 
 ---
 
-## 표준 템플릿
+## 예시
 
 ### 기본 에이전트 (architect/)
 
@@ -650,6 +657,102 @@ handoff:
     reason: "PO는 방향을 제시하고 구현은 executor에 위임"
 ```
 
+### 세부역할이 있는 에이전트 (scenario-analyst/)
+
+**`scenario-analyst/AGENT.md`** — 세부역할별 워크플로우:
+
+````markdown
+---
+name: scenario-analyst
+description: 요구사항 분석 및 시나리오 생성 전문가
+---
+
+# Scenario Analyst
+
+## 목표
+
+요구사항을 분석하고, 실행 가능한 시나리오를 생성함.
+두 가지 세부역할(요구사항 분석, 시나리오 생성)을 수행함.
+
+## 참조
+
+- 첨부된 `agentcard.yaml`을 참조하여 역할, 역량, 제약, 핸드오프 조건을 준수할 것
+- 첨부된 `tools.yaml`을 참조하여 사용 가능한 도구와 입출력을 확인할 것
+
+## 워크플로우
+
+### requirements-analysis
+#### STEP 1. 요구사항 수집
+{tool:file_read}로 입력 문서를 분석하여 요구사항을 수집함.
+#### STEP 2. 핵심 기능 도출
+수집된 요구사항에서 핵심 기능과 제약사항을 도출함.
+
+### scenario-generation
+#### STEP 1. 시나리오 구조 설계
+핵심 기능을 기반으로 시나리오의 전체 구조를 설계함.
+#### STEP 2. 시나리오 상세화
+각 시나리오의 입력/출력/예외 상황을 상세히 기술함.
+
+## 출력 형식
+
+### requirements-analysis
+- 핵심 기능 목록
+- 제약사항 목록
+
+### scenario-generation
+- 시나리오 목록 (입력/출력/예외)
+
+## 검증
+
+- 모든 요구사항이 하나 이상의 시나리오에 반영되었는지 확인
+- 시나리오 간 중복/모순이 없는지 확인
+````
+
+**`scenario-analyst/agentcard.yaml`** — sub_roles 포함:
+
+```yaml
+name: "scenario-analyst"
+version: "1.0.0"
+tier: HIGH
+
+capabilities:
+  role: |
+    시나리오 분석 전문가.
+    요구사항을 분석하고 실행 가능한 시나리오를 생성함.
+  sub_roles:
+    - name: requirements-analysis
+      description: "요구사항을 분석하여 핵심 기능과 제약사항을 도출"
+      triggers: ["요구사항", "분석"]
+    - name: scenario-generation
+      description: "분석 결과를 기반으로 실행 가능한 시나리오를 생성"
+      triggers: ["시나리오", "생성"]
+  identity:
+    is: ["요구사항 분석가", "시나리오 설계자"]
+    is_not: ["코드 작성자", "아키텍트"]
+  restrictions:
+    forbidden_actions: ["file_write", "file_delete"]
+
+handoff:
+  - target: dsl-architect
+    when: "시나리오를 DSL로 변환 필요"
+    reason: "DSL 변환은 dsl-architect에 위임"
+
+persona:
+  profile:
+    name: "이수진"
+    nickname: "수진"
+    role: "시나리오 분석 전문가"
+    gender: "여성"
+    age: 32
+  style: |
+    체계적이고 논리적인 분석을 수행함.
+    요구사항의 모호한 부분을 끈기 있게 파고들어 명확히 함.
+    답변 시 별명 "수진"을 표시함.
+  background: |
+    시스템 분석 및 요구사항 공학 전문가.
+    다수의 대규모 프로젝트에서 요구사항 분석을 주도한 경험.
+```
+
 [Top](#agent-표준)
 
 ---
@@ -661,7 +764,7 @@ handoff:
 | 1 | 에이전트는 AGENT.md(WHY+HOW 프롬프트) + agentcard.yaml(WHO+WHAT+WHEN 선언) 쌍으로 구성 |
 | 2 | agentcard.yaml에 name, version, tier, capabilities, handoff 필수 포함 |
 | 3 | tier는 HEAVY / HIGH / MEDIUM / LOW 중 하나 |
-| 4 | 하나의 에이전트는 하나의 전문 역할만 담당 (역할 단일성) |
+| 4 | 하나의 에이전트는 하나의 전문 역할만 담당 (역할 단일성). 동일 전문 영역 내 세부역할(sub_roles) 분화는 허용 |
 | 5 | 역할 밖 요청은 handoff로 적절한 에이전트에 위임 |
 | 6 | AGENT.md에 Frontmatter(name, description) + 목표 + 참조 + 워크플로우 섹션 필수 포함 |
 | 7 | AGENT.md에 참조 섹션으로 agentcard.yaml 참조 지시 필수, tools.yaml은 있는 경우 참조 지시 포함 |
@@ -706,5 +809,9 @@ handoff:
 - [ ] AGENT.md에 `## 검증` 섹션이 포함되어 있는가
 - [ ] persona가 있는 경우: profile, style, background 중 최소 하나 포함
 - [ ] persona가 있는 경우: AGENT.md에 인격 정보를 중복 기술하지 않음 (경계 원칙)
+- [ ] sub_roles 사용 시: 모든 세부역할이 동일 전문 영역 내에 있는지 확인
+- [ ] sub_roles 사용 시: AGENT.md에 각 세부역할의 서브섹션(`### {세부역할명}`) 존재 확인
+- [ ] sub_roles 사용 시: agentcard.yaml의 `sub_roles[].name`과 AGENT.md 워크플로우 서브섹션 이름 일치 확인
+- [ ] sub_roles 사용 시: `sub_roles[].name`이 kebab-case 형식인지 확인
 
 [Top](#agent-표준)

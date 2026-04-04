@@ -242,12 +242,22 @@ tier_mapping:
       model: "claude-sonnet-4-5"
     LOW:
       model: "claude-haiku-4-5"
-  designer:                            # 에이전트별 예외
+  designer:                            # 에이전트별 예외 (flat 키 — 기존 방식)
     HIGH:
       model: "claude-sonnet-4-5"       # 디자인은 sonnet으로 충분
   scientist:
     HIGH:
       model: "claude-opus-4-6"         # 분석은 반드시 opus
+  scenario-analyst:                    # 세부역할별 예외 (중첩 구조 — 신규)
+    HIGH:
+      model: "claude-opus-4-6"        # 에이전트 루트 기본값
+    sub_roles:
+      requirements-analysis:
+        HIGH:
+          model: "claude-sonnet-4-5"   # 요구사항 분석은 sonnet으로 충분
+      scenario-generation:
+        HIGH:
+          model: "claude-opus-4-6"     # 시나리오 생성은 opus 필요
 
 # ─────────────────────────────────────────────
 # 추상 도구명 → 실제 도구 매핑
@@ -312,6 +322,30 @@ action_mapping:
 - 티어는 LLM 모델 등급 선언 — Gateway가 실제 모델명으로 매핑
 - 모델명은 **작성 시점의 최신 버전**을 사용 — 신규 모델 출시 시 이 파일만 갱신하면 전체 에이전트에 반영
 
+**세부역할별 매핑** (sub_roles가 있는 에이전트):
+- 에이전트 키 하위에 `sub_roles` 키를 추가하고, 그 안에 세부역할명별 티어 매핑을 기술
+- 도트(`.`) 표기법은 사용하지 않음 — YAML 라이브러리 호환성 보장을 위해 중첩 구조 사용
+- `sub_roles`는 tier_mapping 내 **예약 키워드** — 에이전트명으로 `sub_roles`를 사용할 수 없음
+
+**우선순위 (높은 순)**:
+1. `tier_mapping.{에이전트명}.sub_roles.{세부역할명}.{TIER}` — 세부역할 매핑
+2. `tier_mapping.{에이전트명}.{TIER}` — 에이전트 루트 매핑
+3. `tier_mapping.default.{TIER}` — 전역 기본값
+
+**하위 호환성**: flat 키(에이전트명 단위 직접 티어 매핑)와 중첩 sub_roles 키는 동일 에이전트 내에서 공존 가능.  
+`sub_roles` 키가 없는 에이전트는 기존과 동일하게 flat 키만 사용.
+
+**런타임 우선순위 매핑 로직 예시**:
+```
+function resolve_model(agent, sub_role, tier):
+  mapping = tier_mapping[agent]
+  if mapping and sub_role and mapping.sub_roles and mapping.sub_roles[sub_role]:
+    return mapping.sub_roles[sub_role][tier].model    # 세부역할 매핑
+  if mapping and mapping[tier]:
+    return mapping[tier].model                        # 에이전트 루트 매핑
+  return tier_mapping.default[tier].model             # 전역 기본값
+```
+
 **Anthropic 모델 매핑 예시**:
 
 | 티어 | 모델 |
@@ -328,6 +362,8 @@ action_mapping:
 - lsp, mcp, custom 도구만 매핑 — 런타임이 자체적으로 알 수 없는 도구를 선언
 - 동일 카테고리에 여러 타입 나열 시 우선순위 순서 — 런타임이 사용 가능한 것을 선택
 - 플러그인별 도메인 매핑 추가 가능 (예: `db_query: [{ type: custom, tools: ["QueryTool"] }]`)
+- 세부역할별로 다른 도구 세트가 필요한 경우: 에이전트의 tools.yaml에 세부역할별 도구를 모두 선언하고,  
+  AGENT.md의 각 세부역할 워크플로우에서 해당 도구만 `{tool:name}`으로 참조. tool_mapping 자체는 에이전트 단위를 유지
 
 **type별 설명**:
 
@@ -394,6 +430,15 @@ tier_mapping:
       model: "claude-sonnet-4-5"
     LOW:
       model: "claude-haiku-4-5"
+  # 세부역할별 매핑 예시 (sub_roles가 있는 에이전트):
+  # <에이전트명>:
+  #   HIGH:
+  #     model: "claude-opus-4-6"          # 에이전트 루트 기본값
+  #   sub_roles:
+  #     <세부역할명>:
+  #       HIGH:
+  #         model: "claude-sonnet-4-5"    # 세부역할 예외
+  # 우선순위: sub_roles.{세부역할} > 에이전트 루트 > default
 
 # 도구 매핑
 tool_mapping:
@@ -460,5 +505,7 @@ action_mapping:
 - [ ] builtin 도구(Read, Write, Bash)가 tool_mapping에 없음 (런타임 내장)
 - [ ] install.yaml에 런타임 빌트인/OMC 기본 도구가 포함되지 않음 (중복 설치 금지)
 - [ ] tier_mapping 모델명이 작성 시점의 최신 버전임
+- [ ] 세부역할별 tier_mapping이 있는 경우: `sub_roles` 중첩 구조 사용 (도트 표기법 금지)
+- [ ] 세부역할별 tier_mapping이 있는 경우: 해당 에이전트의 agentcard.yaml에 sub_roles가 정의되어 있는지 확인
 
 [Top](#gateway-표준)
