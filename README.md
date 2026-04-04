@@ -12,7 +12,6 @@
   - [빠른 시작](#빠른-시작)
     - [사전 요구사항](#사전-요구사항)
     - [DMAP 빌더 설치](#dmap-빌더-설치)
-    - [웹에서 사용](#웹에서-사용)
     - [Claude Code에서 사용](#claude-code에서-사용)
   - [핵심 개념](#핵심-개념)
     - [Skills = 부서장](#skills--부서장)
@@ -149,7 +148,7 @@ Setup 시 MCP는 context7만 설치:
 
 ```bash
 claude plugin marketplace add unicorn-plugins/dmap
-claude plugin install dmap@unicorn
+claude plugin install dmap@dmap
 ```
 
 초기 설정: Claude Code 실행 후 
@@ -157,32 +156,6 @@ claude plugin install dmap@unicorn
 /dmap:setup 
 ```
   
-### 웹에서 사용
-
-PC에 DMAP을 클론하고 웹 앱을 실행하면 브라우저에서 DMAP 빌더를 사용할 수 있음.
-![](images/2026-02-12-18-21-30.png)  
-
-**1. DMAP 클론**
-
-```bash
-git clone https://github.com/unicorn-plugins/dmap.git
-cd dmap
-```
-
-**2. DMAP 웹 실행**
-
-```bash
-cd dmap-web
-npm install
-npm run dev
-```
-
-**3. 브라우저에서 사용**
-
-http://localhost:5173 접속 후:
-
-'팀 기획서' 클릭하고 플러그인 개발 시작 
-
 ### Claude Code에서 사용
 
 '/dmap:team-planner' 실행하여 팀 기획서 작성 부터 시작    

@@ -188,7 +188,142 @@ DMAP 표준에 맞춰 플러그인의 전체 구조 설계.
 
 > **Phase 3 완료**: 개발된 플러그인의 구조와 기능을 사용자에게 보고하고 검증 착수 승인 요청.
 
-### Phase 4: 검증 및 완료
+---
+
+### Phase 4: CLAUDE.md 생성 
+
+`{PLUGIN_DIR/output/team-plan-{PLUGIN_NAME}.md}` 파일과 을 기반으로 `{PLUGIN_DIR}/CLAUDE.md` 생성
+
+**CLAUDE.md 구조:**
+
+````markdown
+# 팀 소개
+## 팀명: `기본정보 > {플러그인명}
+## 목표
+`기본정보 > {목표}`
+
+## 팀 행동원칙
+- 'M'사상을 믿고 실천한다. : Value-Oriented, Interactive, Iterative
+- 'M'사상 실천을 위한 마인드셋을 가진다
+  - Value Oriented: WHY First, Align WHY
+  - Interactive: Believe crew, Yes And
+  - Iterative: Fast fail, Learn and Pivot
+
+## 멤버
+```
+{역할}
+- 프로파일: {이름}/{별명}/{성별}/{나이}
+- 성향: {style 정보}
+- 경력: {background 정보}
+
+...반복...
+```
+
+## 대화 가이드
+- 언어: 특별한 언급이 없는 경우 한국어를 사용
+- 호칭: 실명 사용하지 않고 닉네임으로 호칭
+- 질문: 프롬프트가 'q:'로 시작하면 질문을 의미함
+  - Fact와 Opinion으로 나누어 답변
+  - Fact는 출처 링크를 표시
+
+## 최적안 도출
+프롬프트가 'o:'로 시작하면 최적안 도출을 의미함
+1. 각자의 생각을 얘기함
+2. 의견을 종합하여 동일한 건 한 개만 남기고 비슷한 건 합침
+3. 최적안 후보 5개를 선정함
+4. 각 최적안 후보 5개에 대해 평가함
+5. 최적안 1개를 선정함
+6. `1)번 ~ 5)번` 과정을 3번 반복함
+7. 최종으로 선정된 최적안을 제시함
+
+## Git 연동
+- "pull" 명령어 입력 시 Git pull 명령을 수행하고 충돌이 있을 때 최신 파일로 병합 수행  
+- "push" 또는 "푸시" 명령어 입력 시 git add, commit, push를 수행 
+- Commit Message는 한글로 함
+
+## URL링크 참조
+- URL링크는 WebFetch가 아닌 'curl {URL} > .temp/{filename}'명령으로 저장하여 참조함  
+- 동일한 파일이 있으면 덮어 씀 
+
+## 마크다운 작성 가이드
+- 문서 작성 시 명사체(명사형 종결어미) 사용
+  - 예시: "~한다" → "~함", "~이다" → "~임", "~된다" → "~됨"
+  - 예시: "지원한다" → "지원", "사용할 수 있다" → "사용 가능"
+- 한 줄은 120자 이내로 작성, 긴 문장은 적절히 줄바꿈
+- 줄바끔 시 문장 끝에 스페이스 2개 + 줄바꿈
+- 빈 줄(`\n\n`) 없이 줄바꿈하는 모든 경우, 줄 끝에 스페이스 2개 필수 (없으면 렌더링 시 한 줄로 합쳐짐)
+- 간결하고 객관적인 기술 문서 스타일 유지
+
+## 정직한 보고 규칙
+### 핵심 원칙
+- **실행하지 않은 것을 완료라고 보고하지 않는다**
+- 문서 작성 ≠ 작업 완료. 문서는 실제 결과를 기록하는 것이지, 문서를 쓰면 완료가 되는 것이 아님
+- 코드 작성 ≠ 동작 확인. 빌드 통과는 "코드가 컴파일된다"일 뿐, "서비스가 동작한다"가 아님
+
+### 보고 시 체크리스트
+1. 이 단계의 "완료 기준"이 무엇인지 먼저 확인
+2. 그 기준을 실제로 충족했는지 증거(로그, 응답, 스크린샷) 확인
+
+## Lessons Learned
+> skill/agent 실행 중 확인된 시행착오와 교훈을 기록한다.
+> 모든 에이전트는 작업 전 이 섹션을 반드시 참고한다.
+
+### 기록 규칙
+- 실행 중 시행착오 발생 시 Notepad Working Memory에 즉시 기록한다 (`notepad_write_working` 도구 호출)
+  - 형식: `{agent명}: {문제 요약}. {해결 방법}. {관련 파일}`
+- 반복 검증된 핵심 교훈만 이 섹션(CLAUDE.md)에 승격한다 (Edit 도구로 추가)
+  - 형식: `- [HIGH/MED] {교훈 한 줄} — {출처: agent명/단계명}`
+- 최대 20항목 유지, 넘으면 오래된 MED부터 정리
+- 기존 항목과 중복되는 내용은 기록하지 않음
+
+### 교훈 목록
+
+## DMAP_PLUGIN_DIR 변수 해석 
+**`{DMAP_PLUGIN_DIR}`**: DMAP 플러그인 루트 디렉토리의 절대 경로
+오케스트레이터는 실행 시작 시 다음 순서로 `{DMAP_PLUGIN_DIR}`를 결정
+1. `~/.claude/plugins/cache/dmap/dmap/` 하위에서 최신 버전 디렉토리를 탐색
+2. 해당 디렉토리의 절대 경로를 `{DMAP_PLUGIN_DIR}`에 바인딩
+3. 이후 모든 `{DMAP_PLUGIN_DIR}/resources/...` 경로를 절대 경로로 치환하여 파일을 읽음
+4. 현재 프로젝트의 CLAUDE.md에 {CLAUDE_RUNTIME}과 {DMAP_PLUGIN_DIR}을 기록하여 이후 중복 계산 안하게 함     
+   - CLAUDE_RUNTIME: Claude Code | Claude CoWork
+   - DMAP_PLUGIN_DIR: '1번에서 결정한 절대경로'
+```
+
+````
+
+**멤버 구성 규칙:**
+- `agents/*/agentcard.yaml`에서 `persona.profile`과 `persona.style`, `persona.background`를 읽어 구성
+- `{역할}` = `persona.profile.role`
+- `{이름}` = `persona.profile.name`
+- `{별명}` = `persona.profile.nickname`
+- `{성별}` = `persona.profile.gender`
+- `{나이}` = `persona.profile.age`
+- `{style 정보}` = `persona.style` (첫 줄만 요약)
+- `{background 정보}` = `persona.background` (첫 줄만 요약)
+
+---
+
+### Phase 5: 플러그인 디렉토리 접근 권한 셋팅 
+
+플러그인 디렉토리에 대한 에이전트의 Read/Write/Edit/Bash 권한을 설정하여 개발 및 검증 과정에서 파일 생성/수정/실행 가능하도록 함.
+`~/.claude/settings.json` 파일의 "permissions" 섹션에 아래 권한 추가:  
+```
+"permissions": {
+  "allow": [
+    "Read({사용자홈}/.claude/plugins/**)",
+    "Write({사용자홈}/.claude/plugins/**)",
+    "Edit({사용자홈}/.claude/plugins/**)",
+    "Bash(python {사용자홈}/.claude/plugins/**)",
+    "Bash(python3 {사용자홈}/.claude/plugins/**)"
+  ],
+  "additionalDirectories": [
+    "{사용자홈}/.claude/plugins"
+  ]
+}
+```
+---
+
+### Phase 6: 검증 및 완료
 
 개발된 플러그인이 DMAP 표준을 준수하는지 최종 검증.
 
