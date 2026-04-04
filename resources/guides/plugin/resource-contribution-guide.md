@@ -238,7 +238,7 @@ resources/samples/{2차분류}/{sample-name}
 | `README.md` | 필수 | 플러그인 개요, 설치 방법, 명령 목록, 워크플로우, 선행 요구사항 |
 | `.claude-plugin/plugin.json` | 필수 | 플러그인명, 버전, 설명, 저장소 URL |
 | `skills/help/SKILL.md` | 필수 | 제공 스킬 목록 및 설명 |
-| `skills/core/SKILL.md` | 선택 | 자동 라우팅 규칙, 실행 경로 분기 조건 |
+| `skills/router/SKILL.md` | 선택 | 자동 라우팅 규칙, 실행 경로 분기 조건 |
 | `skills/*/SKILL.md` | 선택 | 각 스킬의 상세 워크플로우, ARGS 스키마 |
 
 > **참고 — 출력 경로:** `resources/plugins/{2차분류}/{plugin-name}.md`
@@ -251,7 +251,7 @@ resources/samples/{2차분류}/{sample-name}
 |------|------|----------|
 | 기본 정보 | 플러그인명, 설명, 설치 명령, 저장소 URL | `plugin.json`, `README.md` |
 | 제공 스킬 | 스킬명, FQN, 유형, 설명 목록 | `skills/help/SKILL.md`, `skills/*/SKILL.md` |
-| 실행 경로 | 경로명, 설명, 스킬 체인, 조건 | `skills/core/SKILL.md`, `README.md` |
+| 실행 경로 | 경로명, 설명, 스킬 체인, 조건 | `skills/router/SKILL.md`, `README.md` |
 | ARGS 스키마 | 각 스킬별로 전달 가능한 ARGS 키, 필수 여부, 설명 | `skills/*/SKILL.md` |
 | 도메인 컨텍스트 수집 가이드 | External 스킬이 수집해야 할 대상, 소스, 용도 | `skills/*/SKILL.md`, `README.md` |
 | 선행 요구사항 | 플러그인 설치 및 기타 필요 조건 | `README.md`, `plugin.json` |
@@ -899,7 +899,7 @@ AI가 마크다운 작성 규칙을 자동으로 준수함.
 ````
 - 플러그인 디렉토리: {플러그인 디렉토리}
 - {플러그인 디렉토리}의 README.md, .claude-plugin/plugin.json,   
-  skills/help/SKILL.md, skills/core/SKILL.md, skills/*/SKILL.md 파악
+  skills/help/SKILL.md, skills/router/SKILL.md, skills/*/SKILL.md 파악
 - 'resources/guides/plugin/resource-contribution-guide.md' 템플릿의   
   '명세서 필수 7개 섹션'을 따라 플러그인 명세서 작성 
 ````
@@ -909,7 +909,7 @@ AI가 마크다운 작성 규칙을 자동으로 준수함.
 ````
 - 플러그인 디렉토리: '~/workspace/abra'
 - {플러그인 디렉토리}의 README.md, .claude-plugin/plugin.json,   
-  skills/help/SKILL.md, skills/core/SKILL.md, skills/*/SKILL.md 파악
+  skills/help/SKILL.md, skills/router/SKILL.md, skills/*/SKILL.md 파악
 - 'resources/guides/plugin/resource-contribution-guide.md' 템플릿의   
   '명세서 필수 7개 섹션'을 따라 플러그인 명세서 작성 
 ````

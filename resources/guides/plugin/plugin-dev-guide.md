@@ -229,7 +229,7 @@ DMAP 표준에 맞춰 플러그인의 전체 구조 설계.
 | 설계 항목 | 설계 내용 | 참조 표준 |
 |----------|----------|----------|
 | 에이전트 구성 | 역할별 에이전트 정의 (이름, 티어, 도구) | `{DMAP_PLUGIN_DIR}/standards/plugin-standard-agent.md` |
-| 스킬 구성 | 스킬 목록 및 유형 결정 (Core/Setup/Planning/Orchestrator/Utility) | `{DMAP_PLUGIN_DIR}/standards/plugin-standard-skill.md` |
+| 스킬 구성 | 스킬 목록 및 유형 결정 (Router/Setup/Planning/Orchestrator/Utility) | `{DMAP_PLUGIN_DIR}/standards/plugin-standard-skill.md` |
 | Gateway 설정 | 티어 매핑, 도구 매핑, 액션 매핑 | `{DMAP_PLUGIN_DIR}/standards/plugin-standard-gateway.md` |
 | 디렉토리 구조 | 표준 디렉토리 구조 확정 | `{DMAP_PLUGIN_DIR}/standards/plugin-standard.md` |
 
@@ -355,7 +355,7 @@ DMAP 표준에 맞춰 플러그인의 전체 구조 설계.
 | 스킬 | 유형 | 필수 | 설명 |
 |------|------|:----:|------|
 | setup | Setup (직결형) | 필수 | 플러그인 설치 및 초기 설정 |
-| core | Core (위임형) | 필수 | 시스템 전체 행동 규범, 모호한 요청의 의도 판별 |
+| core | Core (위임형) | 선택 | 각 기능 스킬을 파이프라인으로 연결하여 특정 작업을 수행할 필요가 있는 경우만 생성 |
 | help | Utility (직결형) | 권장 | 사용 가능한 명령 및 자동 라우팅 안내 |
 | {기능 스킬} | Orchestrator/Planning | 상황별 | 핵심기능별 워크플로우 |
 

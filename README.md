@@ -227,7 +227,7 @@ DMAP의 구조를 회사 조직에 비유하면 이해하기 쉬움.
 |------|------|
 | 핵심 파일 | `skills/{name}/SKILL.md` |
 | 역할 | 라우팅 + 오케스트레이션 |
-| 유형 | core, setup, orchestrator, planning |
+| 유형 | router, setup, orchestrator, planning |
 
 ### Agents = 전문가
 
@@ -312,7 +312,7 @@ DMAP은 3단계 레이어로 프롬프트를 조립함.
 두 가지 경로로 스킬이 활성화됨:
 
 1. **직접 호출** -- 슬래시 명령어(`/dmap:develop-plugin`)로 정확히 원하는 스킬을 호출
-2. **Core 경유** -- 모호한 요청이 들어오면 Core 스킬이 의도를 분석하여 적절한 스킬로 라우팅
+2. **Router 경유** -- 모호한 요청이 들어오면 Router 스킬이 의도를 분석하여 적절한 스킬로 라우팅
 
 런타임은 `skills/` 디렉토리를 자동 스캔하여 사용 가능한 스킬을 발견함.
 
@@ -514,7 +514,7 @@ Git Repository: https://github.com/unicorn-plugins/abra.git
 | 스킬 | 용도 |
 |------|------|
 | setup | 초기 환경 설정 |
-| core | 자연어 라우팅 |
+| router | 자연어 라우팅 |
 | help | 사용 안내 (즉시 출력) |
 | dify-setup | Dify Docker 환경 구축 |
 | scenario | 요구사항 시나리오 생성 |

@@ -3,7 +3,7 @@
  *
  * 주요 카테고리:
  * - SSE 이벤트: 백엔드→프론트엔드 실시간 스트리밍 이벤트 타입 (12종)
- * - 메뉴: 사이드바 메뉴 구성 (core 하위카테고리 + utility + external)
+ * - 메뉴: 사이드바 메뉴 구성 (router 하위카테고리 + utility + external)
  * - 스킬: SKILL.md 기반 스킬 메타데이터
  * - 세션: 스킬 실행 세션 상태 및 이력
  * - 플러그인: 등록된 플러그인 정보
@@ -166,16 +166,16 @@ export interface MenuSkillItem {
   labels: { ko: string; en: string };
 }
 
-/** 메뉴 하위 카테고리 - core 스킬을 의미 기반으로 그룹핑 (AI 추천 또는 수동 편집) */
+/** 메뉴 하위 카테고리 - router 스킬을 의미 기반으로 그룹핑 (AI 추천 또는 수동 편집) */
 export interface MenuSubcategory {
   id: string;
   labels: { ko: string; en: string };
   skills: MenuSkillItem[];
 }
 
-/** 사이드바 메뉴 설정 - core(하위카테고리별) + utility(고정순서) + external(알파벳순) */
+/** 사이드바 메뉴 설정 - router(하위카테고리별) + utility(고정순서) + external(알파벳순) */
 export interface MenuConfig {
-  core: MenuSubcategory[];
+  router: MenuSubcategory[];
   utility: MenuSkillItem[];
   external: MenuSkillItem[];
 }
@@ -187,7 +187,7 @@ export interface SkillMeta {
   displayName: string;
   description: string;
   icon: string;
-  category: 'core' | 'setup' | 'utility' | 'external';
+  category: 'router' | 'setup' | 'utility' | 'external';
   hasApprovalGates: boolean;
 }
 

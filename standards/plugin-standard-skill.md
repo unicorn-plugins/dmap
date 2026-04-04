@@ -26,7 +26,7 @@ Gateway 도구를 직접 사용(직결형)하는 Controller+UseCase 레이어의
 |------|------|------|------|
 | `name` | ✅ | 스킬 ID (kebab-case) | `my-skill` |
 | `description` | ✅ | 한 줄 설명 | `코드 품질 분석 스킬` |
-| `type` | ✅ | 스킬유형 | core,setup,planning,orchestrator,utility,external |
+| `type` | ✅ | 스킬유형 | router,setup,planning,orchestrator,utility,external |
 | `user-invocable` | 선택 | 사용자 직접 호출 가능 여부 (기본값: true) | `true` |
 | `disable-model-invocation` | 선택 | 런타임 자동 호출 차단. **주의: `true` 설정 시 스킬 로드 자체가 안 되므로 사용 금지** | `false` |
 | `allowed-tools` | 선택 | 허용 도구 목록 | `["Read", "Task"]` |
@@ -77,7 +77,7 @@ Gateway 도구를 직접 사용(직결형)하는 Controller+UseCase 레이어의
 
 | 유형 | 영문명 | 실행 경로 | 역할 | 예시 |
 |------|--------|----------|------|------|
-| 핵심스킬 | Core | 위임형 | 시스템 전체 행동 규범 정의, 항상 활성화 **(필수, 플러그인당 1개)** | core |
+| 핵심스킬 | Router | 위임형 | 요청의 의도를 판별하고 적절한 스킬로 라우팅 | router |
 | 설정스킬 | Setup | 직결형 | 설치 · 설정 마법사 제공 | omc-setup, mcp-setup |
 | 계획스킬 | Planning | 위임형 | 전략적 계획 수립 · 검토 | plan, ralplan, review |
 | 지휘자스킬 | Orchestrator | 위임형 | 워크플로우 조율, 병렬 실행, 분석, 리뷰 | autopilot, ralph, analyze, tdd |
@@ -128,20 +128,19 @@ Gateway 도구를 직접 사용(직결형)하는 Controller+UseCase 레이어의
 | 경로 | 흐름 | 설명 |
 |------|------|------|
 | **직접 활성화** | 런타임 → 특정 스킬 | 슬래시 명령(`/plugin:skill`) 또는 자연어 매칭(frontmatter description 기반) |
-| **Core 경유 활성화** | 런타임 → Core 스킬 → 특정 스킬 | 모호한 요청으로 복잡한 의도 판별이 필요한 경우, Core 스킬이 라우팅 |
 
 ### 직접 활성화
 
 명확한 슬래시 명령 또는 frontmatter의 `description`과 높은 유사도를 보이는 자연어 요청은
 런타임이 직접 해당 스킬을 활성화함. 별도의 중간 계층 없이 즉시 스킬이 로드됨.
 
-### Core 경유 활성화
+### Router 경유 활성화
 
 사용자의 요청이 모호하거나 복수 스킬에 걸칠 수 있는 경우,
-런타임은 Core 스킬을 먼저 활성화함.
-Core 스킬은 요청의 의도를 판별하고 적절한 스킬로 라우팅하는 역할에 한정됨.
+런타임은 Router 스킬을 먼저 활성화함.
+Router 스킬은 요청의 의도를 판별하고 적절한 스킬로 라우팅하는 역할에 한정됨.
 
-> **Core 스킬의 역할 범위**: Core 스킬은 모호한 요청의 **의도 판별 및 라우팅**만 수행함.
+> **Router 스킬의 역할 범위**: Router 스킬은 모호한 요청의 **의도 판별 및 라우팅**만 수행함.
 > 실제 작업 실행은 라우팅된 대상 스킬(Orchestrator, Planning 등)이 담당함.
 
 [Top](#skill-표준)
@@ -323,18 +322,7 @@ Task(
 
 1. **에이전트 FQN 목록** — 이 스킬이 호출하는 에이전트의 FQN (`{plugin}:{agent}:{agent}`)
 2. **프롬프트 조립 절차**:
-   - `agents/{agent-name}/` 에서 3파일 로드 (AGENT.md + agentcard.yaml + tools.yaml)
-   - `gateway/runtime-mapping.yaml` 참조하여 구체화:
-     - **모델 구체화**: agentcard.yaml의 `tier` → `tier_mapping`에서 모델 결정
-     - **툴 구체화**: tools.yaml의 추상 도구 → `tool_mapping`에서 실제 도구 결정
-     - **금지액션 구체화**: agentcard.yaml의 `forbidden_actions` → `action_mapping`에서 제외할 실제 도구 결정
-     - **최종 도구** = (구체화된 도구) - (제외 도구)
-   - 3파일을 합쳐 하나의 프롬프트로 조립
-   - **인격 구체화**: agentcard.yaml에 `persona`가 존재하면,
-     프롬프트 앞에 인격 컨텍스트를 주입:
-     "당신은 {persona.profile.nickname}입니다. 답변 시 별명 '{persona.profile.nickname}'를 표시하세요. {persona.style} {persona.background}"
-   - **프롬프트 구성 순서**: 공통 정적(runtime-mapping) → 에이전트별 정적(3파일) → 인격 주입(persona) → 동적(작업 지시)
-     순서로 배치 (런타임의 prefix 캐시 적중률 극대화)
+   - `{DMAP_PLUGIN_DIR}/resources/guides/combine-prompt.md`에 따라 프롬프트 조립 
    - `Task(subagent_type=FQN, model=구체화된 모델, prompt=조립된 프롬프트)` 호출
 
 3. **오케스트레이션 스킬 활용** (워크플로우 단계별):
@@ -382,10 +370,8 @@ Task(
 | 2 | `[{스킬명} 활성화]` | 선택 | 스킬 시작 시 화면에 출력하는 메시지 |
 | 3 | `## 목표` | ✅ | 이 스킬이 달성하려는 핵심 목적 |
 | 4 | `## 활성화 조건` | 권장 | 이 스킬이 활성화되는 조건 · 상황 (자기 선언) |
-| 5 | `## 워크플로우` | 권장 | 워크플로우 / 단계별 접근법. 위임 시 `→ Agent:` 또는 `→ Skill:` 마커 사용. <br>위임형 스킬은 모든 단계에 오케스트레이션 스킬 활용 필수 명시 (매핑 없으면 `ulw` 폴백) |
-| 6 | `## MUST 규칙` | ✅ | 이 스킬이 반드시 지켜야 할 규칙 목록 (테이블 형식) |
-| 7 | `## MUST NOT 규칙` | ✅ | 이 스킬이 절대 해서는 안 되는 금지 사항 (테이블 형식) |
-| 8 | `## 검증 체크리스트` | ✅ | 스킬 작성 완료 후 확인할 체크 항목 (`- [ ]` 형식) |
+| 5 | `## 에이전트 호출 규칙` | 필수 | 프롬프트 조립 및 호출 규칙 |
+| 6 | `## 워크플로우` | 권장 | 워크플로우 / 단계별 접근법. 위임 시 `→ Agent:` 또는 `→ Skill:` 마커 사용. <br>위임형 스킬은 모든 단계에 오케스트레이션 스킬 활용 필수 명시 (매핑 없으면 `ulw` 폴백) |
 
 ### 섹션명 통일 규칙
 
@@ -396,9 +382,7 @@ Task(
 | 핵심 목적 | `## 목표` | Overview, What It Does, Core Concept, 개요 |
 | 활성화 조건 | `## 활성화 조건` | Activation, When to Use, Magic Keywords |
 | 워크플로우 | `## 워크플로우` | Workflow, Phases, Approach, Step N |
-| 필수 규칙 | `## MUST 규칙` | Rules, 규칙, 준수 사항 |
-| 금지 사항 | `## MUST NOT 규칙` | Restrictions, 제한, 금지 |
-| 검증 항목 | `## 검증 체크리스트` | Validation, 체크, QA |
+| 에이전트 호출 규칙 | `## 에이전트 호출 규칙` | - |
 
 ### 유형별 활성화 조건 작성 가이드
 
@@ -433,7 +417,7 @@ Task(
 
 #### 워크플로우 작성 패턴
 
-Core 스킬의 `## 워크플로우`는 **라우팅 전용**으로 구성됨.
+Router 스킬의 `## 워크플로우`는 **라우팅 전용**으로 구성됨.
 매 메시지마다 요청 의도를 감지하고 적절한 스킬로 분배하는 흐름을 정의함.
 
 **라우팅 워크플로우 구성:**
@@ -809,9 +793,9 @@ user-invocable: true
 
 ```markdown
 ---
-name: my-core-skill
+name: my-router-skill
 description: 시스템 전체 행동 규범
-type: core
+type: router
 user-invocable: false
 ---
 
@@ -911,16 +895,8 @@ user-invocable: true|false
 | architect | `my-plugin:architect:architect` |
 
 ### 프롬프트 조립
-
-1. `agents/{agent-name}/` 에서 3파일 로드 (AGENT.md + agentcard.yaml + tools.yaml)
-2. `gateway/runtime-mapping.yaml` 참조하여 구체화:
-   - **모델 구체화**: agentcard.yaml의 `tier` → `tier_mapping`에서 모델 결정
-   - **툴 구체화**: tools.yaml의 추상 도구 → `tool_mapping`에서 실제 도구 결정
-   - **금지액션 구체화**: agentcard.yaml의 `forbidden_actions` → `action_mapping`에서 제외할 실제 도구 결정
-   - **최종 도구** = (구체화된 도구) - (제외 도구)
-3. 프롬프트 조립: AGENT.md + agentcard.yaml + tools.yaml을 합쳐 하나의 프롬프트로 구성
-   - **구성 순서**: 공통 정적(runtime-mapping) → 에이전트별 정적(3파일) → 동적(작업 지시)
-4. `Task(subagent_type=FQN, model=구체화된 모델, prompt=조립된 프롬프트)` 호출
+- `{DMAP_PLUGIN_DIR}/resources/guides/combine-prompt.md`에 따라 프롬프트 조립 
+- `Task(subagent_type=FQN, model=구체화된 모델, prompt=조립된 프롬프트)` 호출
 
 ## 워크플로우
 
@@ -1159,33 +1135,6 @@ user-invocable: true
 | Phase 0~1 | `ulw` 매직 키워드 | 수집 작업의 병렬 실행 + 완료 보장 |
 | Phase 4 | `ulw` 매직 키워드 | 검증 + 보고의 완료 보장 |
 
-## MUST 규칙
-
-| # | 규칙 |
-|---|------|
-| 1 | 외부 플러그인 설치 여부를 Phase 0에서 반드시 확인 |
-| 2 | 도메인 컨텍스트 수집을 완료한 후 외부 스킬에 위임 |
-| 3 | Skill→Skill 입력 전달 규약을 준수하여 ARGS 전달 |
-| 4 | 경로 분기 조건을 명확히 정의 |
-
-## MUST NOT 규칙
-
-| # | 금지 사항 |
-|---|----------|
-| 1 | 외부 플러그인의 내부 워크플로우를 직접 실행하지 않음 (Skill 도구로 위임) |
-| 2 | 자체 Agent를 생성하지 않음 (외부 플러그인이 Agent 보유) |
-| 3 | 외부 플러그인의 산출물을 임의로 수정하지 않음 |
-
-## 검증 체크리스트
-
-- [ ] 선행 요구사항 섹션에 외부 플러그인 설치 확인 방법이 기술되어 있는가
-- [ ] 크로스-플러그인 스킬 위임 규칙에 외부 스킬 FQN이 명시되어 있는가
-- [ ] 도메인 컨텍스트 수집 대상이 테이블로 정리되어 있는가
-- [ ] 경로 분기 조건이 명확히 정의되어 있는가
-- [ ] Skill→Skill 입력 전달 규약이 적용되어 있는가
-- [ ] 워크플로우의 모든 직접 수행 단계에 스킬 부스팅이 명시되어 있는가
-- [ ] 대상 플러그인 명세서(`resources/plugins/{분류}/{name}.md`)가 존재하는가
-```
 
 [Top](#skill-표준)
 
@@ -1234,7 +1183,7 @@ user-invocable: true
 - [ ] 직결형 스킬: 애플리케이션 코드 작성·수정을 하지 않는가 (설정 파일·문서만 허용)
 - [ ] 위임 프롬프트에 HOW(방법) 없이 WHAT(목표)+제약만 기술했는가
 - [ ] 라우팅 로직은 상세하게, 위임은 간결하게 작성했는가
-- [ ] Core 스킬: 워크플로우가 라우팅 전용인가 (실행 Phase 없음)
+- [ ] Router 스킬: 워크플로우가 라우팅 전용인가 (실행 Phase 없음)
 - [ ] Setup 스킬: `disable-model-invocation: true`를 사용하지 않았는가 (사용 시 스킬 로드 불가)
 - [ ] Setup 스킬: help 유틸리티 스킬 제공 여부 (권장)
 - [ ] Setup 스킬: 워크플로우 단계에 스킬 부스팅이 명시되었는가
@@ -1248,8 +1197,5 @@ user-invocable: true
 - [ ] 위임형 및 Setup 스킬: 모든 워크플로우 단계에 오케스트레이션 스킬 활용이 명시되었는가
 - [ ] 위임형 및 Setup 스킬: 매핑 스킬이 없는 단계에 `ulw` 폴백이 적용되었는가
 - [ ] 위임형 스킬: 프롬프트 구성 순서가 공통 정적 → 에이전트별 정적 → 동적 순서인가
-- [ ] `## MUST 규칙` 섹션이 파일 마지막 3개 섹션 중 첫 번째에 위치하는가
-- [ ] `## MUST NOT 규칙` 섹션이 `## MUST 규칙` 바로 다음에 위치하는가
-- [ ] `## 검증 체크리스트` 섹션이 파일의 최종 섹션인가
 
 [Top](#skill-표준)

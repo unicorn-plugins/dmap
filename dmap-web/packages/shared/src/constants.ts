@@ -22,7 +22,7 @@ export const DMAP_SKILLS: SkillMeta[] = [
     displayName: 'AI팀(플러그인) 기획서',
     description: '새로운 AI팀(플러그인) 기획서 작성',
     icon: '📋',
-    category: 'core',
+    category: 'router',
     hasApprovalGates: true,
   },
   {
@@ -30,7 +30,7 @@ export const DMAP_SKILLS: SkillMeta[] = [
     displayName: '플러그인(AI팀) 개발',
     description: 'AI팀 기획서 기반 플러그인 개발',
     icon: '🔨',
-    category: 'core',
+    category: 'router',
     hasApprovalGates: true,
   },
   {
@@ -89,13 +89,13 @@ export const PROMPT_SKILL: SkillMeta = {
   displayName: '프롬프트',
   description: '자유 프롬프트 실행',
   icon: '⚡',
-  category: 'core',
+  category: 'router',
   hasApprovalGates: true,
 };
 
 /** 스킬 카테고리 메타데이터 - 사이드바 메뉴에서 카테고리별 라벨/색상 표시에 사용 */
 export const SKILL_CATEGORIES = {
-  core: { label: '핵심', color: 'blue' },
+  router: { label: '라우터', color: 'blue' },
   utility: { label: '유틸리티', color: 'gray' },
   setup: { label: '설정', color: 'green' },
   external: { label: '외부 연동', color: 'purple' },

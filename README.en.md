@@ -227,7 +227,7 @@ An entire workflow declared in a single `SKILL.md` file.
 |------|---------|
 | Core File | `skills/{name}/SKILL.md` |
 | Role | Routing + orchestration |
-| Types | core, setup, orchestrator, planning |
+| Types | router, setup, orchestrator, planning |
 
 ### Agents = Specialists
 
@@ -312,7 +312,7 @@ When task difficulty increases during execution, automatic escalation to a highe
 Skills are activated via two paths:
 
 1. **Direct invocation** -- Call the exact skill with a slash command (`/dmap:develop-plugin`)
-2. **Via Core** -- When an ambiguous request arrives, the Core skill analyzes intent and routes to the appropriate skill
+2. **Via Router** -- When an ambiguous request arrives, the Router skill analyzes intent and routes to the appropriate skill
 
 The runtime automatically scans the `skills/` directory to discover available skills.
 
@@ -514,7 +514,7 @@ Git Repository: https://github.com/unicorn-plugins/abra.git
 | Skill | Purpose |
 |-------|---------|
 | setup | Initial environment setup |
-| core | Natural language routing |
+| router | Natural language routing |
 | help | Usage guide (immediate output) |
 | dify-setup | Dify Docker environment setup |
 | scenario | Requirements scenario generation |

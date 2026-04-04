@@ -11,7 +11,7 @@ interface Props {
   onClose: () => void;
 }
 
-type CategoryKey = 'core' | 'utility' | 'external';
+type CategoryKey = 'router' | 'utility' | 'external';
 
 /** Drag source: which skill is being dragged */
 interface DragSource {
@@ -40,7 +40,7 @@ interface FlatDropTarget {
 }
 
 const CATEGORY_LABELS: Record<CategoryKey, { ko: string; en: string }> = {
-  core: { ko: '핵심', en: 'Core' },
+  router: { ko: '라우터', en: 'Router' },
   utility: { ko: '유틸리티', en: 'Utility' },
   external: { ko: '외부 연동', en: 'External' },
 };
@@ -56,7 +56,7 @@ export function MenuManageDialog({ onClose }: Props) {
 
   const [draft, setDraft] = useState<MenuConfig>(() => {
     if (menus) return JSON.parse(JSON.stringify(menus));
-    return { core: [], utility: [], external: [] };
+    return { router: [], utility: [], external: [] };
   });
   const [aiLoading, setAiLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -64,10 +64,10 @@ export function MenuManageDialog({ onClose }: Props) {
   const [useSubcategories, setUseSubcategories] = useState(() => {
     // Subcategories are "in use" only when there are 2+ subcategories
     if (!menus) return false;
-    return menus.core.length > 1;
+    return menus.router.length > 1;
   });
 
-  // ─── Drag & Drop state (core) ───
+  // ─── Drag & Drop state (router) ───
   const dragSourceRef = useRef<DragSource | null>(null);
   const [dropTarget, setDropTarget] = useState<DropTarget | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -86,11 +86,11 @@ export function MenuManageDialog({ onClose }: Props) {
   const handleToggleSubcategories = useCallback(() => {
     if (useSubcategories) {
       // Turning OFF: save current structure, merge into flat
-      savedCategorizedRef.current = JSON.parse(JSON.stringify(draft.core));
-      const allSkills = draft.core.flatMap(sub => sub.skills);
+      savedCategorizedRef.current = JSON.parse(JSON.stringify(draft.router));
+      const allSkills = draft.router.flatMap(sub => sub.skills);
       setDraft(d => ({
         ...d,
-        core: [{ id: 'default', labels: { ko: '기본', en: 'Default' }, skills: allSkills }],
+        router: [{ id: 'default', labels: { ko: '기본', en: 'Default' }, skills: allSkills }],
       }));
       setUseSubcategories(false);
     } else {
@@ -98,19 +98,19 @@ export function MenuManageDialog({ onClose }: Props) {
       if (savedCategorizedRef.current && savedCategorizedRef.current.length > 1) {
         const saved = savedCategorizedRef.current;
         savedCategorizedRef.current = null;
-        setDraft(d => ({ ...d, core: saved }));
+        setDraft(d => ({ ...d, router: saved }));
       }
       setUseSubcategories(true);
     }
-  }, [useSubcategories, draft.core]);
+  }, [useSubcategories, draft.router]);
 
-  // ─── Subcategory operations (core only) ───
+  // ─── Subcategory operations (router only) ───
 
   const addSubcategory = useCallback(() => {
     setDraft((prev) => ({
       ...prev,
-      core: [
-        ...prev.core,
+      router: [
+        ...prev.router,
         {
           id: `sub-${Date.now()}`,
           labels: { ko: t('menu.newSubcategory'), en: 'New Subcategory' },
@@ -122,26 +122,26 @@ export function MenuManageDialog({ onClose }: Props) {
 
   const removeSubcategory = useCallback((subIdx: number) => {
     setDraft((prev) => {
-      const next = { ...prev, core: [...prev.core] };
-      next.core.splice(subIdx, 1);
+      const next = { ...prev, router: [...prev.router] };
+      next.router.splice(subIdx, 1);
       return next;
     });
   }, []);
 
   const updateSubcategoryLabel = useCallback((subIdx: number, langKey: 'ko' | 'en', value: string) => {
     setDraft((prev) => {
-      const next = { ...prev, core: prev.core.map((s, i) => i === subIdx ? { ...s, labels: { ...s.labels, [langKey]: value } } : s) };
+      const next = { ...prev, router: prev.router.map((s, i) => i === subIdx ? { ...s, labels: { ...s.labels, [langKey]: value } } : s) };
       return next;
     });
   }, []);
 
   const moveSubcategory = useCallback((subIdx: number, dir: -1 | 1) => {
     setDraft((prev) => {
-      const arr = [...prev.core];
+      const arr = [...prev.router];
       const targetIdx = subIdx + dir;
       if (targetIdx < 0 || targetIdx >= arr.length) return prev;
       [arr[subIdx], arr[targetIdx]] = [arr[targetIdx], arr[subIdx]];
-      return { ...prev, core: arr };
+      return { ...prev, router: arr };
     });
   }, []);
 
@@ -196,24 +196,24 @@ export function MenuManageDialog({ onClose }: Props) {
     setForeignDragOver(null);
   }, []);
 
-  // ─── Skill operations within subcategory (core) ───
+  // ─── Skill operations within subcategory (router) ───
 
   const moveSkillInSubcat = useCallback((subIdx: number, skillIdx: number, dir: -1 | 1) => {
     setDraft((prev) => {
-      const sub = { ...prev.core[subIdx], skills: [...prev.core[subIdx].skills] };
+      const sub = { ...prev.router[subIdx], skills: [...prev.router[subIdx].skills] };
       const targetIdx = skillIdx + dir;
       if (targetIdx < 0 || targetIdx >= sub.skills.length) return prev;
       [sub.skills[skillIdx], sub.skills[targetIdx]] = [sub.skills[targetIdx], sub.skills[skillIdx]];
-      const core = prev.core.map((s, i) => i === subIdx ? sub : s);
-      return { ...prev, core };
+      const router = prev.router.map((s, i) => i === subIdx ? sub : s);
+      return { ...prev, router };
     });
   }, []);
 
   const updateSkillLabel = useCallback((subIdx: number | null, skillIdx: number, langKey: 'ko' | 'en', value: string) => {
     setDraft((prev) => {
       if (subIdx === null) return prev;
-      const sub = { ...prev.core[subIdx], skills: prev.core[subIdx].skills.map((sk, i) => i === skillIdx ? { ...sk, labels: { ...sk.labels, [langKey]: value } } : sk) };
-      return { ...prev, core: prev.core.map((s, i) => i === subIdx ? sub : s) };
+      const sub = { ...prev.router[subIdx], skills: prev.router[subIdx].skills.map((sk, i) => i === skillIdx ? { ...sk, labels: { ...sk.labels, [langKey]: value } } : sk) };
+      return { ...prev, router: prev.router.map((s, i) => i === subIdx ? sub : s) };
     });
   }, []);
 
@@ -251,10 +251,10 @@ export function MenuManageDialog({ onClose }: Props) {
     if (!source) return;
 
     setDraft((prev) => {
-      const core = prev.core.map(sub => ({ ...sub, skills: [...sub.skills] }));
+      const router = prev.router.map(sub => ({ ...sub, skills: [...sub.skills] }));
 
       // Remove from source
-      core[source.subIdx].skills.splice(source.skillIdx, 1);
+      router[source.subIdx].skills.splice(source.skillIdx, 1);
 
       // Adjust insert index if same subcategory and removing before insert point
       let adjustedIdx = targetInsertIdx;
@@ -263,9 +263,9 @@ export function MenuManageDialog({ onClose }: Props) {
       }
 
       // Insert at target
-      core[targetSubIdx].skills.splice(adjustedIdx, 0, source.item);
+      router[targetSubIdx].skills.splice(adjustedIdx, 0, source.item);
 
-      return { ...prev, core };
+      return { ...prev, router };
     });
 
     dragSourceRef.current = null;
@@ -295,7 +295,7 @@ export function MenuManageDialog({ onClose }: Props) {
         const data: MenuConfig = await res.json();
         setDraft(data);
         // Auto-toggle subcategory mode based on AI result
-        setUseSubcategories(data.core.length > 1);
+        setUseSubcategories(data.router.length > 1);
         savedCategorizedRef.current = null;
       }
     } catch {
@@ -439,7 +439,7 @@ export function MenuManageDialog({ onClose }: Props) {
       <div
         key={subcat.id}
         className={`mb-3 border rounded-lg p-3 transition-colors ${
-          isForeignHere && foreignDragOver === 'core'
+          isForeignHere && foreignDragOver === 'router'
             ? 'border-red-300 dark:border-red-700 bg-red-50/30 dark:bg-red-900/10 cursor-not-allowed'
             : isDropHere
               ? 'border-blue-400 dark:border-blue-500 bg-blue-50/30 dark:bg-blue-900/10'
@@ -448,7 +448,7 @@ export function MenuManageDialog({ onClose }: Props) {
         onDragEnter={(e) => {
           if (isFlatDragging) {
             e.preventDefault();
-            setForeignDragOver('core');
+            setForeignDragOver('router');
           }
         }}
         onDragLeave={(e) => {
@@ -595,12 +595,12 @@ export function MenuManageDialog({ onClose }: Props) {
         <div>
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-1">
-              {CATEGORY_LABELS.core[lang]}
+              {CATEGORY_LABELS.router[lang]}
             </h3>
           </div>
           {useSubcategories ? (
             <>
-              {draft.core.map((subcat, subIdx) => renderSubcategory(subcat, subIdx, draft.core.length))}
+              {draft.router.map((subcat, subIdx) => renderSubcategory(subcat, subIdx, draft.router.length))}
               {/* Add subcategory: big + icon */}
               <button
                 onClick={addSubcategory}
@@ -614,17 +614,17 @@ export function MenuManageDialog({ onClose }: Props) {
           ) : (
             <>
               {/* Flat mode: show all skills without subcategory grouping */}
-              {draft.core.length > 0 && (
+              {draft.router.length > 0 && (
                 <div
                   className={`border rounded-lg p-3 space-y-0.5 min-h-[32px] transition-colors ${
-                    foreignDragOver === 'core'
+                    foreignDragOver === 'router'
                       ? 'border-red-300 dark:border-red-700 bg-red-50/30 dark:bg-red-900/10 cursor-not-allowed'
                       : 'border-gray-200 dark:border-gray-700'
                   }`}
                   onDragEnter={(e) => {
                     if (isFlatDragging) {
                       e.preventDefault();
-                      setForeignDragOver('core');
+                      setForeignDragOver('router');
                     }
                   }}
                   onDragLeave={(e) => {
@@ -639,7 +639,7 @@ export function MenuManageDialog({ onClose }: Props) {
                       return;
                     }
                     e.preventDefault();
-                    const allSkills = draft.core[0]?.skills || [];
+                    const allSkills = draft.router[0]?.skills || [];
                     if (allSkills.length > 0) {
                       const rect = e.currentTarget.getBoundingClientRect();
                       const y = e.clientY - rect.top;
@@ -653,15 +653,15 @@ export function MenuManageDialog({ onClose }: Props) {
                     if (target) handleDrop(e, 0, target.insertIdx);
                   }}
                 >
-                  {draft.core[0]?.skills?.map((sk, skIdx) => renderSkillRow(sk, 0, skIdx, draft.core[0]?.skills?.length || 0))}
-                  {(!draft.core[0]?.skills?.length) && (
+                  {draft.router[0]?.skills?.map((sk, skIdx) => renderSkillRow(sk, 0, skIdx, draft.router[0]?.skills?.length || 0))}
+                  {(!draft.router[0]?.skills?.length) && (
                     <p className="text-xs text-gray-400 dark:text-gray-500 italic px-2 py-2 text-center">No skills</p>
                   )}
                 </div>
               )}
             </>
           )}
-          {draft.core.length === 0 && (
+          {draft.router.length === 0 && (
             <p className="text-xs text-gray-400 dark:text-gray-500 italic px-2 py-2">No subcategories</p>
           )}
         </div>

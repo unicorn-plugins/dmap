@@ -64,11 +64,11 @@
 |--------|------|------|--------|
 | `setup` | Setup | NPD 플러그인 초기 설정 | `/npd:setup` |
 | `help` | Utility | 사용법 안내 | `/npd:help` |
-| `create` | Core | 새 프로젝트 생성 및 초기화 | `/npd:create` |
+| `create` | Router | 새 프로젝트 생성 및 초기화 | `/npd:create` |
 | `plan` | Planning | 기획 단계 지원 | `/npd:plan` |
-| `design` | Core | 설계 단계 지원 | `/npd:design` |
-| `develop` | Core | 개발 단계 지원 | `/npd:develop` |
-| `deploy` | Core | 배포 단계 지원 | `/npd:deploy` |
+| `design` | Router | 설계 단계 지원 | `/npd:design` |
+| `develop` | Router | 개발 단계 지원 | `/npd:develop` |
+| `deploy` | Router | 배포 단계 지원 | `/npd:deploy` |
 | `add-ext-skill` | External | 외부 스킬 추가 | `/npd:add-ext-skill` |
 | `remove-ext-skill` | External | 외부 스킬 제거 | `/npd:remove-ext-skill` |
 
@@ -351,8 +351,8 @@ capabilities:
 | `help` | Utility | — |
 | `add-ext-skill` | Utility | — |
 | `remove-ext-skill` | Utility | — |
-| `create` | Core | — (모노레포 생성, domain-expert 동적 생성) |
-| `plan` | Core | `resources/guides/plan/` |
+| `create` | Router | — (모노레포 생성, domain-expert 동적 생성) |
+| `plan` | Router | `resources/guides/plan/` |
 | `design` | Orchestrator | `resources/guides/design/` |
 | `develop` | Orchestrator | `resources/guides/develop/` |
 | `deploy` | Orchestrator | `resources/guides/deploy/` |

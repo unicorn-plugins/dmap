@@ -1,6 +1,6 @@
 /**
  * 사이드바 컴포넌트 - 플러그인 전환 + 스킬 메뉴 + 에이전트 동기화 + 설정.
- * 메뉴 기반(core/utility/external) 또는 레거시(SKILL_CATEGORIES) 렌더링 지원
+ * 메뉴 기반(router/utility/external) 또는 레거시(SKILL_CATEGORIES) 렌더링 지원
  * @module components/Sidebar
  */
 import { useEffect, useState } from 'react';
@@ -211,23 +211,23 @@ export function Sidebar() {
   };
 
   /**
-   * 메뉴 기반 네비게이션 렌더링 - core(하위 카테고리 포함) + utility + external 순서
+   * 메뉴 기반 네비게이션 렌더링 - router(하위 카테고리 포함) + utility + external 순서
    */
   const renderMenusNav = () => {
     if (!menus) return null;
 
     return (
       <>
-        {/* Core 카테고리 - 하위 카테고리(서브카테고리) 포함 */}
-        {menus.core.length > 0 && (
+        {/* Router 카테고리 - 하위 카테고리(서브카테고리) 포함 */}
+        {menus.router.length > 0 && (
           <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
             <h2 className="text-sm font-bold text-gray-700 dark:text-gray-200 px-2 mb-2">
-              {t('category.core')}
+              {t('category.router')}
             </h2>
-            {menus.core.map((subcat, idx) => {
+            {menus.router.map((subcat, idx) => {
               const rendered = subcat.skills.map(renderMenuSkill).filter(Boolean);
               if (rendered.length === 0) return null;
-              const showSubLabel = menus.core.length > 1 || subcat.id !== 'default';
+              const showSubLabel = menus.router.length > 1 || subcat.id !== 'default';
               return (
                 <div key={subcat.id} className={idx > 0 ? 'mt-3' : ''}>
                   {showSubLabel && (

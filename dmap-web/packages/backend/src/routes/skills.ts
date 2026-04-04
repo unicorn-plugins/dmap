@@ -98,7 +98,7 @@ function parseSkillFrontmatter(skillDir: string): Record<string, unknown> | null
  * 분류 규칙:
  * - well-known 스킬(setup, help 등): 고정 카테고리/아이콘
  * - ext- 접두사: external 카테고리
- * - frontmatter type: core/utility/setup/external
+ * - frontmatter type: router/utility/setup/external
  * - user-invocable: false → 목록에서 제외
  *
  * @param projectDir - 플러그인 프로젝트 경로 (기본: DMAP_PROJECT_DIR)
@@ -133,12 +133,12 @@ function discoverSkills(projectDir: string = DMAP_PROJECT_DIR): SkillMeta[] {
     'setup': { category: 'setup', icon: '⚙️', displayName: '플러그인 초기설정', order: 0 },
   };
   // Category display order
-  const CATEGORY_ORDER: Record<string, number> = { core: 0, utility: 1, setup: 2, external: 3 };
+  const CATEGORY_ORDER: Record<string, number> = { router: 0, utility: 1, setup: 2, external: 3 };
 
   // Dynamic skills (all skills for non-DMAP, remaining for DMAP)
   for (const name of dirSet) {
-    // Hide "core" skill for non-DMAP plugins
-    if (!isDmap && name === 'core') continue;
+    // Hide "router" skill for non-DMAP plugins
+    if (!isDmap && name === 'router') continue;
 
     const isExt = name.startsWith('ext-');
     const fixed = FIXED_SKILLS[name];
@@ -162,10 +162,10 @@ function discoverSkills(projectDir: string = DMAP_PROJECT_DIR): SkillMeta[] {
     const i18nDescription = i18n?.ko?.description;
     const fmDescription = frontmatter?.description as string | undefined;
 
-    const validCategories = ['core', 'setup', 'utility', 'external'];
+    const validCategories = ['router', 'setup', 'utility', 'external'];
     const resolvedCategory = fixed?.category
       || (fmCategory && validCategories.includes(fmCategory) ? fmCategory : undefined)
-      || (isExt ? 'external' : 'core');
+      || (isExt ? 'external' : 'router');
 
     result.push({
       name,

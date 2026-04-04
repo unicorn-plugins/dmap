@@ -5,7 +5,7 @@
  * 1. scanLocalAgents(): 플러그인 agents/ 디렉토리에서 AGENT.md + agentcard.yaml 파싱
  * 2. skillAgentMap: SKILL.md에서 에이전트 참조를 추출하여 스킬별 필요 에이전트 매핑
  * 3. 선택적 로딩: 현재 실행 스킬에 필요한 에이전트만 full prompt, 나머지는 description-only
- * 4. 메뉴 자동 생성: 스킬을 core/utility/external로 분류하여 MenuConfig 구성
+ * 4. 메뉴 자동 생성: 스킬을 router/utility/external로 분류하여 MenuConfig 구성
  *
  * 저장소: DATA_DIR/plugins/{pluginId}.json
  *
@@ -413,10 +413,10 @@ function parseSkillFrontmatter(skillDir: string): Record<string, unknown> | null
  * 플러그인의 skills/ 디렉토리를 스캔하여 메뉴 분류
  *
  * 분류 규칙:
- * - core: SKILL.md frontmatter type이 core/planning/orchestrator (또는 기본값)
+ * - router: SKILL.md frontmatter type이 router/planning/orchestrator (또는 기본값)
  * - utility: type이 utility/setup 또는 well-known 유틸리티 스킬(setup, help 등)
  * - external: ext- 접두사 또는 type이 external
- * - core 스킬 중 'core'(시스템 레벨)는 메뉴에서 제외
+ * - router 스킬 중 'router'(시스템 레벨)는 메뉴에서 제외
  *
  * 라벨 우선순위: i18n > description > 스킬 디렉토리명
  */
@@ -427,7 +427,7 @@ function parseSkillFrontmatter(skillDir: string): Record<string, unknown> | null
  * Discover skills from a plugin and classify into menu categories.
  *
  * Category rules (from SKILL.md frontmatter type):
- * - core, planning, orchestrator → core
+ * - router, planning, orchestrator → router
  * - utility, setup → utility (fixed order: setup, add-ext-skill, remove-ext-skill, help)
  * - external (or ext-* prefix) → external (alphabetical)
  *
@@ -435,7 +435,7 @@ function parseSkillFrontmatter(skillDir: string): Record<string, unknown> | null
  */
 function discoverSkillsForMenus(projectDir: string): Array<{
   name: string;
-  category: 'core' | 'utility' | 'external';
+  category: 'router' | 'utility' | 'external';
   labels: { ko: string; en: string };
 }> {
   const skillsDir = path.join(projectDir, 'skills');
@@ -446,17 +446,17 @@ function discoverSkillsForMenus(projectDir: string): Array<{
 
   const skills: Array<{
     name: string;
-    category: 'core' | 'utility' | 'external';
+    category: 'router' | 'utility' | 'external';
     labels: { ko: string; en: string };
   }> = [];
 
   // Well-known utility skills (always go to utility regardless of frontmatter type)
   const UTILITY_SKILLS = new Set(['setup', 'add-ext-skill', 'remove-ext-skill', 'help']);
-  // Types that map to core category
-  const CORE_TYPES = new Set(['core', 'planning', 'orchestrator']);
+  // Types that map to router category
+  const ROUTER_TYPES = new Set(['router', 'planning', 'orchestrator']);
 
   for (const dir of dirs) {
-    if (dir.name === 'core') continue; // skip system-level core skill
+    if (dir.name === 'router') continue; // skip system-level router skill
 
     const fm = parseSkillFrontmatter(path.join(skillsDir, dir.name));
     const i18n = fm?.i18n as Record<string, Record<string, string>> | undefined;
@@ -467,17 +467,17 @@ function discoverSkillsForMenus(projectDir: string): Array<{
     const description = (fm?.description as string) || '';
 
     // Determine category
-    let category: 'core' | 'utility' | 'external';
+    let category: 'router' | 'utility' | 'external';
     if (UTILITY_SKILLS.has(dir.name)) {
       category = 'utility';
     } else if (isExt || fmType === 'external') {
       category = 'external';
-    } else if (fmType && CORE_TYPES.has(fmType)) {
-      category = 'core';
+    } else if (fmType && ROUTER_TYPES.has(fmType)) {
+      category = 'router';
     } else if (fmType === 'utility' || fmType === 'setup') {
       category = 'utility';
     } else {
-      category = 'core'; // default
+      category = 'router'; // default
     }
 
     // Labels: prefer i18n, fallback to description (ko) / skill name (en)
@@ -496,14 +496,14 @@ function discoverSkillsForMenus(projectDir: string): Array<{
  * Generate default MenuConfig from discovered skills.
  *
  * Rules:
- * - core: all core skills in a single "default" subcategory (use AI recommend or manual edit to reorganize)
+ * - router: all router skills in a single "default" subcategory (use AI recommend or manual edit to reorganize)
  * - utility: fixed order (setup → other setup/utility → add-ext-skill → remove-ext-skill → help)
  * - external: alphabetical by name
  */
 export function generateDefaultMenus(projectDir: string): MenuConfig {
   const skills = discoverSkillsForMenus(projectDir);
 
-  const coreSkills: MenuSkillItem[] = [];
+  const routerSkills: MenuSkillItem[] = [];
   const utilityMap: MenuSkillItem[] = [];
   const externalSkills: MenuSkillItem[] = [];
 
@@ -511,8 +511,8 @@ export function generateDefaultMenus(projectDir: string): MenuConfig {
     const item: MenuSkillItem = { name: skill.name, labels: skill.labels };
 
     switch (skill.category) {
-      case 'core':
-        coreSkills.push(item);
+      case 'router':
+        routerSkills.push(item);
         break;
       case 'utility':
         utilityMap.push(item);
@@ -523,13 +523,13 @@ export function generateDefaultMenus(projectDir: string): MenuConfig {
     }
   }
 
-  // Core: wrap in a single default subcategory
-  const core: MenuSubcategory[] = [];
-  if (coreSkills.length > 0) {
-    core.push({
+  // Router: wrap in a single default subcategory
+  const router: MenuSubcategory[] = [];
+  if (routerSkills.length > 0) {
+    router.push({
       id: 'default',
       labels: { ko: '기본', en: 'General' },
-      skills: coreSkills,
+      skills: routerSkills,
     });
   }
 
@@ -562,7 +562,7 @@ export function generateDefaultMenus(projectDir: string): MenuConfig {
   // External: alphabetical
   externalSkills.sort((a, b) => a.name.localeCompare(b.name));
 
-  return { core, utility, external: externalSkills };
+  return { router, utility, external: externalSkills };
 }
 
 /**
@@ -606,7 +606,7 @@ export function getMenus(pluginId: string, projectDir: string): MenuConfig {
 /**
  * 외부 플러그인 메뉴 갱신 - 디스크에서 스킬을 재스캔하여 external 카테고리만 업데이트
  *
- * core/utility 카테고리는 사용자 커스터마이징을 보존하고,
+ * router/utility 카테고리는 사용자 커스터마이징을 보존하고,
  * external 카테고리만 현재 skills/ 디렉토리 상태로 동기화.
  * add-ext-skill / remove-ext-skill 실행 후 호출.
  */
@@ -626,7 +626,7 @@ export function refreshExternalMenus(pluginId: string, projectDir: string): Menu
     .map(s => ({ name: s.name, labels: existingLabels.get(s.name) || s.labels }));
 
   if (data?.menus) {
-    // core/utility 보존, external만 갱신
+    // router/utility 보존, external만 갱신
     data.menus.external = freshExternal;
     savePluginData(pluginId, data);
     log.info(`Refreshed external menus for ${pluginId}: ${freshExternal.map(s => s.name).join(', ') || '(none)'}`);

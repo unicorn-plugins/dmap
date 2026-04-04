@@ -73,7 +73,7 @@ const en: Translations = {
   'startup.runInTerminal': 'Run in terminal required',
 
   // Categories
-  'category.core': 'Core',
+  'category.router': 'Router',
   'category.setup': 'Setup',
   'category.utility': 'Utility',
   'category.external': 'External',

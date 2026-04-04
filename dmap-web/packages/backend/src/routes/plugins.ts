@@ -176,7 +176,7 @@ pluginsRouter.get('/:id/menus', async (req, res) => {
 pluginsRouter.put('/:id/menus', async (req, res) => {
   try {
     const menus = req.body;
-    if (!menus || !menus.core) {
+    if (!menus || !menus.router) {
       res.status(400).json({ error: 'Invalid menu configuration' });
       return;
     }
@@ -214,7 +214,7 @@ pluginsRouter.post('/:id/menus/ai-recommend', async (req, res) => {
     }
 
     const UTILITY_SKILLS = new Set(['setup', 'add-ext-skill', 'remove-ext-skill', 'help']);
-    const CORE_TYPES = new Set(['core', 'planning', 'orchestrator']);
+    const ROUTER_TYPES = new Set(['router', 'planning', 'orchestrator']);
 
     interface SkillInfo {
       name: string;
@@ -224,7 +224,7 @@ pluginsRouter.post('/:id/menus/ai-recommend', async (req, res) => {
       enName: string;
     }
 
-    const coreSkills: SkillInfo[] = [];
+    const routerSkills: SkillInfo[] = [];
     const utilitySkills: SkillInfo[] = [];
     const externalSkills: SkillInfo[] = [];
 
@@ -232,7 +232,7 @@ pluginsRouter.post('/:id/menus/ai-recommend', async (req, res) => {
       .filter(d => d.isDirectory() && existsSync(path.join(skillsDir, d.name, 'SKILL.md')));
 
     for (const dir of dirs) {
-      if (dir.name === 'core') continue;
+      if (dir.name === 'router') continue;
       const skillMdPath = path.join(skillsDir, dir.name, 'SKILL.md');
       const content = readFileSync(skillMdPath, 'utf-8').replace(/\r\n/g, '\n');
 
@@ -284,12 +284,12 @@ pluginsRouter.post('/:id/menus/ai-recommend', async (req, res) => {
         utilitySkills.push(info);
       } else if (isExt || fmType === 'external') {
         externalSkills.push(info);
-      } else if (CORE_TYPES.has(fmType) || !fmType) {
-        coreSkills.push(info);
+      } else if (ROUTER_TYPES.has(fmType) || !fmType) {
+        routerSkills.push(info);
       } else if (fmType === 'utility' || fmType === 'setup') {
         utilitySkills.push(info);
       } else {
-        coreSkills.push(info);
+        routerSkills.push(info);
       }
     }
 
@@ -317,33 +317,33 @@ pluginsRouter.post('/:id/menus/ai-recommend', async (req, res) => {
       }
     }
 
-    // AI 추천 대상 스킬: core + 비고정 유틸리티 + 외부
+    // AI 추천 대상 스킬: router + 비고정 유틸리티 + 외부
     const labelOnlySkills = [...nonFixedUtility, ...externalSkills];
-    const allAiSkillCount = coreSkills.length + labelOnlySkills.length;
+    const allAiSkillCount = routerSkills.length + labelOnlySkills.length;
 
     // AI 추천 대상이 없으면 규칙 기반 폴백
     if (allAiSkillCount === 0) {
       const utility: MenuSkillItem[] = [...fixedUtility];
       const external: MenuSkillItem[] = [];
-      res.json({ core: [], utility, external });
+      res.json({ router: [], utility, external });
       return;
     }
 
-    // core 0-1개이고 라벨 추천 대상도 없으면 AI 불필요
-    if (coreSkills.length <= 1 && labelOnlySkills.length === 0) {
-      const core: MenuSubcategory[] = coreSkills.length === 1
-        ? [{ id: 'default', labels: { ko: '기본', en: 'Default' }, skills: [{ name: coreSkills[0].name, labels: { ko: coreSkills[0].koName, en: coreSkills[0].enName } }] }]
+    // router 0-1개이고 라벨 추천 대상도 없으면 AI 불필요
+    if (routerSkills.length <= 1 && labelOnlySkills.length === 0) {
+      const router: MenuSubcategory[] = routerSkills.length === 1
+        ? [{ id: 'default', labels: { ko: '기본', en: 'Default' }, skills: [{ name: routerSkills[0].name, labels: { ko: routerSkills[0].koName, en: routerSkills[0].enName } }] }]
         : [];
       const utility: MenuSkillItem[] = [...fixedUtility];
       const external: MenuSkillItem[] = externalSkills
         .sort((a, b) => a.name.localeCompare(b.name))
         .map(s => ({ name: s.name, labels: { ko: s.koName, en: s.enName } }));
-      res.json({ core, utility, external });
+      res.json({ router, utility, external });
       return;
     }
 
-    // Claude SDK로 core 스킬 분류 + 모든 스킬 라벨 추천 요청
-    const coreSkillListForAi = coreSkills.map(s =>
+    // Claude SDK로 router 스킬 분류 + 모든 스킬 라벨 추천 요청
+    const routerSkillListForAi = routerSkills.map(s =>
       `- name: "${s.name}", type: "${s.type}", description: "${s.description}"`
     ).join('\n');
 
@@ -353,17 +353,17 @@ pluginsRouter.post('/:id/menus/ai-recommend', async (req, res) => {
 
     const aiPrompt = `You are a menu classification and naming expert. You have two tasks:
 
-TASK 1: Classify CORE skills into subcategories and generate Korean/English display names.
+TASK 1: Classify ROUTER skills into subcategories and generate Korean/English display names.
 TASK 2: Generate Korean/English display names for LABEL-ONLY skills (no classification needed).
 
-CORE SKILLS (classify + name):
-${coreSkillListForAi || '(none)'}
+ROUTER SKILLS (classify + name):
+${routerSkillListForAi || '(none)'}
 
 LABEL-ONLY SKILLS (name only):
 ${labelOnlyListForAi || '(none)'}
 
 RULES:
-1. For CORE skills: Group by purpose/use-case (e.g., "탐색" for exploration, "개발" for development). Each subcategory must have at least 2 skills. If only 1 skill would be in a group, merge with the most related group.
+1. For ROUTER skills: Group by purpose/use-case (e.g., "탐색" for exploration, "개발" for development). Each subcategory must have at least 2 skills. If only 1 skill would be in a group, merge with the most related group.
 2. Provide Korean (ko) and English (en) names for subcategories. Names should be short nouns (1-2 words).
 3. Generate Korean (ko) and English (en) display names for EVERY skill. Read each skill's description carefully and create a meaningful Korean name that reflects its purpose.
 4. Korean names MUST be natural Korean nouns (e.g., "개발환경 준비", "코드 리뷰"), NOT English transliterations, NOT the English skill name.
@@ -386,7 +386,7 @@ RESPONSE FORMAT (JSON only):
   ]
 }`;
 
-    log.info(`AI recommend: classifying ${coreSkills.length} core + ${labelOnlySkills.length} label-only skills for plugin ${pluginId}`);
+    log.info(`AI recommend: classifying ${routerSkills.length} router + ${labelOnlySkills.length} label-only skills for plugin ${pluginId}`);
 
     try {
       const { query } = await import('@anthropic-ai/claude-code');
@@ -429,8 +429,8 @@ RESPONSE FORMAT (JSON only):
         labelOnly?: MenuSkillItem[];
       };
 
-      // core 서브카테고리
-      const core: MenuSubcategory[] = (parsed.subcategories || []).map(sub => ({
+      // router 서브카테고리
+      const router: MenuSubcategory[] = (parsed.subcategories || []).map(sub => ({
         id: sub.id,
         labels: sub.labels,
         skills: sub.skills,
@@ -457,23 +457,23 @@ RESPONSE FORMAT (JSON only):
           return { name: s.name, labels: aiLabels || { ko: s.koName, en: s.enName } };
         });
 
-      log.info(`AI recommend: created ${core.length} subcategories, ${aiLabelMap.size} label-only for ${pluginId}`);
-      res.json({ core, utility, external });
+      log.info(`AI recommend: created ${router.length} subcategories, ${aiLabelMap.size} label-only for ${pluginId}`);
+      res.json({ router, utility, external });
     } catch (aiError) {
       // AI 분류 실패 시 규칙 기반 폴백
       log.warn('AI recommend failed, using default menu:', aiError);
-      const core: MenuSubcategory[] = coreSkills.length > 0
+      const router: MenuSubcategory[] = routerSkills.length > 0
         ? [{
             id: 'default',
             labels: { ko: '기본', en: 'Default' },
-            skills: coreSkills.map(s => ({ name: s.name, labels: { ko: s.koName, en: s.enName } })),
+            skills: routerSkills.map(s => ({ name: s.name, labels: { ko: s.koName, en: s.enName } })),
           }]
         : [];
       const utility: MenuSkillItem[] = [...fixedUtility, ...nonFixedUtility.map(s => ({ name: s.name, labels: { ko: s.koName, en: s.enName } }))];
       const external: MenuSkillItem[] = externalSkills
         .sort((a, b) => a.name.localeCompare(b.name))
         .map(s => ({ name: s.name, labels: { ko: s.koName, en: s.enName } }));
-      res.json({ core, utility, external });
+      res.json({ router, utility, external });
     }
   } catch (error: unknown) {
     res.status(500).json({ error: (error as Error).message });

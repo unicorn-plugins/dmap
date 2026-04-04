@@ -73,7 +73,7 @@ const ko: Translations = {
   'startup.runInTerminal': '터미널에서 실행 필요',
 
   // Categories
-  'category.core': '핵심',
+  'category.router': '라우터',
   'category.setup': '설정',
   'category.utility': '유틸리티',
   'category.external': '외부 연동',

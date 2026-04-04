@@ -69,7 +69,7 @@ export interface Translations {
   'startup.runInTerminal': string;
 
   // Categories
-  'category.core': string;
+  'category.router': string;
   'category.setup': string;
   'category.utility': string;
   'category.external': string;
