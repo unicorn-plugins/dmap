@@ -163,7 +163,7 @@ DMAP 표준에 맞춰 플러그인의 전체 구조 설계.
 
 #### Step1. 플러그인 스켈레톤 생성 (`{PLUGIN_DIR}/.claude-plugin/`, 디렉토리 구조)
 - `.claude-plugin/plugin.json`과 `.claude-plugin/marketplace.json` 작성 (플러그인 메타데이터, 마켓플레이스 정보)
-- `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`은 `standards/plugin-standard.md`의 플러그인 메인 표준을 준수하여 작성
+- `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`은 `{DMAP_PLUGIN_DIR}/standards/plugin-standard.md`의 플러그인 메인 표준을 준수하여 작성
 1. `.gitignore` 생성 (`.dmap/secrets/`, `__pycache__/`, `.env` 등 보안·임시 파일 제외. `output/` 디렉토리는 제외하지 않음)
 2. Gateway 설정 (`{PLUGIN_DIR}/gateway/install.yaml`, `{PLUGIN_DIR}/gateway/runtime-mapping.yaml`)
 3. 공유자원 복사 

@@ -28,6 +28,15 @@ user-invocable: true
 
 ---
 
+## 작업 환경 변수 로드
+
+CLAUDE.md에서 아래 환경변수 로드함. 없으면 `/dmap:setup`을 먼저 수행하도록 안내하고 종료.
+- DMAP_PLUGIN_DIR: DMAP 플러그인의 루트 절대 경로
+
+[Top](#add-ext-skill)
+
+---
+
 ## 워크플로우
 
 ### Step 1: 대상 플러그인 탐색
@@ -57,17 +66,17 @@ user-invocable: true
 ### Step 5: ext-{대상플러그인} External 스킬 생성
 
 - 아래 "참고사항"의 External 유형 표준 골격을 기반으로 생성
-- `skills/ext-{대상플러그인}/SKILL.md` 파일 작성
+- `{DMAP_PLUGIN_DIR}/skills/ext-{대상플러그인}/SKILL.md` 파일 작성
 - 명세서의 제공 스킬(FQN), ARGS 스키마, 실행 경로, 도메인 컨텍스트 수집 가이드를 반영
 - 요구사항 정의서에서 도메인 컨텍스트를 추출하여 반영
 
 ### Step 6: commands/ 진입점 생성
 
-- `commands/ext-{대상플러그인}.md` 파일 작성
+- `{DMAP_PLUGIN_DIR}/commands/ext-{대상플러그인}.md` 파일 작성
 
 ### Step 7: help 스킬 업데이트
 
-- `skills/help/SKILL.md`의 명령 테이블에 `/dmap:ext-{대상플러그인}` 추가
+- `{DMAP_PLUGIN_DIR}/skills/help/SKILL.md`의 명령 테이블에 `/dmap:ext-{대상플러그인}` 추가
 
 [Top](#add-ext-skill)
 
@@ -162,8 +171,8 @@ ARGS JSON 루트 키 구조:
 - [ ] 플러그인 카탈로그 다운로드 또는 캐시 재사용이 동작하는가
 - [ ] 중복 ext-{} 스킬 존재 시 안내 후 중단되는가
 - [ ] 명세서 다운로드 실패 시 적절히 처리되는가
-- [ ] skills/ext-{대상플러그인}/SKILL.md가 External 유형 표준을 준수하는가
-- [ ] commands/ext-{대상플러그인}.md가 생성되는가
+- [ ] {DMAP_PLUGIN_DIR}/skills/ext-{대상플러그인}/SKILL.md가 External 유형 표준을 준수하는가
+- [ ] {DMAP_PLUGIN_DIR}/commands/ext-{대상플러그인}.md가 생성되는가
 - [ ] help 스킬의 명령 테이블에 새 명령이 추가되는가
 - [ ] 생성된 SKILL.md에 TOC(목차)가 포함되어 있지 않은가
 

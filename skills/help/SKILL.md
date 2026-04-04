@@ -79,12 +79,12 @@ Phase 4: 검증 및 완료      ──→ 사용자 확인
 
 | 문서 | 경로 |
 |------|------|
-| DMAP 빌더 표준 | `standards/plugin-standard.md` |
-| Agent 표준 | `standards/plugin-standard-agent.md` |
-| Skill 표준 | `standards/plugin-standard-skill.md` |
-| Gateway 표준 | `standards/plugin-standard-gateway.md` |
-| 리소스 마켓플레이스 | `resources/plugin-resources.md` |
-| 플러그인 개발 가이드 | `resources/guides/plugin/plugin-dev-guide.md` |
+| DMAP 빌더 표준 | `{DMAP_PLUGIN_DIR}/standards/plugin-standard.md` |
+| Agent 표준 | `{DMAP_PLUGIN_DIR}/standards/plugin-standard-agent.md` |
+| Skill 표준 | `{DMAP_PLUGIN_DIR}/standards/plugin-standard-skill.md` |
+| Gateway 표준 | `{DMAP_PLUGIN_DIR}/standards/plugin-standard-gateway.md` |
+| 리소스 마켓플레이스 | `{DMAP_PLUGIN_DIR}/resources/plugin-resources.md` |
+| 플러그인 개발 가이드 | `{DMAP_PLUGIN_DIR}/resources/guides/plugin/plugin-dev-guide.md` |
 
 [Top](#help)
 
