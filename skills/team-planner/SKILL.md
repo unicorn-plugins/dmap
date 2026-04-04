@@ -108,11 +108,9 @@ AI가 에이전트 구성 힌트와 참고 공유 자원을 자동 분석/추천
 
 ### Step 3: 사용자 인터뷰 -- Interview 모드 (`ulw` 활용)
 
-AskUserQuestion 도구를 활용하여 필수 항목을 순차 수집함.  
-한 번에 최대 4개의 질문을 묶어 문의 가능.
+사용자에게 `{DMAP_PLUGIN_DIR}/resources/guides/plugin/plugin-dev-guide.md`의
+"### 기획서 작성 양식"에 정의된 기본정보, 핵심기능, 사용자플로우를 입력하도록 템플릿과 샘플을 제공함 
 
-수집할 항목은 `{DMAP_PLUGIN_DIR}/resources/guides/plugin/plugin-dev-guide.md`의
-"기획서 작성 양식"에 정의된 필수 항목(기본 정보, 핵심기능, 사용자 플로우)을 따름.
 
 ### Step 4: AI 자동 완성 (`ulw` 활용)
 
