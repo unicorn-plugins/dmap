@@ -314,21 +314,20 @@ DMAP 표준에 맞춰 플러그인의 전체 구조 설계.
 - PLUGIN_NAME: {PLUGIN_NAME}
 ---
 
-### Phase 5: 플러그인 디렉토리 접근 권한 셋팅 
-
+### Phase 5: DMAP 플러그인 디렉토리 접근 권한 셋팅 
 플러그인 디렉토리에 대한 에이전트의 Read/Write/Edit/Bash 권한을 설정하여 개발 및 검증 과정에서 파일 생성/수정/실행 가능하도록 함.
 `~/.claude/settings.json` 파일의 "permissions" 섹션에 아래 권한 추가:  
 ```
 "permissions": {
   "allow": [
-    "Read({사용자홈}/.claude/plugins/**)",
-    "Write({사용자홈}/.claude/plugins/**)",
-    "Edit({사용자홈}/.claude/plugins/**)",
-    "Bash(python {사용자홈}/.claude/plugins/**)",
-    "Bash(python3 {사용자홈}/.claude/plugins/**)"
+    "Read({DMAP_PLUGIN_DIR}/**)",
+    "Write({DMAP_PLUGIN_DIR}/**)",
+    "Edit({DMAP_PLUGIN_DIR}/**)",
+    "Bash(python {DMAP_PLUGIN_DIR}/**)",
+    "Bash(python3 {DMAP_PLUGIN_DIR}/**)"
   ],
   "additionalDirectories": [
-    "{사용자홈}/.claude/plugins"
+    "{DMAP_PLUGIN_DIR}"
   ]
 }
 ```
