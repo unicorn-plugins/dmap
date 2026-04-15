@@ -39,7 +39,6 @@ CLAUDE.md에서 아래 환경변수 로드함. 없으면 '/dmap:team-panner'를 
 
 | 문서 | 경로 | 용도 |
 |------|------|------|
-| 플러그인 개발 가이드 | `{DMAP_PLUGIN_DIR}/resources/guides/plugin/plugin-dev-guide.md` | 상세 워크플로우 참조 |
 | DMAP 빌더 표준 | `{DMAP_PLUGIN_DIR}/standards/plugin-standard.md` | 디렉토리 구조, 배포, 네임스페이스 |
 | Agent 표준 | `{DMAP_PLUGIN_DIR}/standards/plugin-standard-agent.md` | 에이전트 패키지 작성 규칙 |
 | Skill 표준 | `{DMAP_PLUGIN_DIR}/standards/plugin-standard-skill.md` | 스킬 작성 규칙, 유형별 템플릿 |
@@ -53,12 +52,6 @@ CLAUDE.md에서 아래 환경변수 로드함. 없으면 '/dmap:team-panner'를 
 
 ---
 
-## 스킬 부스팅
-
-| 단계 | 부스팅 스킬 | 용도 |
-|------|------------|------|
-| Phase 2 Step 3 | `/oh-my-claudecode:ralplan` | 개발 계획서 작성 (Planner+Architect+Critic 합의) |
-| Phase 3 | `/oh-my-claudecode:ralph` | 플러그인 개발 실행 (완료까지 지속) |
 
 [Top](#develop-plugin)
 
@@ -72,18 +65,14 @@ CLAUDE.md에서 아래 환경변수 로드함. 없으면 '/dmap:team-panner'를 
 
 `{PLUGIN_DIR/output/team-plan-{PLUGIN_NAME}.md}` 팀 기획서를 분석하고, 부족한 정보를 사용자에게 문의하여 수집함.
 
-**Step 1. 요구사항 파악**
+#### Step 1. 요구사항 파악
 
 사용자가 제공한 팀 기획서의 각 항목을 분석함.  
 팀 기획서 탐색 순서:
 1. `{PLUGIN_DIR}/output/team-plan-{PLUGIN_NAME}.md` 파일이 존재하면 자동 로드하여 사용
-   (team-planner 스킬로 사전 작성된 기획서)
-2. 사용자가 메시지에 기획서 내용을 직접 포함한 경우 해당 내용 사용
-3. 위 두 경우에 해당하지 않으면 `{DMAP_PLUGIN_DIR}/resources/guides/plugin/plugin-dev-guide.md`의
-   "팀 기획서 > 기획서 작성 양식"을 참고하여
-   사용자에게 핵심 항목(플러그인명, 목적, 핵심기능, 사용자 플로우)을 문의함
+2. 파일이 없거나 불완전하면, 사용자에게 `/dmap:team-planner` 스킬을 먼저 수행하도록 안내하고 종료
 
-**Step 2. 플러그인 적합여부 판단**
+#### Step 2. 플러그인 적합여부 판단
 
 요구사항이 DMAP 플러그인으로 구현하기 적합한지 판단함.
 
@@ -96,28 +85,39 @@ CLAUDE.md에서 아래 환경변수 로드함. 없으면 '/dmap:team-panner'를 
 
 부적합 시 사용자에게 검토결과 및 보완사항 추천.
 
-**Step 3. 사용자에게 문의하여 정보 수집**
+#### Step 3. 사용자에게 문의하여 정보 수집
 
-팀 기획서에서 누락되거나 모호한 항목을 파악하여 AskUserQuestion 도구로 문의함.
+팀 기획서에서 누락되거나 모호한 항목을 파악하여 질문 목록 작성.
+아래 기본 항목 외에도 요구사항의 특성에 따라 충분히 문의할 내용을 취합.
 
-기본 확인 항목:
+**기본 확인 항목:**
 - 미작성 필수 항목 (플러그인명, 목적, 핵심기능, 사용자 플로우)
 - 핵심기능과 사용자 플로우 간 불일치
 - 에이전트 역할 구분이 필요한 부분
 - 외부 시스템 연동 여부 (API, DB, 파일 시스템 등)
 - 기술 요건 (프로그래밍 언어, 프레임워크, 프로토콜, 데이터 형식 등)
 
-**Step 4. 팀 기획서 업데이트**
+**요구사항에 따른 추가 확인 (예시):**
+- 인증/보안 요건 (API Key, OAuth, 접근 권한 등)
+- 데이터 입출력 형식 및 저장소
+- 기존 시스템과의 호환성 제약
+- 성능/비용 요건 (응답 시간, 토큰 사용량 등)
+- 에러 처리 및 예외 상황 대응 방침
 
-수집된 정보를 반영하여 완성된 정의서를 `{PLUGIN_DIR}/.dmap/{PLUGIN_NAME}/requirements.md`에 저장함.
+
+#### Step 4. 팀 기획서 업데이트
+
+수집된 정보를 반영하여 완성된 요구사항 정의서를 `{PLUGIN_DIR}/output/requirements.md`에 저장함.
 
 > **Phase 1 완료**: 업데이트된 팀 기획서를 사용자에게 보고하고 승인 요청.
 
+---
+
 ### Phase 2: 설계 및 계획
 
-수집된 요구사항을 기반으로 플러그인 구조를 설계하고 개발 계획 수립.
+수집된 요구사항(`{PLUGIN_DIR}/output/requirements.md`)을 기반으로 플러그인 구조를 설계하고 개발 계획 수립.
 
-**Step 1. 공유 자원 선택**
+#### Step 1. 공유 자원 선택
 
 `{DMAP_PLUGIN_DIR}/resources/plugin-resources.md`를 참조하여 플러그인에 활용할 공유 자원 선별.
 
@@ -127,70 +127,206 @@ CLAUDE.md에서 아래 환경변수 로드함. 없으면 '/dmap:team-panner'를 
 | 템플릿 | 산출물 생성에 활용할 템플릿 |
 | 샘플 | 구현 참고용 샘플 코드/패턴 |
 | 도구 | 개발/검증에 필요한 도구 |
-| 플러그인 | 외부호출스킬(ext-{플러그인명})에서 위임할 대상 플러그인 명세 |
 
-**Step 2. 플러그인 구조 설계**
+#### Step 2. 플러그인 구조 설계
 
-DMAP 표준에 맞춰 플러그인의 전체 구조 설계.
+"참조 표준"컬럼에 있는 DMAP 표준 문서를 읽고 표준에 맞춰 플러그인의 전체 구조 설계.
 
-| 설계 항목 | 참조 표준 |
-|----------|----------|
-| 에이전트 구성 (이름, 티어, 도구) | `{DMAP_PLUGIN_DIR}/standards/plugin-standard-agent.md` |
-| 스킬 구성 (목록, 유형) | `{DMAP_PLUGIN_DIR}/standards/plugin-standard-skill.md` |
-| Gateway 설정 (티어·도구·액션 매핑) | `{DMAP_PLUGIN_DIR}/standards/plugin-standard-gateway.md` |
-| 디렉토리 구조 | `{DMAP_PLUGIN_DIR}/standards/plugin-standard.md` |
+| 설계 항목 | 설계 내용 | 참조 표준 |
+|----------|----------|----------|
+| 에이전트 구성 | 역할별 에이전트 정의 (이름, 티어, 도구) | `{DMAP_PLUGIN_DIR}/standards/plugin-standard-agent.md` |
+| 스킬 구성 | 스킬 목록 및 유형 결정 (Router/Setup/Planning/Orchestrator/Utility) | `{DMAP_PLUGIN_DIR}/standards/plugin-standard-skill.md` |
+| Gateway 설정 | 티어 매핑, 도구 매핑, 액션 매핑 | `{DMAP_PLUGIN_DIR}/standards/plugin-standard-gateway.md` |
+| 디렉토리 구조 | 표준 디렉토리 구조 확정 | `{DMAP_PLUGIN_DIR}/standards/plugin-standard.md` |
 
-**Step 3. 개발 계획 수립**
+
+#### Step 3. 개발 계획 수립
 
 개발 계획서 포함 사항:
 - 공유자원 마켓플레이스에서 가져갈 자원 목록
 - 개발할 커스텀 앱 또는 커스텀 CLI 파악 및 개발 계획
-- 공유자원 외 필요한 외부 자원 파악 및 수집 계획
 - DMAP 표준 산출물 목록 및 생성 순서
 
-결과 파일: `{PLUGIN_DIR}/.dmap/{PLUGIN_NAME}/develop-plan.md`
+결과 파일: `{PLUGIN_DIR}/output/develop-plan.md`
 
-**Step 4. 사용자 검토 및 보완**
+#### Step 4. 사용자 검토 및 보완
 
 사용자에게 개발 계획서 검토 요청.
 피드백에 따라 계획서 보완 후 재승인.
 
 > **Phase 2 완료**: 확정된 개발 계획서를 사용자에게 보고하고 개발 착수 승인 요청.
 
+---
+
 ### Phase 3: 플러그인 개발
 
 `/oh-my-claudecode:ralph` 스킬 부스팅 패턴을 적용하여 개발 계획서에 따라 플러그인 개발.
 
-#### Step1. 플러그인 스켈레톤 생성 (`{PLUGIN_DIR}/.claude-plugin/`, 디렉토리 구조)
-- `.claude-plugin/plugin.json`과 `.claude-plugin/marketplace.json` 작성 (플러그인 메타데이터, 마켓플레이스 정보)
-- `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`은 `{DMAP_PLUGIN_DIR}/standards/plugin-standard.md`의 플러그인 메인 표준을 준수하여 작성
-1. `.gitignore` 생성 (`.dmap/secrets/`, `__pycache__/`, `.env` 등 보안·임시 파일 제외. `output/` 디렉토리는 제외하지 않음)
-2. Gateway 설정 (`{PLUGIN_DIR}/gateway/install.yaml`, `{PLUGIN_DIR}/gateway/runtime-mapping.yaml`)
-3. 공유자원 복사 
-  - {DMAP_PLUGIN_DIR}/resources/ → {PLUGIN_DIR}/resources/ 
-  - {PLUGIN_DIR}/resources/resource.md에 '로컬 리소스 카탈로그' 작성하여 복사된 자원 목록과 간략 설명 기록
-4. {PLUGIN_DIR}/agents/ 하위에 에이전트 개발 (`AGENT.md`, `agentcard.yaml`, `tools.yaml`)
-5. {PLUGIN_DIR}/skills/ 하위에 스킬 개발
-   - 기본 스킬: `{DMAP_PLUGIN_DIR}/standards/plugin-standard-skill.md`의 각 유형별 표준 및 템플릿을 준수하여 생성
-     - setup 스킬 (필수): 플러그인 초기 설정
-     - help 스킬 (필수): 사용 안내
-     - 기능 스킬: 요구사항에 따른 Core/Planning/Orchestrator/Utility 스킬
-   - 외부호출 스킬 (사용자 요청 시): 사용자가 외부 플러그인 연동을 요청한 경우에만 생성
-     - ext-{플러그인명} 스킬: External 유형 표준(`{DMAP_PLUGIN_DIR}/standards/plugin-standard-skill.md`) 준수하여 생성
-     - add-ext-skill 스킬: 외부호출 스킬 추가 유틸리티 (아래 "add-ext-skill 생성 지침" 참조)
-     - remove-ext-skill 스킬: 외부호출 스킬 제거 유틸리티 (아래 "remove-ext-skill 생성 지침" 참조)
+개발 계획서(`{PLUGIN_DIR}/output/develop-plan.md`)에 따라 플러그인 개발.
 
-6. {PLUGIN_DIR}/commands/ 진입점 생성
-7. 커스텀 앱/CLI 개발
-  - {PLUGIN_DIR}/resources/tools/ 하위에 개발
-  - {PLUGIN_DIR}/resources/resource.md에 '로컬 리소스 카탈로그' 에 추가 
-8. README.md 작성
+#### Step 1. 플러그인 스켈레톤 생성
 
-> 각 단계의 상세 내용은 `{DMAP_PLUGIN_DIR}/resources/guides/plugin/plugin-dev-guide.md`의 Phase 3 참조.
+표준 디렉토리 구조와 필수 매니페스트 파일 생성.
 
-> **Phase 3 완료**: 개발된 플러그인의 구조와 기능을 사용자에게 보고하고 검증 착수 승인 요청.
+```
+{PLUGIN_DIR}/
+├── .claude-plugin/
+│   ├── plugin.json              # 플러그인 매니페스트 (필수)
+│   └── marketplace.json         # 마켓플레이스 매니페스트 (필수)
+├── skills/
+├── agents/
+├── gateway/
+├── commands/
+├── .gitignore
+└── README.md
+
+```
+
+**1)marketplace.json 작성**:      
+아래 형식으로 작성. '{마켓플레이스명}'을 '{플러그인명}'과 동일하게 함. '{사용자명}'은 사용자에게 요청.     
+```json
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "{마켓플레이스명}",
+  "owner": {
+    "name": "{사용자명}"
+  },
+  "plugins": [
+    {
+      "name": "{플러그인명}",
+      "version": "0.0.1",
+      "source": "./"
+    }
+  ]
+}
+```
+
+**2)plugin.json 작성:**           
+'{플러그인 설명}', '{키워드}'는 적절히 작성       
+```
+{
+  "name": "{플러그인명}",
+  "version": "0.0.1",
+  "description": "{플러그인 설명}",
+  "author": {
+    "name": "{사용자명}"
+  },
+  "license": "MIT",
+  "keywords": ["{키워드1}", "{키워드2}", ]
+}
+```
+
+
+> `plugin.json`과 `marketplace.json` 작성 시
+> DMAP 메인 표준(`{DMAP_PLUGIN_DIR}/standards/plugin-standard.md`)의 `## 배포 > plugin.json`과 `## 배포 > marketplace.json` 섹션 참조.
+
+**3)`.gitignore` 작성**: 
+- `.dmap/secrets/`, `__pycache__/`, `.env` 등 보안·임시 파일 제외
+- `.dmap/`, `.omc/` 디렉토리 제외 
+- `output/` 디렉토리는 제외하지 않음
+
+
+#### Step 2. Gateway 설정
+공통 표준 `{DMAP_PLUGIN_DIR}/standards/plugin-standard.md`와  
+Gateway 표준 `{DMAP_PLUGIN_DIR}/standards/plugin-standard-gateway.md`를 반드시 준수하여   
+추상 선언과 구체 매핑을 연결하는 Gateway 파일 생성.
+
+| 파일 | 내용 |
+|------|------|
+| `{PLUGIN_DIR}/gateway/install.yaml` | MCP 서버, LSP 서버, 커스텀 도구 설치 매니페스트 |
+| `{PLUGIN_DIR}/gateway/runtime-mapping.yaml` | 티어→모델 매핑, 추상도구→구체도구 매핑, 금지액션→제외도구 매핑 |
+
+> Gateway 설정이 없으면 에이전트 호출 시 모델/도구 구체화 불가.
+
+#### Step 3. 공유자원 복사
+
+리소스 마켓플레이스(`{DMAP_PLUGIN_DIR}/resources/`)에서 선별된 자원을 플러그인 디렉토리(`{PLUGIN_DIR}`)로 복사.  
+`{PLUGIN_DIR}/resources/resource.md`에 '로컬 리소스 카탈로그' 작성하여 복사된 자원 목록과 간략 설명 기록.
+
+| 자원 유형 | 복사 위치 | 기준 |
+|----------|----------|------|
+| 가이드 | `{PLUGIN_DIR}/agents/{agent-name}/references/` | 에이전트가 참조하는 경우 |
+| 가이드 | `{PLUGIN_DIR}/skills/{skill-name}/references/` | 스킬이 참조하는 경우 |
+| 템플릿 | `{PLUGIN_DIR}/agents/{agent-name}/templates/` | 에이전트 출력 포맷인 경우 |
+| 템플릿 | `{PLUGIN_DIR}/skills/{skill-name}/assets/` | 스킬이 사용하는 경우 |
+| 샘플 | `{PLUGIN_DIR}/agents/{agent-name}/references/` | — |
+| 도구 소스 | `{PLUGIN_DIR}/gateway/tools/` | — |
+
+#### Step 4. 에이전트 개발
+공통 표준 `{DMAP_PLUGIN_DIR}/standards/plugin-standard.md`와  
+에이젼트 표준 `{DMAP_PLUGIN_DIR}/standards/plugin-standard-agent.md`을 반드시 준수하여 에이전트 패키지 작성.  
+에이전트별 패키지(디렉토리) `{PLUGIN_DIR}/agents/{agent-name}/` 하위에 생성.
+
+| 파일 | 필수 | 내용 |
+|------|:----:|------|
+| `AGENT.md` | 필수 | 프롬프트 (목표, 참조, 워크플로우, 출력 형식, 검증) |
+| `agentcard.yaml` | 필수 | 메타데이터 (정체성, 역량, 제약, 핸드오프) |
+| `tools.yaml` | 선택 | 추상 도구 선언 (이름, 설명, 파라미터) |
+| `references/` | 선택 | 에이전트 전용 참조 문서 |
+
+
+#### Step 5. 스킬 개발
+공통 표준 `{DMAP_PLUGIN_DIR}/standards/plugin-standard.md`와  
+스킬 표준 `{DMAP_PLUGIN_DIR}/standards/plugin-standard-skill.md`을 반드시 준수하여   
+스킬별 디렉토리 및 SKILL.md 생성. setup 스킬은 반드시 포함.
+
+| 스킬 | 유형 | 필수 | 설명 |
+|------|------|:----:|------|
+| setup | Setup (직결형) | 필수 | 플러그인 설치 및 초기 설정 |
+| core | Core (위임형) | 선택 | 각 기능 스킬을 파이프라인으로 연결하여 특정 작업을 수행할 필요가 있는 경우만 생성 |
+| help | Utility (직결형) | 권장 | 사용 가능한 명령 및 자동 라우팅 안내 |
+| {기능 스킬} | Orchestrator/Planning | 상황별 | 핵심기능별 워크플로우 |
+
+setup 스킬 필수 수행 사항:
+- `{PLUGIN_DIR}/gateway/install.yaml` 기반 도구 설치
+
+setup 스킬 권장 사항:
+- `help` 유틸리티 스킬 제공 (사용 가능한 명령 및 자동 라우팅 안내)
+
+help 스킬 작성 규칙:
+- SKILL.md에 명령 목록과 자동 라우팅 규칙을 **하드코딩**하여 즉시 출력하는 방식으로 작성
+- 워크플로우 시작 부분에 다음 지시문 삽입:
+  `**중요: 추가적인 파일 탐색이나 에이전트 위임 없이, 아래 내용을 즉시 사용자에게 출력하세요.**`
+- `skills/` 디렉토리 스캔 등 런타임 탐색 금지 (토큰 낭비 방지)
+
+#### Step 6. commands/ 진입점 생성
+
+슬래시 명령으로 노출할 스킬의 진입점 파일 생성.
+
+```markdown
+# commands/{skill-name}.md
+---
+description: {스킬 설명}
+---
+
+1. 현재 작업 중인 프로젝트의 `{PLUGIN_DIR}/CLAUDE.md` 파일을 "view_file" 등으로 꼼꼼히 읽으세요.
+2. 파일에서 `DMAP_PLUGIN_DIR`의 위치를 파악할 뿐만 아니라, 그 안에 적힌 팀 행동원칙, 대화 가이드, 정직한 보고 등 "모든 프로젝트 지침"을 이번 작업 전체에 걸쳐 우선적으로 엄격히 준수하세요.
+3. `{PLUGIN_DIR}/skills/{skill-name}/SKILL.md` 파일을 읽고 지시사항을 실행하세요.
+
+```
+
+#### Step 7. 커스텀 앱/CLI 개발
+
+개발 계획서에 명시된 커스텀 도구 개발.
+
+| 단계 | 내용 |
+|------|------|
+| 개발 | `{PLUGIN_DIR}/gateway/tools/`에 소스 파일 생성 |
+| 테스트 | 단위 테스트 및 통합 테스트 수행 |
+| Gateway 등록 | `install.yaml`의 `custom_tools`에 등록, `runtime-mapping.yaml`의 `tool_mapping`에 매핑 |
+| 리소스 카탈로그 등록 | `{PLUGIN_DIR}/resources/resource.md`에 도구 설명 및 사용법 기록 |
+
+#### Step 8. README.md 작성
+
+`{DMAP_PLUGIN_DIR}/resources/templates/plugin/README-plugin-template.md`를 참고하여 README.md 작성.
+
+- 필수 섹션: 개요, 설치, 업그레이드, 사용법, 요구사항, 라이선스.
+- {owner},{repo}, {marketplace-name}, {plugin-name}, {skill-name}, {HIGH/MEDIUM/LOW} 등 변수들을 실제값으로 치환 
+
+> **Phase 3 완료**: 개발된 플러그인의 구조와 기능을 사용자에게 보고하고 검토 요청.
 
 ---
+
 
 ### Phase 4: CLAUDE.md 생성 
 
@@ -286,6 +422,12 @@ DMAP 표준에 맞춰 플러그인의 전체 구조 설계.
 - `@setup`: 플러그인 초기 설정
 - `@help`: 사용 안내
 - `@{스킬명}`: {skills/*/SKILL.md frontmatter description 값}
+
+## 플러그인 변수 
+- CLAUDE_RUNTIME: 런타임 종류. Claude Code 또는 Claude CoWork 
+- DMAP_PLUGIN_DIR: DMAP 플러그인의 루트 절대 경로 
+- PLUGIN_DIR: 생성할 플러그인의 루트 절대 경로 
+- PLUGIN_NAME: 생성할 플러그인 이름
 ```
 
 ````
@@ -307,16 +449,11 @@ DMAP 표준에 맞춰 플러그인의 전체 구조 설계.
 - `{style 정보}` = `persona.style` (첫 줄만 요약)
 - `{background 정보}` = `persona.background` (첫 줄만 요약)
 
-## 플러그인 변수 설정 
-- CLAUDE_RUNTIME: {CLAUDE_RUNTIME}
-- DMAP_PLUGIN_DIR: {DMAP_PLUGIN_DIR}
-- PLUGIN_DIR: {PLUGIN_DIR}
-- PLUGIN_NAME: {PLUGIN_NAME}
 ---
 
 ### Phase 5: DMAP 플러그인 디렉토리 접근 권한 셋팅 
 플러그인 디렉토리에 대한 에이전트의 Read/Write/Edit/Bash 권한을 설정하여 개발 및 검증 과정에서 파일 생성/수정/실행 가능하도록 함.
-`~/.claude/settings.json` 파일의 "permissions" 섹션에 아래 권한 추가:  
+`{PLUGIN_DIR}/.claude/settings.local.json` 파일의 "permissions" 섹션에 아래 권한 추가:  
 ```
 "permissions": {
   "allow": [
@@ -337,26 +474,25 @@ DMAP 표준에 맞춰 플러그인의 전체 구조 설계.
 
 개발된 플러그인이 DMAP 표준을 준수하는지 최종 검증.
 
-**Step 1. 전체 검증**
+#### Step 1. 전체 검증
 
 | 검증 항목 | 확인 내용 |
 |----------|----------|
+| 프로젝트 구조 | 표준 디렉토리 구조를 준수 |
 | 필수 파일 | `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` 존재 |
 | 필수 파일 구조 | `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` 이 스킬 메인 표준 준수 |
 | 에이전트 쌍 | 모든 에이전트에 `AGENT.md` + `agentcard.yaml` 존재 |
 | 스킬 구조 | 모든 스킬에 `SKILL.md` 존재, frontmatter 포함 |
 | setup 스킬 | setup 스킬 존재 |
 | help 스킬 (권장) | help 유틸리티 스킬 존재, 즉시 출력 방식 |
-| add-ext-skill 스킬 (선택) | 외부호출 스킬 요청 시 add-ext-skill 유틸리티 스킬 존재 |
-| remove-ext-skill 스킬 (선택) | 외부호출 스킬 요청 시 remove-ext-skill 유틸리티 스킬 존재 |
 | Gateway | `install.yaml` + `runtime-mapping.yaml` 존재 |
 | 슬래시 명령 | `commands/` 진입점 파일 존재 |
 | 도구 매핑 | `tools.yaml`의 추상 도구가 `runtime-mapping.yaml`에 매핑 |
 | 티어 매핑 | `agentcard.yaml`의 tier가 `runtime-mapping.yaml`에 매핑 |
-| 오케스트레이션 구조 | 스킬이 에이전트에 위임하고, 에이전트가 다른 에이전트를 호출하는 구조가 아닌지 확인 |
+| 오케스트레이션 구조 | 에이전트가 다른 에이전트를 호출하는 구조가 아닌지 확인 |
 | README | 필수 섹션(개요, 설치, 업그레이드, 사용법, 요구사항, 라이선스) 포함 |
 
-**Step 2. 사용자에게 개발완료 보고**
+#### Step 2. 사용자에게 개발완료 보고
 
 최종 산출물 요약 보고:
 - 플러그인 디렉토리 구조 (트리)
@@ -364,7 +500,7 @@ DMAP 표준에 맞춰 플러그인의 전체 구조 설계.
 - 슬래시 명령 목록
 - 설치 방법
 
-**Step 3. GitHub 배포 여부 문의**
+#### Step 3. GitHub 배포 여부 문의
 
 사용자에게 "개발 완료된 플러그인을 GitHub에 배포할까요?" 문의.
 - 동의 시: `CHAIN>>>/dmap:publish` 출력으로 스킬 전환 (플러그인 디렉토리 경로, 플러그인명 전달)

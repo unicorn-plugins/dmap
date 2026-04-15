@@ -35,7 +35,6 @@
 | github | github-account-setup | GitHub 계정 생성 가이드 (회원가입, 프로필 설정, 2FA) | [상세](guides/github/github-account-setup.md) |
 | github | github-token-guide | Personal Access Token (PAT) 생성 가이드 (권한 설정, 보안) | [상세](guides/github/github-token-guide.md) |
 | github | github-organization-guide | GitHub Organization 생성 가이드 (팀 관리, 멤버 초대) | [상세](guides/github/github-organization-guide.md) |
-| plugin | plugin-dev-guide | DMAP 플러그인 개발 가이드 (팀 기획서, 개발 워크플로우) | [상세](guides/plugin/plugin-dev-guide.md) |
 | plugin | resource-contribution-guide | 리소스 마켓플레이스에 가이드, 템플릿, 샘플, 커스텀 도구를 추가하는 방법 안내 | [상세](guides/plugin/resource-contribution-guide.md) |
 | docs | ppt-guide | PPT 슬라이드 작성 가이드 (컬러 팔레트, 타이포그래피, 레이아웃, 컴포넌트 스타일, 디자인 규칙) | [상세](guides/docs/ppt-guide.md) |
 
