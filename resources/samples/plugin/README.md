@@ -53,6 +53,13 @@ claude plugin install abra@abra
 claude plugin list
 ```
 
+**방법 3: 프로젝트 디렉토리에서만 동작하게 설치**
+```
+cd ./develop-agent/plugin/abra
+claude --plugin-dir .
+````
+
+
 > **설치 후 setup 스킬 실행:**
 > ```
 > /abra:dify-setup

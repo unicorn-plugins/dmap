@@ -41,7 +41,7 @@ claude plugin list
 
 ```bash
 # 1. 로컬 경로를 마켓플레이스로 등록
-claude plugin marketplace add ./{plugin-path}
+claude plugin marketplace add {plugin-path}
 
 # 2. 플러그인 설치
 claude plugin install {plugin-name}@{marketplace-name}
@@ -49,6 +49,12 @@ claude plugin install {plugin-name}@{marketplace-name}
 # 3. 설치 확인
 claude plugin list
 ```
+
+**방법 3: 프로젝트 디렉토리에서만 동작하게 설치**
+```
+cd {plugin-path}
+claude --plugin-dir .
+````
 
 > **설치 후 setup 스킬 실행:**
 > ```
