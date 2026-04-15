@@ -26,23 +26,6 @@ AI가 에이전트 구성 힌트와 참고 공유 자원을 자동 분석/추천
 
 ---
 
-## {DMAP_PLUGIN_DIR} 변수 해석
-오케스트레이터는 실행 시작 시 다음 순서로 `{DMAP_PLUGIN_DIR}`를 결정:
-1. 아래 후보 경로 중 존재하는 첫 번째를 `PLUGIN_BASE_DIR`로 선택
-   - `/mnt/.local-plugins/cache/unicorn/dmap` (Cowork VM)
-   - `~/.claude/plugins/cache/unicorn/dmap` (Mac/Linux CLI)
-   - `%APPDATA%/Claude/plugins/cache/unicorn/dmap` (Windows CLI)
-2. `PLUGIN_BASE_DIR` 하위의 버전 디렉토리를 시맨틱 버전 비교하여 최신 버전 선택
-3. 해당 디렉토리의 절대 경로를 `{DMAP_PLUGIN_DIR}`에 바인딩
-4. 이후 모든 `{DMAP_PLUGIN_DIR}/...` 경로를 절대 경로로 치환하여 파일을 읽음
-5. 현재 프로젝트의 CLAUDE.md에 {CLAUDE_RUNTIME}과 {DMAP_PLUGIN_DIR}을 기록하여 이후 중복 계산 안하게 함     
-   - CLAUDE_RUNTIME: Claude Code | Claude CoWork
-   - DMAP_PLUGIN_DIR: '2번에서 결정한 절대경로'
-
-[Top](#team-planner)
-
----
-
 ## 참조
 | 문서 | 경로 | 용도 |
 |------|------|------|
@@ -83,13 +66,31 @@ AI가 에이전트 구성 힌트와 참고 공유 자원을 자동 분석/추천
 
 ## 워크플로우
 
-### Step1: 대상 프로젝트 디렉토리 확인
-
+### Step1: 대상 프로젝트 디렉토리 확인, {DMAP_PLUGIN_DIR} 변수 설정
+#### 대상 프로젝트 디렉토리 확인
 새 플러그인을 생성할 프로젝트 디렉토리를 생성하였고   
 플러그인 프로젝트 디렉토리에서 {CLAUDE_RUNTIME}을 수행하였는지 AskUserQuestion 도구로 문의함.
 - Yes: CLAUDE.md에 현재 디렉토리의 절대 경로를 {PLUGIN_DIR}로 저장 
 - No: 플러그인 프로젝트 디렉토리를 생성하고 그 디렉토리로 이동하여 {CLAUDE_RUNTIME}을 수행하도록 안내 
- 
+
+#### {DMAP_PLUGIN_DIR} 변수 설정
+사용자에게 DMAP 플러그인 디렉토리 경로를 입력받아 `{PLUGIN_DIR}/CLAUDE.md`의 `{DMAP_PLUGIN_DIR}` 변수에 설정합니다. 
+<!--ASK_USER-->
+{"title":"DMAP 플러그인 디렉토리","questions":[
+  {"question":"DMAP 플러그인 디렉토리 경로를 입력해주세요.","type":"text"}
+]}
+<!--/ASK_USER-->
+
+#### `{PLUGIN_DIR}/CLAUDE.md` 에 다음 변수를 기록하여 이후 중복 계산 방지
+
+```
+## 플러그인 변수 설정 
+- CLAUDE_RUNTIME: 런타임 종류. Claude Code 또는 Claude CoWork 
+- DMAP_PLUGIN_DIR: DMAP 플러그인의 루트 절대 경로 
+- PLUGIN_DIR: 생성할 플러그인의 루트 절대 경로 
+- PLUGIN_NAME: 생성할 플러그인 이름. Step4-3에서 결정하여 등록 
+```
+
 ### Step 2: 입력 모드 판별 (`ulw` 활용)
 
 사용자 메시지를 분석하여 Interview 모드 또는 Direct 모드를 결정함.

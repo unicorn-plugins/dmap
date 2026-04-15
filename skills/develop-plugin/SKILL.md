@@ -280,16 +280,6 @@ DMAP 표준에 맞춰 플러그인의 전체 구조 설계.
 
 ### 교훈 목록
 
-## DMAP_PLUGIN_DIR 변수 해석 
-**`{DMAP_PLUGIN_DIR}`**: DMAP 플러그인 루트 디렉토리의 절대 경로
-오케스트레이터는 실행 시작 시 다음 순서로 `{DMAP_PLUGIN_DIR}`를 결정
-1. `~/.claude/plugins/cache/dmap/dmap/` 하위에서 최신 버전 디렉토리를 탐색
-2. 해당 디렉토리의 절대 경로를 `{DMAP_PLUGIN_DIR}`에 바인딩
-3. 이후 모든 `{DMAP_PLUGIN_DIR}/resources/...` 경로를 절대 경로로 치환하여 파일을 읽음
-4. 현재 프로젝트의 CLAUDE.md에 {CLAUDE_RUNTIME}과 {DMAP_PLUGIN_DIR}을 기록하여 이후 중복 계산 안하게 함     
-   - CLAUDE_RUNTIME: Claude Code | Claude CoWork
-   - DMAP_PLUGIN_DIR: '1번에서 결정한 절대경로'
-
 ## {플러그인명} 플러그인
 `@{스킬명}` 입력 시 해당 스킬(`/{플러그인명}:{스킬명}`)을 즉시 실행함.
 
@@ -317,6 +307,11 @@ DMAP 표준에 맞춰 플러그인의 전체 구조 설계.
 - `{style 정보}` = `persona.style` (첫 줄만 요약)
 - `{background 정보}` = `persona.background` (첫 줄만 요약)
 
+## 플러그인 변수 설정 
+- CLAUDE_RUNTIME: {CLAUDE_RUNTIME}
+- DMAP_PLUGIN_DIR: {DMAP_PLUGIN_DIR}
+- PLUGIN_DIR: {PLUGIN_DIR}
+- PLUGIN_NAME: {PLUGIN_NAME}
 ---
 
 ### Phase 5: 플러그인 디렉토리 접근 권한 셋팅 
