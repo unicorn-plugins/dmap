@@ -140,9 +140,7 @@ DMAP 표준에 맞춰 플러그인의 전체 구조 설계.
 | Gateway 설정 (티어·도구·액션 매핑) | `{DMAP_PLUGIN_DIR}/standards/plugin-standard-gateway.md` |
 | 디렉토리 구조 | `{DMAP_PLUGIN_DIR}/standards/plugin-standard.md` |
 
-**Step 3. 개발 계획 수립 (스킬 부스팅)**
-
-`/oh-my-claudecode:ralplan` 스킬 부스팅 패턴을 적용하여 개발 계획서 작성.
+**Step 3. 개발 계획 수립**
 
 개발 계획서 포함 사항:
 - 공유자원 마켓플레이스에서 가져갈 자원 목록
