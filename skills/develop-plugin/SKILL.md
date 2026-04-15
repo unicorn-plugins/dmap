@@ -66,6 +66,8 @@ CLAUDE.md에서 아래 환경변수 로드함. 없으면 '/dmap:team-panner'를 
 
 ## 워크플로우
 
+(중요) 특별한 언급이 없는 경우 한글로 작성함   
+
 ### Phase 1: 요구사항 수집
 
 `{PLUGIN_DIR/output/team-plan-{PLUGIN_NAME}.md}` 팀 기획서를 분석하고, 부족한 정보를 사용자에게 문의하여 수집함.

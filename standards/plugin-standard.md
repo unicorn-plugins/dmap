@@ -355,10 +355,12 @@ plugin.json:     { "name": "abra" }
 commands/setup.md
 ─────────────────
 ---
-description: Abra 플러그인 초기 설정
+description: {커맨드 설명}
 ---
 
-~/.claude/plugins/cache/{marketplace-name}/{plugin-name}/ 하위 최신 버전 디렉토리의 skills/setup/SKILL.md 파일을 읽고 실행하세요.
+1. 현재 작업 중인 프로젝트의 `CLAUDE.md` 파일을 "view_file" 등으로 꼼꼼히 읽으세요.
+2. 파일에서 `DMAP_PLUGIN_DIR`의 위치를 파악할 뿐만 아니라, 그 안에 적힌 팀 행동원칙, 대화 가이드, 정직한 보고 등 "모든 프로젝트 지침"을 이번 작업 전체에 걸쳐 우선적으로 엄격히 준수하세요.
+3. 현재 작업 중인 프로젝트 하위의 `skills/{skill-name}/SKILL.md` 파일을 읽고 지시사항을 실행하세요.
 ```
 
 ### 충돌 해소 우선순위

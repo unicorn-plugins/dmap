@@ -74,6 +74,8 @@ AI가 에이전트 구성 힌트와 참고 공유 자원을 자동 분석/추천
 - No: 플러그인 프로젝트 디렉토리를 생성하고 그 디렉토리로 이동하여 {CLAUDE_RUNTIME}을 수행하도록 안내 
 
 #### {DMAP_PLUGIN_DIR} 변수 설정
+`{PLUGIN_DIR}/CLAUDE.md` 파일에 `{DMAP_PLUGIN_DIR}` 변수가 설정되어 있는지 확인함.
+미설정 시 아래 수행 
 사용자에게 DMAP 플러그인 디렉토리 경로를 입력받아 `{PLUGIN_DIR}/CLAUDE.md`의 `{DMAP_PLUGIN_DIR}` 변수에 설정합니다. 
 <!--ASK_USER-->
 {"title":"DMAP 플러그인 디렉토리","questions":[
