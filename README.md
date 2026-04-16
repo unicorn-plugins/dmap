@@ -164,11 +164,6 @@ cd dmap
 claude plugin marketplace add ./
 claude plugin install dmap@dmap
 ```
-
-초기 설정: Claude Code 실행 후 
-```
-/dmap:setup 
-```
   
 ### Claude Code에서 사용
 
