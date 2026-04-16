@@ -772,7 +772,7 @@ export async function executeSkill(
 
   // Enrich plugin agent guide with usage example for skill context
   const pluginAgentGuide = pluginAgentCount > 0
-    ? basePluginGuide.replace('Use the full FQN as subagent_type.', `Use the full FQN as subagent_type (e.g., Task(subagent_type="${Object.keys(allAgents)[0] || 'scope:agent:agent'}", model="sonnet", prompt="...")).`)
+    ? basePluginGuide.replace('Use the full FQN as subagent_type.', `Use the full FQN as subagent_type (e.g., Agent(subagent_type="${Object.keys(allAgents)[0] || 'scope:agent:agent'}", model="sonnet", prompt="...")).`)
     : '';
 
   // Build available skill list for relevance check instruction

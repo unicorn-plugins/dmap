@@ -441,12 +441,12 @@ agents/
   1. agents/{agent-name}/ 디렉토리 탐색
   2. AGENT.md + agentcard.yaml + tools.yaml 로드
   3. tier → runtime-mapping.yaml로 모델 매핑
-  4. Task(subagent_type=FQN, model=매핑된모델, prompt=AGENT.md) 호출
+  4. Agent(subagent_type=FQN, model=매핑된모델, prompt=AGENT.md) 호출
 ```
 
 ```python
 # 위임형 스킬에서 에이전트 호출 예시
-Task(
+Agent(
     subagent_type="abra:architect:architect",
     model="opus",        # tier: HIGH → runtime-mapping.yaml에서 매핑
     prompt="시스템 아키텍처를 분석해주세요..."
