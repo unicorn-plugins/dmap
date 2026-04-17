@@ -328,6 +328,7 @@ CLAUDE.md에서 아래 환경변수 로드함. 없으면 '/dmap:team-panner'를 
 공통 표준 `{DMAP_PLUGIN_DIR}/standards/plugin-standard.md`와  
 Gateway 표준 `{DMAP_PLUGIN_DIR}/standards/plugin-standard-gateway.md`를 반드시 준수하여   
 추상 선언과 구체 매핑을 연결하는 Gateway 파일 생성.
+(중요) 'tier_mapping:'의 모델명은 **플러그인 생성 시점의 최신 버전**을 검색하여 지정 
 
 | 파일 | 내용 |
 |------|------|

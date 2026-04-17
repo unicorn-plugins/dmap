@@ -235,9 +235,9 @@ my-plugin/
 tier_mapping:
   default:                             # 전역 기본값
     HEAVY:
-      model: "claude-opus-4-6"
+      model: "claude-opus-4-7"
     HIGH:
-      model: "claude-opus-4-6"
+      model: "claude-opus-4-7"
     MEDIUM:
       model: "claude-sonnet-4-5"
     LOW:
@@ -247,17 +247,17 @@ tier_mapping:
       model: "claude-sonnet-4-5"       # 디자인은 sonnet으로 충분
   scientist:
     HIGH:
-      model: "claude-opus-4-6"         # 분석은 반드시 opus
+      model: "claude-opus-4-7"         # 분석은 반드시 opus
   scenario-analyst:                    # 세부역할별 예외 (중첩 구조 — 신규)
     HIGH:
-      model: "claude-opus-4-6"        # 에이전트 루트 기본값
+      model: "claude-opus-4-7"        # 에이전트 루트 기본값
     sub_roles:
       requirements-analysis:
         HIGH:
           model: "claude-sonnet-4-5"   # 요구사항 분석은 sonnet으로 충분
       scenario-generation:
         HIGH:
-          model: "claude-opus-4-6"     # 시나리오 생성은 opus 필요
+          model: "claude-opus-4-7"     # 시나리오 생성은 opus 필요
 
 # ─────────────────────────────────────────────
 # 추상 도구명 → 실제 도구 매핑
@@ -320,7 +320,7 @@ action_mapping:
 - 에이전트별 매핑이 있으면 default보다 우선 적용
 - 각 티어는 `model`만 정의 — 예산(budget)은 런타임이 자체 관리
 - 티어는 LLM 모델 등급 선언 — Gateway가 실제 모델명으로 매핑
-- 모델명은 **작성 시점의 최신 버전**을 사용 — 신규 모델 출시 시 이 파일만 갱신하면 전체 에이전트에 반영
+- (중요)모델명은 **플러그인 생성 시점의 최신 버전**을 검색하여 지정   
 
 **세부역할별 매핑** (sub_roles가 있는 에이전트):
 - 에이전트 키 하위에 `sub_roles` 키를 추가하고, 그 안에 세부역할명별 티어 매핑을 기술
@@ -423,9 +423,9 @@ custom_tools:
 tier_mapping:
   default:
     HEAVY:
-      model: "claude-opus-4-6"
+      model: "claude-opus-4-7"
     HIGH:
-      model: "claude-opus-4-6"
+      model: "claude-opus-4-7"
     MEDIUM:
       model: "claude-sonnet-4-5"
     LOW:
