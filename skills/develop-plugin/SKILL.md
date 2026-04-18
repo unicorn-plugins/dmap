@@ -541,6 +541,7 @@ description: {스킬 설명}
 - PLUGIN_NAME: 생성할 플러그인 이름
 
 ## Advisor 활용 규칙
+- Advisor 모델은 Opus 가장 최신 버전으로 설정  
 - 실제 작업을 시작하기 전에 먼저 Advisor를 호출
 - 작업 진행 중 Advisor의 자문이 필요하면 호출. 단, 최대 3번까지만 호출
 - 작업 완료 후 한번 더 Advisor를 호출
