@@ -139,7 +139,7 @@ claude plugin install abra@abra
 
 ## 사용법
 
-### 슬래시 명령
+### 슬래시 명령: 플러그인 설치 후 사용 가능  
 
 | 명령 | 설명 |
 |------|------|
@@ -151,6 +151,18 @@ claude plugin install abra@abra
 | `/abra:dev-plan` | 개발계획서 작성 |
 | `/abra:develop` | AI Agent 개발 및 배포 |
 
+### @ 명령: 플러그인 설치 없이 플러그인 디렉토리에서 바로 사용 가능  
+
+| 명령 | 설명 |
+|------|------|
+| `@dify-setup` | Dify Docker 환경 구축 |
+| `@setup` | 플러그인 초기 설정 (.env, 가상환경, 연결 테스트) |
+| `@scenario` | 요구사항 시나리오 생성 및 선택 |
+| `@dsl-generate` | Dify DSL 자동 생성 |
+| `@prototype` | Dify 프로토타이핑 자동화 |
+| `@dev-plan` | 개발계획서 작성 |
+| `@develop` | AI Agent 개발 및 배포 |
+  
 ### 사용 예시
 
 ```
