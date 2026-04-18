@@ -539,6 +539,13 @@ description: {스킬 설명}
 - DMAP_PLUGIN_DIR: DMAP 플러그인의 루트 절대 경로 
 - PLUGIN_DIR: 생성할 플러그인의 루트 절대 경로 
 - PLUGIN_NAME: 생성할 플러그인 이름
+
+## Advisor 활용 규칙
+- 실제 작업을 시작하기 전에 먼저 Advisor를 호출
+- 작업 진행 중 Advisor의 자문이 필요하면 호출. 단, 최대 3번까지만 호출
+- 작업 완료 후 한번 더 Advisor를 호출
+- Advisor의 응답은 최대 200자를 초과하지 않게 함 
+
 ```
 
 ````
