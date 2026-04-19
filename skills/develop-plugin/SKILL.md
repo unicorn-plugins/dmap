@@ -570,26 +570,7 @@ description: {스킬 설명}
 
 ---
 
-### Phase 5: DMAP 플러그인 디렉토리 접근 권한 셋팅 
-플러그인 디렉토리에 대한 에이전트의 Read/Write/Edit/Bash 권한을 설정하여 개발 및 검증 과정에서 파일 생성/수정/실행 가능하도록 함.
-`{PLUGIN_DIR}/.claude/settings.local.json` 파일의 "permissions" 섹션에 아래 권한 추가:  
-```
-"permissions": {
-  "allow": [
-    "Read({DMAP_PLUGIN_DIR}/**)",
-    "Write({DMAP_PLUGIN_DIR}/**)",
-    "Edit({DMAP_PLUGIN_DIR}/**)",
-    "Bash(python {DMAP_PLUGIN_DIR}/**)",
-    "Bash(python3 {DMAP_PLUGIN_DIR}/**)"
-  ],
-  "additionalDirectories": [
-    "{DMAP_PLUGIN_DIR}"
-  ]
-}
-```
----
-
-### Phase 6: 검증 및 완료
+### Phase 5: 검증 및 완료
 
 개발된 플러그인이 DMAP 표준을 준수하는지 최종 검증.
 
