@@ -329,15 +329,157 @@ const fs12 = (size) => {
 → 1.0인치 이상이면 NG → 행 높이/폰트 크기 확대 필요
 ```
 
-#### 6-3. 생성 후 자가 검증 체크리스트
+#### 6-3. Shape 사용 규칙
+
+도형 생성 시 반드시 `pptx.shapes` 상수 사용. `ShapeType` 객체 직접 import 금지.
+
+```javascript
+// ✅ CORRECT
+slide.addShape(pptx.shapes.RECTANGLE, { x: 0, y: 0, w: 10, h: 1 });
+slide.addShape(pptx.shapes.ROUNDED_RECTANGLE, { x: 0, y: 0, w: 5, h: 1, rectRadius: 0.1 });
+
+// ❌ WRONG
+import { ShapeType } from "pptxgenjs";
+slide.addShape(ShapeType.rect, ...);
+```
+
+**규칙**: 도형은 `pptx.shapes.*`로만 참조. 자주 쓰는 항목:
+- `pptx.shapes.RECTANGLE` — 콘텐츠 박스, 카드 배경
+- `pptx.shapes.ROUNDED_RECTANGLE` — 배지, 라운드 카드
+- `pptx.shapes.LINE` — 구분선
+- `pptx.shapes.RIGHT_TRIANGLE` — 화살표 등 보조 도형
+
+#### 6-4. 슬라이드 크기 정의
+
+스크립트 시작부에서 반드시 `defineLayout("CUSTOM")` 사용:
+
+```javascript
+const pptx = new pptxgen();
+pptx.defineLayout({ name: "CUSTOM", width: 16, height: 9 });
+pptx.layout = "CUSTOM";
+```
+
+**규칙**: 16" × 9" (1152 × 648pt) 고정. `LAYOUT_WIDE` 등 프리셋 사용 금지.
+
+#### 6-5. 슬라이드 함수 패턴
+
+각 슬라이드는 `async function createSlideXX(pptx)` 형태로 분리:
+
+```javascript
+async function createSlide01(pptx) {
+  const slide = pptx.addSlide({ masterName: "MASTER" });
+  // ... 슬라이드 콘텐츠 작성
+  return slide;
+}
+```
+
+**규칙**:
+- 슬라이드 함수는 반드시 `async`로 선언 (이미지 로드 비동기 처리)
+- 함수명은 `createSlide` + 2자리 숫자(01, 02, …)
+- 한 함수에 한 슬라이드만 작성
+- `main()`에서 순차 호출
+
+#### 6-6. 테이블 작성 규칙
+
+행/열 구조 데이터는 반드시 `slide.addTable()` 사용. `addShape` + `addText`로 셀 수동 그리기 금지.
+
+```javascript
+// ✅ CORRECT
+slide.addTable(
+  [
+    [{ text: "헤더1", options: { bold: true, fill: "059669", color: "FFFFFF" } }, { text: "헤더2", options: { bold: true } }],
+    ["셀1", "셀2"],
+  ],
+  { x: 0.5, y: 1.0, w: 15, colW: [3, 12], fontSize: fs12(12), fontFace: "Pretendard" }
+);
+
+// ❌ WRONG — 수동 셀 그리기
+slide.addShape(pptx.shapes.RECTANGLE, { x: 0.5, y: 1.0, w: 3, h: 0.5 });
+slide.addText("헤더1", { x: 0.5, y: 1.0, w: 3, h: 0.5 });
+```
+
+**규칙**:
+- 셀 옵션은 `{ text, options }` 객체로 지정
+- `colW` 배열로 열 너비 명시
+- 테이블 폰트도 `fs12()` 헬퍼 경유
+
+#### 6-7. 이미지 임베딩 검증
+
+스크립트에서 이미지 추가 전 파일 존재 여부 확인:
+
+```javascript
+const fs = require("fs");
+function addImage(slide, imagePath, opts) {
+  if (!fs.existsSync(imagePath)) {
+    throw new Error(`이미지 파일 없음: ${imagePath}`);
+  }
+  slide.addImage({ path: imagePath, ...opts });
+}
+```
+
+**규칙**:
+- 이미지 경로는 빌드 스크립트 기준 상대 경로 또는 절대 경로
+- 빌드 시점에 파일 존재 검증 후 임베딩
+- 마크다운 스크립트의 `![](images/foo.png)` 경로와 일치
+
+#### 6-8. 한글 폰트 처리
+
+모든 텍스트의 `fontFace`는 `"Pretendard"`로 통일:
+
+```javascript
+const FONT = "Pretendard";
+{ text: "안녕하세요", options: { fontFace: FONT, fontSize: fs12(14) } }
+```
+
+**규칙**: `Calibri`, `Arial`, `맑은 고딕` 등 직접 지정 금지. 시스템 폴백은 PPT 뷰어가 처리.
+
+#### 6-9. 빌드 스크립트 진입점
+
+빌드 스크립트는 단일 `main()` 함수에서 시작하고 에러 시 종료 코드 1로 종료:
+
+```javascript
+async function main() {
+  const pptx = new pptxgen();
+  pptx.defineLayout({ name: "CUSTOM", width: 16, height: 9 });
+  pptx.layout = "CUSTOM";
+
+  // 마스터 슬라이드 정의
+  pptx.defineSlideMaster({ title: "MASTER", /* ... */ });
+
+  // 슬라이드 생성 (순차)
+  for (const fn of [createSlide01, createSlide02 /* ... */]) {
+    await fn(pptx);
+  }
+
+  await pptx.writeFile({ fileName: "courseware.pptx" });
+  console.log("✅ PPT 생성 완료");
+}
+
+main().catch((e) => {
+  console.error("❌ PPT 생성 실패:", e);
+  process.exit(1);
+});
+```
+
+**규칙**:
+- 진입점은 `main().catch(...)` 패턴
+- 실패 시 `process.exit(1)`로 종료 (CI/검증에서 실패 인식)
+- 성공 시 콘솔 로그 출력
+
+#### 6-10. 생성 후 자가 검증 체크리스트
 
 PPT 파일 생성 후, 다음 항목을 **반드시 확인**하고 통과해야 완료로 보고:
 
 | # | 검증 항목 | 방법 | 합격 기준 |
 |---|----------|------|----------|
-| 1 | 최소 폰트 크기 | 스크립트 내 모든 fontSize 값 확인 | 12pt 이상 |
+| 1 | 최소 폰트 크기 | 스크립트 내 모든 fontSize 값 확인 | 12pt 이상 (fs12 경유) |
 | 2 | 하단 여백 | 최하단 콘텐츠 ~ 푸터 간 거리 계산 | 1.0인치 미만 |
 | 3 | 콘텐츠 누락 | markitdown으로 텍스트 추출 후 원본 대조 | 모든 항목 포함 |
 | 4 | 이미지 임베딩 | 스크립트의 이미지 경로 존재 여부 | 파일 존재 확인 |
 | 5 | 슬라이드 크기 | 1152 × 648pt (16" × 9") | 정확히 일치 |
-| 6 | 폰트 | Pretendard 사용 | Calibri/Arial 금지 |
+| 6 | 폰트 | Pretendard 사용 | Calibri/Arial/맑은 고딕 금지 |
+| 7 | Shape 참조 | `pptx.shapes.*` 사용 | `ShapeType` 직접 import 금지 |
+| 8 | 슬라이드 함수 | `async function createSlideXX` 패턴 | 동기 함수·인라인 작성 금지 |
+| 9 | 표 작성 | `slide.addTable()` 사용 | 셀 수동 그리기 금지 |
+| 10 | 빌드 종료 코드 | `node build.js` 실행 후 `$?` 확인 | 0 (성공) |
+| 11 | 출력 파일 | `.pptx` 파일 존재 및 크기 | 0바이트 초과 |
