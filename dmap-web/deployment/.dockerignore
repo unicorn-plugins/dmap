@@ -1,8 +1,0 @@
-node_modules/
-dist/
-.env
-*.tsbuildinfo
-.git/
-.omc/
-.claude/
-.dmap/
