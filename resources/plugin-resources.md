@@ -36,7 +36,14 @@
 | github | github-token-guide | Personal Access Token (PAT) 생성 가이드 (권한 설정, 보안) | [상세](guides/github/github-token-guide.md) |
 | github | github-organization-guide | GitHub Organization 생성 가이드 (팀 관리, 멤버 초대) | [상세](guides/github/github-organization-guide.md) |
 | plugin | resource-contribution-guide | 리소스 마켓플레이스에 가이드, 템플릿, 샘플, 커스텀 도구를 추가하는 방법 안내 | [상세](guides/plugin/resource-contribution-guide.md) |
-| docs | ppt-guide | PPT 슬라이드 작성 가이드 (컬러 팔레트, 타이포그래피, 레이아웃, 컴포넌트 스타일, 디자인 규칙) | [상세](guides/docs/ppt-guide.md) |
+| office | pptx-build-guide | pptxgenjs 기반 PPT 작성 가이드 (스타일+빌드규칙 통합, 컬러·타이포·패턴 A~F + fs12 등 검증 규칙 11종) | [상세](guides/office/pptx-build-guide.md) |
+| office | xlsx-build-guide | openpyxl 기반 XLSX 빌드 가이드 (입력 데이터→코드, 셀/병합/스타일/수식, 자가검증 9항) | [상세](guides/office/xlsx-build-guide.md) |
+| office | docx-build-guide | python-docx 기반 DOCX 빌드 가이드 (입력 본문→코드, 헤딩/표/이미지/한글폰트, 자가검증 9항) | [상세](guides/office/docx-build-guide.md) |
+
+> **MS-Office 산출물 패턴 안내**:
+> - **pptx**: `pptx-spec-writer` 에이전트(시각 명세 .md) + 빌더 스킬(generate-pptx) 2단계 패턴 — 시각 레이아웃 매핑이 필요하므로 명세 단계 별도 운영
+> - **xlsx / docx**: 빌더 스킬(generate-xlsx, generate-docx) 단독 1단계 패턴 — 입력 데이터/본문이 곧 명세이므로 spec-writer 에이전트 미사용
+> - 외부 변환 스킬(`anthropic-skills:pptx`/`xlsx` 등) 의존 없음. 오케스트레이터(Claude Code)가 `Write + Bash`로 직접 빌드 → Cursor·Cowork 등 모든 런타임 호환
 
 [Top](#리소스-마켓플레이스)
 
@@ -51,6 +58,10 @@
 | general | develop | 개발 계획서 기반 Agent 개발 프롬프트 | [상세](templates/general/develop.md) |
 | general | team-plan-template | AI 팀 기획서 자동 생성 프롬프트 | [상세](templates/general/team-plan-template.md) |
 | plugin | README-plugin-template | 플러그인 README.md 스켈레톤 | [상세](templates/plugin/README-plugin-template.md) |
+| office | pptx-spec-writer-AGENT | PPT 시각 명세 작성 에이전트 패키지 스켈레톤 (pptx 전용) | [상세](templates/office/pptx-spec-writer-AGENT.md) |
+| office | pptx-builder-SKILL | PPT 빌더 스킬 스켈레톤 (spec-agent 위임 + Build/Verify Phase) | [상세](templates/office/pptx-builder-SKILL.md) |
+| office | xlsx-builder-SKILL | XLSX 빌더 스킬 스켈레톤 (1단계 — 입력 데이터→직접 빌드) | [상세](templates/office/xlsx-builder-SKILL.md) |
+| office | docx-builder-SKILL | DOCX 빌더 스킬 스켈레톤 (1단계 — 입력 본문→직접 빌드) | [상세](templates/office/docx-builder-SKILL.md) |
 
 [Top](#리소스-마켓플레이스)
 
@@ -61,6 +72,9 @@
 | 2차 분류 | 샘플명 | 설명 | 상세 |
 |---------|-------|------|------|
 | plugin | README | 플러그인 README.md 작성 예시 (Abra 플러그인 기준) | [상세](samples/plugin/README.md) |
+| office | pptx-build-sample | pptxgenjs 기반 PPT 빌드 샘플 (4슬라이드, 검증 규칙 11항 준수) | [상세](samples/office/pptx-build-sample.js) |
+| office | xlsx-build-sample | openpyxl 기반 XLSX 빌드 샘플 (2시트, 합계 수식·인쇄 설정) | [상세](samples/office/xlsx-build-sample.py) |
+| office | docx-build-sample | python-docx 기반 DOCX 빌드 샘플 (헤딩·표·강조박스·페이지 나눔) | [상세](samples/office/docx-build-sample.py) |
 
 [Top](#리소스-마켓플레이스)
 

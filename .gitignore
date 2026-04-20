@@ -55,6 +55,11 @@ nul
 *.sqlite
 develop-agent/examples/graphrag/cache/
 
+# Office 샘플 빌드 산출물 (소스만 보관, 산출물은 검증 시 재생성)
+resources/samples/office/sample.pptx
+resources/samples/office/sample.xlsx
+resources/samples/office/sample.docx
+
 .claude
 .omc
 .dmap

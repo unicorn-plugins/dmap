@@ -100,6 +100,33 @@ custom_tools:
     description: "코드 복잡도 분석 (순환 복잡도, 인지 복잡도)"
     source: tools/complexity.py        # gateway/ 기준 상대 경로
     required: false
+
+# ─────────────────────────────────────────────
+# 런타임 의존성 — 플러그인 스킬·도구가 사용하는 외부 라이브러리
+#   (예: Office 산출물 생성 플러그인의 pptxgenjs/openpyxl/python-docx)
+#   MCP/LSP/custom_tools 어디에도 부합하지 않는 단순 라이브러리 의존성
+# ─────────────────────────────────────────────
+runtime_dependencies:
+  - name: pptxgenjs                    # 라이브러리 식별자
+    description: "PPT 빌드용 Node.js 라이브러리"
+    runtime: node                      # 실행 환경: node | python | ...
+    install: "npm install pptxgenjs"   # 설치 명령
+    check: "node -e \"require('pptxgenjs')\""  # 설치 검증 명령
+    required: true                     # 필수 여부
+
+  - name: openpyxl
+    description: "XLSX 빌드용 Python 라이브러리"
+    runtime: python
+    install: "pip install openpyxl"
+    check: "python -c \"import openpyxl\""
+    required: true
+
+  - name: python-docx
+    description: "DOCX 빌드용 Python 라이브러리"
+    runtime: python
+    install: "pip install python-docx"
+    check: "python -c \"import docx\""
+    required: true
 ```
 
 ### 필드 설명
@@ -119,6 +146,12 @@ custom_tools:
 | **custom_tools** | `name` | ✅ | 도구 식별자 |
 | | `description` | 선택 | 도구의 목적·용도 설명. Setup 스킬이 설치 시 참고 |
 | | `source` | ✅ | 소스 파일 경로 (gateway/ 기준) |
+| | `required` | 권장 | 필수 여부 |
+| **runtime_dependencies** | `name` | ✅ | 라이브러리 식별자 (npm/pip 패키지명과 일치) |
+| | `description` | 선택 | 라이브러리 용도 설명. Setup 스킬이 설치 시 참고 |
+| | `runtime` | ✅ | 실행 환경 (`node` / `python` 등). 사전 요구 런타임 식별 |
+| | `install` | ✅ | 설치 명령 (런타임이 실행) |
+| | `check` | 권장 | 설치 검증 명령 (성공 시 이미 설치됨 — 중복 설치 방지) |
 | | `required` | 권장 | 필수 여부 |
 
 > **작성 가이드**:
@@ -199,6 +232,7 @@ my-plugin/
    - MCP: 런타임의 MCP 등록 명령 (예: `claude mcp add-json`)
    - LSP: `install` 필드의 명령 실행
    - 커스텀 도구: `source` 파일 확인
+   - **runtime 의존성 라이브러리**: `runtime` 필드로 사전 요구 환경(node/python) 확인 후 `install` 명령 실행
 4. `required: true` 항목 실패 시 설치 중단 및 사용자 안내
 5. 런타임 상주 파일에 플러그인 활성화 라우팅 테이블 추가
    - 사용자에게 적용 범위를 질문하여 대상 파일 결정:
@@ -414,6 +448,15 @@ custom_tools:
     description: "<도구 목적·용도>"   # 선택
     source: tools/<파일명>
     required: false
+
+# 런타임 의존성 (외부 라이브러리)
+runtime_dependencies:
+  - name: <라이브러리명>
+    description: "<용도>"             # 선택
+    runtime: node                    # node | python | ...
+    install: "<설치 명령>"
+    check: "<검증 명령>"               # 권장
+    required: true
 ```
 
 ### runtime-mapping.yaml 템플릿
@@ -475,6 +518,7 @@ action_mapping:
 | 3 | tier_mapping에 default 전역 기본값 포함 (HEAVY/HIGH/MEDIUM/LOW), 각 티어에 model 정의 |
 | 4 | setup 스킬이 install.yaml을 참조하여 설치 수행 |
 | 5 | MCP 서버 config는 런타임 중립적 JSON 포맷 |
+| 6 | 외부 라이브러리(npm/pip 패키지)는 `runtime_dependencies` 섹션에 선언 (예: Office 산출물 생성 플러그인의 pptxgenjs/openpyxl/python-docx). custom_tools(플러그인 자체 구현)와 구분 |
 
 [Top](#gateway-표준)
 
@@ -507,5 +551,7 @@ action_mapping:
 - [ ] tier_mapping 모델명이 작성 시점의 최신 버전임
 - [ ] 세부역할별 tier_mapping이 있는 경우: `sub_roles` 중첩 구조 사용 (도트 표기법 금지)
 - [ ] 세부역할별 tier_mapping이 있는 경우: 해당 에이전트의 agentcard.yaml에 sub_roles가 정의되어 있는지 확인
+- [ ] 외부 라이브러리 의존성이 있는 경우(예: Office 산출물 생성 플러그인): `runtime_dependencies` 섹션에 선언, `runtime`/`install`/`check` 필드 구성
+- [ ] `runtime_dependencies` 항목이 custom_tools와 혼동되지 않음 (라이브러리 vs 플러그인 자체 구현 도구)
 
 [Top](#gateway-표준)

@@ -280,6 +280,38 @@ AI가 에이전트 구성 힌트와 참고 공유 자원을 자동 분석/추천
 - "해당 자원 없음 -- 플러그인 개발 시 직접 작성 필요" 안내
 - 유사한 자원이 있으면 참고용으로 제안
 
+##### Step4-2-A. MS-Office 산출물 형식 감지·자동 매칭
+
+`## 핵심기능`, `## 사용자 플로우`, 산출물·결과물 항목을 스캔하여
+다음 키워드가 1개 이상 포함되면 office 카테고리 자원을 자동 등록함.
+
+| 형식 | 감지 키워드 |
+|------|-------------|
+| pptx | "PPT", "프리젠테이션", "파워포인트", "발표 자료", "슬라이드", ".pptx", "PowerPoint" |
+| xlsx | "엑셀", "스프레드시트", "강의계획서", "보고 양식", ".xlsx", "Excel" |
+| docx | "워드", "보고서", "문서", "제안서", ".docx", "Word" |
+
+**감지된 형식별 자동 매칭** (공유자원 매핑 테이블에 자동 추가):
+
+| 감지 형식 | 가이드 | 템플릿 | 샘플 |
+|-----------|--------|--------|------|
+| pptx | pptx-build-guide (스타일+빌드규칙 통합) | pptx-spec-writer-AGENT, pptx-builder-SKILL | pptx-build-sample |
+| xlsx | xlsx-build-guide | xlsx-builder-SKILL | xlsx-build-sample |
+| docx | docx-build-guide | docx-builder-SKILL | docx-build-sample |
+
+**에이전트 구성 힌트 자동 보강**:
+- **pptx 감지 시**: 에이전트 구성에 `pptx-spec-writer` 역할 자동 추가 (시각 명세 작성 전담, 티어 MEDIUM)
+- **xlsx/docx**: 별도 spec-writer 에이전트 추가 안 함 (빌더 스킬이 입력 직수신)
+
+**감지 결과 사용자 보고 (필수)**:
+> "MS-Office 산출물 감지: {형식 목록}. 형식별 표준 패턴(pptx 2단계 / xlsx·docx 1단계)에 따라
+> 가이드·템플릿·샘플 N건을 공유자원에 자동 등록함. develop-plugin이 이 매핑을 그대로 활용하여
+> 빌더 스킬과 (해당 시) spec-writer 에이전트를 구성함."
+
+**감지 안 됨 처리**:
+- 키워드 미감지 시 본 단계 건너뜀 (무동작, 기존 Step4-2 결과 그대로)
+- 사용자가 수동으로 office 산출물 의도를 표현하면 AskUserQuestion으로 확인 후 매핑 추가 가능
+
 #### Step4-3. 기획서 초안 생성
 
 수집된 필수 항목 + 자동 완성된 선택 항목을 조합하여  
