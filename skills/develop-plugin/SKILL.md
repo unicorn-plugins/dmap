@@ -477,8 +477,27 @@ setup 스킬 권장 사항:
   2. 가이드 로드 (`{DMAP_PLUGIN_DIR}/resources/guides/office/{format}-build-guide.md`)
   3. Build script 작성 (Write 도구) — 가이드의 검증 규칙 항 모두 준수
   4. Build 실행 (Bash 도구)
-  5. 파일 존재·크기 검증 (실패 시 재시도 ≤3)
-  6. 사용자 보고 (절대 경로, 크기, 빌드 스크립트 경로)
+  5. 파일 존재·크기 검증 A — 빌드 확인 (실패 시 재시도 ≤3)
+  6. **pptx만** — 검증 B — PowerShell COM 시각적 검토:
+     - 아래 PS1 템플릿으로 `.temp/export-pptx.ps1`을 생성 후 슬라이드별 PNG 추출
+     ```powershell
+     $pptxPath = '<절대경로\{산출물}.pptx>'
+     $outDir   = '<절대경로\preview>'
+     if (-not (Test-Path $outDir)) { New-Item -ItemType Directory -Path $outDir | Out-Null }
+     Add-Type -AssemblyName Microsoft.Office.Interop.PowerPoint
+     $ppt  = New-Object -ComObject PowerPoint.Application
+     $pres = $ppt.Presentations.Open($pptxPath, 0, 0, 0)
+     foreach ($i in 1..$pres.Slides.Count) {
+         $pres.Slides.Item($i).Export("$outDir\slide-$i.png", 'PNG', 1600, 900)
+     }
+     $pres.Close(); $ppt.Quit()
+     ```
+     - PowerShell 실행 전 `Get-Process POWERPNT -ErrorAction SilentlyContinue | Stop-Process -Force`로 파일 잠금 해제
+     - 추출된 PNG를 Read 도구로 열어 레이아웃·이미지 비율·텍스트 잘림 시각 확인
+     - 이상 발견 시 build script 수정 → 재빌드 → 재검토 (최대 2회)
+     - **기존 이미지 파일(`images/` 폴더)은 절대 삭제하지 말 것 — 레이아웃·크기만 조정**
+     - 시각 검토 완료 후 임시 파일 정리: `Remove-Item '<preview경로>\*.png' -Force; Remove-Item '.temp\export-pptx.ps1' -Force`
+  7. 사용자 보고 (절대 경로, 크기, 빌드 스크립트 경로, 시각 검토 결과 요약)
 - 외부 변환 스킬(`anthropic-skills:pptx`/`xlsx` 등) 호출 금지 (모든 런타임 호환성 확보)
 
 help 스킬 작성 규칙:
@@ -526,9 +545,10 @@ description: {스킬 설명}
 ---
 
 
-### Phase 4: CLAUDE.md 생성 
+### Phase 4: AGENTS.md, CLAUDE.md 생성 
 
-`{PLUGIN_DIR/output/team-plan-{PLUGIN_NAME}.md}` 파일과 을 기반으로 `{PLUGIN_DIR}/CLAUDE.md` 생성
+#### Step 1. AGENTS.md 생성
+`{PLUGIN_DIR/output/team-plan-{PLUGIN_NAME}.md}` 파일과 을 기반으로 `{PLUGIN_DIR}/AGENTS.md` 생성
 
 **CLAUDE.md 구조:**
 
@@ -655,6 +675,14 @@ description: {스킬 설명}
 - `{style 정보}` = `persona.style` (첫 줄만 요약)
 - `{background 정보}` = `persona.background` (첫 줄만 요약)
 
+
+#### Step 2. CLAUDE.md 생성
+`{PLUGIN_DIR}/CLAUDE.md`을 아래 내용을 제일 상단에 삽입하여 생성
+```
+@AGENTS.md
+
+```
+
 ---
 
 ### Phase 5: 검증 및 완료
@@ -680,6 +708,7 @@ description: {스킬 설명}
 | README | 필수 섹션(개요, 설치, 업그레이드, 사용법, 요구사항, 라이선스) 포함 |
 | Office 산출물 생성 패턴 (해당 시) | pptx는 spec-writer 에이전트 + 빌더 스킬 2단계 패턴, xlsx/docx는 빌더 스킬 단독 1단계 패턴 준수 |
 | Office 빌드 검증 규칙 (해당 시) | 빌더 스킬 SKILL.md가 가이드 검증 규칙(pptx 6절 11항 / xlsx 4절 9항 / docx 4절 9항) 명시 적용 |
+| Office pptx 시각적 검토 규칙 (pptx 해당 시) | 빌더 스킬 SKILL.md에 PowerShell COM 시각적 검토 Phase 포함 (PNG 추출 → 레이아웃 확인 → 재빌드 ≤2회), `images/` 기존 이미지 삭제 금지 규칙 명시 |
 | Office 런타임 의존성 (해당 시) | `gateway/install.yaml`의 `runtime_dependencies` 섹션에 형식별 빌드 라이브러리(`pptxgenjs`/`openpyxl`/`python-docx`) 등록, setup 스킬이 이를 참조 |
 | Office 외부 변환 스킬 의존 금지 | 빌더 스킬 SKILL.md에 `anthropic-skills:pptx`/`xlsx` 등 외부 호출 없음 (모든 런타임 호환성 확보) |
 
