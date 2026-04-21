@@ -13,6 +13,11 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from typing import Optional
+from pathlib import Path
+from dotenv import load_dotenv
+
+env_path = Path(__file__).resolve().parent / ".env"
+load_dotenv(env_path)
 
 
 def send_email(
@@ -77,7 +82,40 @@ def send_email(
 
 
 def main():
-    """CLI 진입점"""
+    """CLI 진입점
+
+    ============================================================
+    [Gmail 사전 설정 가이드]
+    ============================================================
+
+    1. Google 계정 2단계 인증 활성화
+       - https://myaccount.google.com/security 접속
+       - '2단계 인증' 클릭 → 활성화
+
+    2. Gmail 앱 비밀번호 생성
+       - https://myaccount.google.com/apppasswords 접속
+       - '앱 선택' → '메일', '기기 선택' → '기타(직접 입력)' → 이름 입력
+       - 생성된 16자리 앱 비밀번호 복사 (공백 제거 후 사용)
+
+    3. Gmail SMTP 설정 확인
+       - Gmail → 설정(톱니바퀴) → '모든 설정 보기'
+       - '전달 및 POP/IMAP' 탭 → IMAP 사용 → '변경사항 저장'
+
+    4. .env 파일 생성 (이 파일과 같은 디렉토리)
+       --------------------------------------------------
+       SMTP_SERVER=smtp.gmail.com
+       SMTP_PORT=587
+       SMTP_USER=your-email@gmail.com
+       SMTP_PASSWORD=abcd efgh ijkl mnop   # 앱 비밀번호 (공백 포함 가능)
+       --------------------------------------------------
+
+    5. 의존 패키지 설치
+       pip install python-dotenv
+
+    6. 실행 예시
+       python email_sender.py receiver@example.com "제목" "본문 텍스트"
+    ============================================================
+    """
     if len(sys.argv) < 4:
         print("Usage: email_sender.py <to> <subject> <body_text> [<body_html>]")
         print("Environment variables: SMTP_SERVER, SMTP_PORT, SMTP_USER, SMTP_PASSWORD")
