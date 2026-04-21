@@ -39,6 +39,17 @@
 | office | pptx-build-guide | pptxgenjs 기반 PPT 작성 가이드 (스타일+빌드규칙 통합, 컬러·타이포·패턴 A~F + fs12 등 검증 규칙 11종) | [상세](guides/office/pptx-build-guide.md) |
 | office | xlsx-build-guide | openpyxl 기반 XLSX 빌드 가이드 (입력 데이터→코드, 셀/병합/스타일/수식, 자가검증 9항) | [상세](guides/office/xlsx-build-guide.md) |
 | office | docx-build-guide | python-docx 기반 DOCX 빌드 가이드 (입력 본문→코드, 헤딩/표/이미지/한글폰트, 자가검증 9항) | [상세](guides/office/docx-build-guide.md) |
+| ai/plan | problem-hypothesis-guide | AI 활용 문제가설 정의 가이드 (대표 현상문제 3개 · 5WHY 근본원인 · 비즈니스 가치) | [상세](guides/ai/plan/01-problem-hypothesis-guide.md) |
+| ai/plan | direction-setting-guide | 방향성 정의 가이드 (킹핀 문제 · Needs Statement · 자동화/증강/생성 카테고리) | [상세](guides/ai/plan/02-direction-setting-guide.md) |
+| ai/plan | ideation-guide | 아이디어 발상 가이드 (SCAMPER · Steal & Synthesize · AI 패턴 카드) | [상세](guides/ai/plan/03-ideation-guide.md) |
+| ai/plan | solution-selection-guide | 솔루션 선정 가이드 (B/F 투표 · 우선순위 매트릭스 · AI 실현 가능성 4요소) | [상세](guides/ai/plan/04-solution-selection-guide.md) |
+| ai/plan | event-storming-guide | 이벤트 스토밍 가이드 (PlantUML 시퀀스 · Bounded Context · AI 에이전트 Actor) | [상세](guides/ai/plan/05-event-storming-guide.md) |
+| ai/plan | user-stories-guide | 유저스토리 가이드 (UFR/AFR/NFR · Given-When-Then · LLM 검증 기준 AC) | [상세](guides/ai/plan/06-user-stories-guide.md) |
+| ai/tech-info | multimodal-ai | 멀티모달 AI 참조 (텍스트·이미지·음성·문서 입출력) | [상세](guides/ai/tech-info/01-multimodal-ai.md) |
+| ai/tech-info | langchain | Langchain 참조 (체인·메모리·Tool 바인딩) | [상세](guides/ai/tech-info/02-langchain.md) |
+| ai/tech-info | rag | RAG 참조 (청킹·인덱싱·검색·리랭킹) | [상세](guides/ai/tech-info/03-rag.md) |
+| ai/tech-info | mcp | MCP 참조 (외부 Tool/MCP 서버 연동) | [상세](guides/ai/tech-info/04-mcp.md) |
+| ai/tech-info | mas-langgraph | MAS & LangGraph 참조 (에이전트 토폴로지·노드/엣지/State) | [상세](guides/ai/tech-info/05-mas-langgraph.md) |
 
 > **MS-Office 산출물 패턴 안내**:
 > - **pptx**: `pptx-spec-writer` 에이전트(시각 명세 .md) + 빌더 스킬(generate-pptx) 2단계 패턴 — 시각 레이아웃 매핑이 필요하므로 명세 단계 별도 운영
