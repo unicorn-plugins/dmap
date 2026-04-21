@@ -36,6 +36,7 @@
 | github | github-token-guide | Personal Access Token (PAT) 생성 가이드 (권한 설정, 보안) | [상세](guides/github/github-token-guide.md) |
 | github | github-organization-guide | GitHub Organization 생성 가이드 (팀 관리, 멤버 초대) | [상세](guides/github/github-organization-guide.md) |
 | plugin | resource-contribution-guide | 리소스 마켓플레이스에 가이드, 템플릿, 샘플, 커스텀 도구를 추가하는 방법 안내 | [상세](guides/plugin/resource-contribution-guide.md) |
+| plugin | agent-runtime-adapters | 에이전트 SSOT(`agents/{name}/`)의 런타임별 포인터 스텁 생성·동기화 가이드 (Claude Code / Cursor / Codex / Antigravity) | [상세](guides/agent-runtime-adapters.md) |
 | office | pptx-build-guide | pptxgenjs 기반 PPT 작성 가이드 (스타일+빌드규칙 통합, 컬러·타이포·패턴 A~F + fs12 등 검증 규칙 11종) | [상세](guides/office/pptx-build-guide.md) |
 | office | xlsx-build-guide | openpyxl 기반 XLSX 빌드 가이드 (입력 데이터→코드, 셀/병합/스타일/수식, 자가검증 9항) | [상세](guides/office/xlsx-build-guide.md) |
 | office | docx-build-guide | python-docx 기반 DOCX 빌드 가이드 (입력 본문→코드, 헤딩/표/이미지/한글폰트, 자가검증 9항) | [상세](guides/office/docx-build-guide.md) |
@@ -73,6 +74,10 @@
 | office | pptx-builder-SKILL | PPT 빌더 스킬 스켈레톤 (spec-agent 위임 + Build/Verify Phase) | [상세](templates/office/pptx-builder-SKILL.md) |
 | office | xlsx-builder-SKILL | XLSX 빌더 스킬 스켈레톤 (1단계 — 입력 데이터→직접 빌드) | [상세](templates/office/xlsx-builder-SKILL.md) |
 | office | docx-builder-SKILL | DOCX 빌더 스킬 스켈레톤 (1단계 — 입력 본문→직접 빌드) | [상세](templates/office/docx-builder-SKILL.md) |
+| runtime-adapters | claude-code | Claude Code / CoWork 런타임 어댑터 스텁 템플릿 (Markdown + frontmatter) | [상세](templates/runtime-adapters/claude-code.md.tmpl) |
+| runtime-adapters | cursor | Cursor 런타임 어댑터 스텁 템플릿 (Markdown + frontmatter) | [상세](templates/runtime-adapters/cursor.md.tmpl) |
+| runtime-adapters | codex | Codex 런타임 어댑터 스텁 템플릿 (TOML + developer_instructions) | [상세](templates/runtime-adapters/codex.toml.tmpl) |
+| runtime-adapters | antigravity | Antigravity 런타임 어댑터 스텁 템플릿 (Markdown + Manager UI 수동 로드 안내) | [상세](templates/runtime-adapters/antigravity.md.tmpl) |
 
 [Top](#리소스-마켓플레이스)
 

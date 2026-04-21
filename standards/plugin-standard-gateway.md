@@ -172,7 +172,7 @@ install.yaml에 포함하지 않음. 이미 설치된 도구를 중복 등록하
 | File | `Read`, `Write`, `Edit`, `Glob`, `Grep` |
 | Shell | `Bash` |
 | Web | `WebSearch`, `WebFetch` |
-| Agent | `Task` |
+| Agent | `Agent` |
 | UI | `AskUserQuestion` |
 | Notebook | `NotebookEdit` |
 | Planning | `EnterPlanMode`, `ExitPlanMode` |
@@ -344,7 +344,7 @@ action_mapping:
   code_execute: ["Bash"]
   network_access: ["WebFetch", "WebSearch"]
   user_interact: ["AskUserQuestion"]
-  agent_delegate: ["Task"]
+  agent_delegate: ["Agent"]
 ```
 
 ### 작성 가이드: tier_mapping
@@ -502,7 +502,7 @@ action_mapping:
   code_execute: ["Bash"]
   network_access: ["WebFetch", "WebSearch"]
   user_interact: ["AskUserQuestion"]
-  agent_delegate: ["Task"]
+  agent_delegate: ["Agent"]
 ```
 
 [Top](#gateway-표준)

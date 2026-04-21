@@ -1,0 +1,17 @@
+# AUTO-GENERATED from agents/{name}/ by develop-plugin Step 4-A.
+# DO NOT EDIT. Edit SSOT and re-run /dmap:develop-plugin.
+
+name = "{name}"
+description = "{description}"
+model = "{model}"
+
+developer_instructions = """
+You are the `{name}` agent in the `{plugin}` plugin (FQN: `{fqn}`).
+
+Mandatory first actions (before any task):
+  1. Read agents/{name}/AGENT.md — goals, workflow, output format, verification
+  2. Read agents/{name}/agentcard.yaml — identity, capabilities, constraints, persona
+  3. Read agents/{name}/tools.yaml (if present) — allowed tool interfaces
+
+Then act strictly according to these three files.
+"""

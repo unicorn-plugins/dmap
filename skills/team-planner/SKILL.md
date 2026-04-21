@@ -63,9 +63,9 @@ AI가 에이전트 구성 힌트와 참고 공유 자원을 자동 분석/추천
 ### Step1: 대상 프로젝트 디렉토리 확인, {DMAP_PLUGIN_DIR} 변수 설정
 #### 대상 프로젝트 디렉토리 확인
 새 플러그인을 생성할 프로젝트 디렉토리를 생성하였고   
-플러그인 프로젝트 디렉토리에서 {CLAUDE_RUNTIME}을 수행하였는지 AskUserQuestion 도구로 문의함.
+플러그인 프로젝트 디렉토리에서 {AI_RUNTIME}을 수행하였는지 AskUserQuestion 도구로 문의함.
 - Yes: CLAUDE.md에 현재 디렉토리의 절대 경로를 {PLUGIN_DIR}로 저장 
-- No: 플러그인 프로젝트 디렉토리를 생성하고 그 디렉토리로 이동하여 {CLAUDE_RUNTIME}을 수행하도록 안내 
+- No: 플러그인 프로젝트 디렉토리를 생성하고 그 디렉토리로 이동하여 {AI_RUNTIME}을 수행하도록 안내 
 
 #### {DMAP_PLUGIN_DIR} 변수 설정
 `{PLUGIN_DIR}/CLAUDE.md` 파일에 `{DMAP_PLUGIN_DIR}` 변수가 설정되어 있는지 확인함.  
@@ -81,7 +81,7 @@ AI가 에이전트 구성 힌트와 참고 공유 자원을 자동 분석/추천
 
 ```
 ## 플러그인 변수 설정 
-- CLAUDE_RUNTIME: 런타임 종류. Claude Code 또는 Claude CoWork 
+- AI_RUNTIME: 런타임 종류. (Claude Code, Claude Cowork, Cursor, AntiGravity, Codex 등)
 - DMAP_PLUGIN_DIR: DMAP 플러그인의 루트 절대 경로 
 - PLUGIN_DIR: 생성할 플러그인의 루트 절대 경로 
 - PLUGIN_NAME: 생성할 플러그인 이름. Step4-3에서 결정하여 등록 

@@ -30,6 +30,21 @@ agents/{agent_name}/
 └── templates/        # [선택] 출력 포맷 규격
 ```
 
+### 런타임 어댑터 포인터 파일 구조
+
+위 SSOT를 각 AI 런타임에서 인식시키기 위해 develop-plugin Step 4-A가 얇은 포인터 스텁을 자동 생성함.
+
+```text
+.claude/agents/{name}.md       # Claude Code / CoWork 어댑터 (Markdown + frontmatter)
+.cursor/agents/{name}.md       # Cursor 어댑터 (Markdown + frontmatter)
+.codex/agents/{name}.toml      # Codex 어댑터 (TOML)
+.antigravity/agents/{name}.md  # Antigravity 어댑터 (Markdown, Manager UI 수동 로드 안내)
+```
+
+> **원칙**: develop-plugin Step 4-A가 자동 생성. **Git 커밋 대상** (`.gitignore` 제외).
+> 수동 편집 금지 — SSOT(`agents/{name}/`) 변경 후 develop-plugin 재실행으로만 갱신.
+> 치환 변수·템플릿·동기화 절차는 `{DMAP_PLUGIN_DIR}/resources/guides/agent-runtime-adapters.md` 참조.
+
 ### AGENT.md vs agentcard.yaml
 
 | 구분 | AGENT.md | agentcard.yaml |
@@ -341,7 +356,7 @@ persona:
 | `code_execute` | 코드·명령 실행 | Claude Code: `Bash` |
 | `network_access` | 외부 네트워크 요청 | Claude Code: `WebFetch`, `WebSearch` |
 | `user_interact` | 사용자에게 직접 질문 | Claude Code: `AskUserQuestion` |
-| `agent_delegate` | 다른 에이전트 호출 | Claude Code: `Task` |
+| `agent_delegate` | 다른 에이전트 호출 | Claude Code: `Agent` (v2.1.63+) |
 | `state_mutate` | 외부 상태 변경 (DB, API 등) | 도메인별 도구 매핑 |
 
 > **작성 가이드**:
@@ -432,6 +447,10 @@ agents/
 > 디렉토리명과 Frontmatter name을 일치시키면 FQN이 `{plugin}:{name}:{name}` 형태가 됨.
 > 이는 정상적인 패턴이며, 호출 시 반드시 FQN 전체를 사용해야 함.
 
+> **런타임 중립성**: FQN은 Claude Code 한정 주소 체계임.
+> **런타임 중립 표준 식별자**는 디렉토리명이며, 런타임별 호출 이름(Cursor 슬래시 명령, Codex agent 이름 등)은
+> develop-plugin Step 4-A가 생성하는 어댑터 스텁이 담당함.
+
 ### 에이전트 탐색·스폰 흐름
 
 에이전트를 찾고 스폰하는 것은 **위임형 스킬**(planning, orchestrator 등)의 책임임.
@@ -452,6 +471,19 @@ Agent(
     prompt="시스템 아키텍처를 분석해주세요..."
 )
 ```
+
+#### 런타임별 호출 매트릭스
+
+위 호출 문법은 Claude Code 기준. 런타임별 실제 호출 방법은 아래와 같으며,
+develop-plugin Step 4-A가 각 런타임의 어댑터 스텁(`.{runtime}/agents/`)을 생성하여
+런타임 차이를 흡수함.
+
+| 런타임        | 호출 문법                                              |
+|--------------|-------------------------------------------------------|
+| Claude Code  | `Agent(subagent_type=FQN, model=..., prompt=...)`     |
+| Cursor       | `/{agent}` 또는 자연어 위임                             |
+| Codex        | `spawn_agents_on_csv` 또는 자연어 위임                  |
+| Antigravity  | Manager UI에서 수동 로드 (프로그래매틱 API 불확실)       |
 
 ### 이름 규칙 요약
 
@@ -770,6 +802,7 @@ persona:
 | 7 | AGENT.md에 참조 섹션으로 agentcard.yaml 참조 지시 필수, tools.yaml은 있는 경우 참조 지시 포함 |
 | 8 | forbidden_actions는 블랙리스트 방식 (나열되지 않은 것은 허용) |
 | 9 | 티어 변형 에이전트는 inherits로 기본 에이전트 상속, 오버라이드만 기술 |
+| 10 | 에이전트 SSOT는 `agents/{name}/` 디렉토리만. 런타임 어댑터 스텁(`.claude/agents/`, `.cursor/agents/`, `.codex/agents/`, `.antigravity/agents/`)은 develop-plugin Step 4-A가 자동 생성하며 **Git 커밋 대상** (`.gitignore` 제외) + 수동 편집 금지. 기존 규칙 #1(AGENT.md + agentcard.yaml 쌍)의 보완 관계 |
 
 [Top](#agent-표준)
 
@@ -785,6 +818,7 @@ persona:
 | 4 | agentcard.yaml에 프롬프트 성격 내용(워크플로우, 출력형식) 포함 금지 |
 | 5 | AGENT.md와 agentcard.yaml에 동일 정보 중복 기술 금지 — WHY+HOW / WHO+WHAT+WHEN 경계 준수 |
 | 6 | AGENT.md에 persona 정보(이름, 성향, 경력) 중복 기술 금지 — agentcard.yaml의 persona에 분리 |
+| 7 | `.claude/agents/`, `.cursor/agents/`, `.codex/agents/`, `.antigravity/agents/` 런타임 스텁 파일의 수동 편집 및 수동 동기화 금지. SSOT(`agents/{name}/`) 변경 후 develop-plugin 재실행으로만 갱신 (setup의 tier-mapping 갱신 시 frontmatter `model:`만 동기화 허용) |
 
 [Top](#agent-표준)
 
@@ -813,5 +847,6 @@ persona:
 - [ ] sub_roles 사용 시: AGENT.md에 각 세부역할의 서브섹션(`### {세부역할명}`) 존재 확인
 - [ ] sub_roles 사용 시: agentcard.yaml의 `sub_roles[].name`과 AGENT.md 워크플로우 서브섹션 이름 일치 확인
 - [ ] sub_roles 사용 시: `sub_roles[].name`이 kebab-case 형식인지 확인
+- [ ] 런타임 어댑터 스텁이 `.claude/agents/`, `.cursor/agents/`, `.codex/agents/`, `.antigravity/agents/` 각 디렉토리에 존재하는가 (develop-plugin Step 4-A 산출물)
 
 [Top](#agent-표준)

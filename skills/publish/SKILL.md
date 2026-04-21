@@ -27,7 +27,7 @@ user-invocable: true
 
 ## 작업 환경 변수 로드 
 CLAUDE.md에서 아래 환경변수 로드함. 없으면 '/dmap:team-panner'를 먼저 수행하도록 안내하고 종료.   
-- CLAUDE_RUNTIME: 런타임 종류. Claude Code 또는 Claude CoWork 
+- AI_RUNTIME: 런타임 종류. Claude Code 또는 Claude CoWork 
 - DMAP_PLUGIN_DIR: DMAP 플러그인의 루트 절대 경로 
 - PLUGIN_DIR: 생성할 플러그인의 루트 절대 경로 
 - PLUGIN_NAME: 생성할 플러그인 이름 

@@ -77,10 +77,22 @@ Gateway가 추상 선언을 실제 런타임 환경에 맞게 자동 변환함.
 | **비개발자 접근성** | Markdown 작성 가능하면 누구나 플러그인 구축 가능 |
 | **도메인 범용** | 코드 생성, 교육, 문서화, 비즈니스 워크플로우 등 어떤 도메인에도 적용 가능 |
 
-> **현재 버전 안내 (2026.2월)**:
-> 현재 DMAP 빌더는 **Claude Code 전용**으로 제공됨.
-> DMAP 표준 자체는 런타임 중립적으로 설계되었으며, 향후 Codex CLI, Gemini CLI 등
-> **멀티 런타임 지원으로 확장 예정**임.
+### 지원 런타임
+
+DMAP이 생성하는 플러그인은 SSOT(`agents/{name}/`) + **런타임별 얇은 포인터 어댑터** 방식으로 아래 4개 런타임을 모두 지원함.
+에이전트 정의는 한 번만 작성하고 `develop-plugin`이 런타임별 스텁을 자동 생성함.
+
+| 런타임 | 어댑터 경로 | 포맷 | 모델 예시 | 호출 방법 |
+|--------|------------|------|----------|----------|
+| Claude Code / CoWork | `.claude/agents/{name}.md` | Markdown + YAML frontmatter | `opus`, `sonnet`, `haiku` | `Agent(subagent_type=FQN, ...)` |
+| Cursor | `.cursor/agents/{name}.md` | Markdown + YAML frontmatter | `opus`, `sonnet`, `haiku` | `/{agent}` 또는 자연어 위임 |
+| Codex | `.codex/agents/{name}.toml` | TOML + `developer_instructions` | `gpt-5.4`, `gpt-5.4-mini` 등 | `spawn_agents_on_csv` 또는 자연어 |
+| Antigravity | `.antigravity/agents/{name}.md` | Markdown + YAML frontmatter | `opus`, `sonnet`, `haiku` | Manager UI 수동 로드 (프로그래매틱 API 불확실) |
+
+> **핵심 설계**: SSOT는 `agents/{name}/` 한 곳에만 존재하고, 각 런타임용 어댑터 스텁은
+> "SSOT 3파일을 읽어 그에 따라 행동하라"는 지시문만 포함하는 얇은 포인터임.
+> 모델 버전은 `gateway/runtime-mapping.yaml`의 4런타임 tier 매핑에서 해결되어 스텁 frontmatter에 기록됨.
+> 상세: [agent-runtime-adapters.md](resources/guides/agent-runtime-adapters.md)
 
 [Top](#dmap-빌더)
 
@@ -402,8 +414,8 @@ DMAP 표준은 4개의 핵심 문서와 리소스 카탈로그로 구성됨.
 
 | 단계 | 목표 | 내용 |
 |------|------|------|
-| **현재** | Claude Code 기반 안정화 | Claude Code 런타임에서 DMAP 표준 기반 플러그인 개발 및 실행 |
-| **단기** | 다중 런타임 지원 | Codex CLI, Gemini CLI 등 다양한 실행 환경 지원 |
+| **현재** | 멀티 런타임 어댑터 지원 | Claude Code / Cursor / Codex / Antigravity 4런타임용 포인터 어댑터 자동 생성 |
+| **단기** | 런타임 실측 및 커버리지 확장 | Antigravity 프로그래매틱 API 실측, Gemini CLI 등 추가 런타임 어댑터 추가 |
 | **중기** | 마켓플레이스 / 커뮤니티 | 플러그인 공유 마켓플레이스 구축, 오픈소스 커뮤니티 생태계 조성 |
 | **장기** | 노코드 UI | 비개발자용 시각적 플러그인 빌더 (드래그 앤 드롭) |
 
