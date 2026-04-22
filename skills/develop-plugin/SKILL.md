@@ -25,7 +25,7 @@ user-invocable: true
 ---
 
 ## 작업 환경 변수 로드 
-CLAUDE.md에서 아래 환경변수 로드함. 없으면 '/dmap:team-panner'를 먼저 수행하도록 안내하고 종료.   
+AGENTS.md에서 아래 환경변수 로드함. 없으면 '/dmap:team-panner'를 먼저 수행하도록 안내하고 종료.   
 - AI_RUNTIME: 런타임 종류. Claude Code 또는 Claude CoWork 
 - DMAP_PLUGIN_DIR: DMAP 플러그인의 루트 절대 경로 
 - PLUGIN_DIR: 생성할 플러그인의 루트 절대 경로 
@@ -577,7 +577,7 @@ help 스킬 작성 규칙:
 description: {스킬 설명}
 ---
 
-1. 현재 작업 중인 프로젝트의 `{PLUGIN_DIR}/CLAUDE.md` 파일을 "view_file" 등으로 꼼꼼히 읽으세요.
+1. 현재 작업 중인 프로젝트의 `{PLUGIN_DIR}/AGENTS.md` 파일을 "view_file" 등으로 꼼꼼히 읽으세요.
 2. 파일에서 `DMAP_PLUGIN_DIR`의 위치를 파악할 뿐만 아니라, 그 안에 적힌 팀 행동원칙, 대화 가이드, 정직한 보고 등 "모든 프로젝트 지침"을 이번 작업 전체에 걸쳐 우선적으로 엄격히 준수하세요.
 3. `{PLUGIN_DIR}/skills/{skill-name}/SKILL.md` 파일을 읽고 지시사항을 실행하세요.
 
@@ -611,7 +611,7 @@ description: {스킬 설명}
 #### Step 1. AGENTS.md 생성
 `{PLUGIN_DIR/output/team-plan-{PLUGIN_NAME}.md}` 파일과 을 기반으로 `{PLUGIN_DIR}/AGENTS.md` 생성
 
-**CLAUDE.md 구조:**
+**AGENTS.md 구조:**
 
 ````markdown
 # 팀 소개
@@ -688,7 +688,7 @@ description: {스킬 설명}
 ### 기록 규칙
 - 실행 중 시행착오 발생 시 Notepad Working Memory에 즉시 기록한다 (`notepad_write_working` 도구 호출)
   - 형식: `{agent명}: {문제 요약}. {해결 방법}. {관련 파일}`
-- 반복 검증된 핵심 교훈만 이 섹션(CLAUDE.md)에 승격한다 (Edit 도구로 추가)
+- 반복 검증된 핵심 교훈만 이 섹션(AGENTS.md)에 승격한다 (Edit 도구로 추가)
   - 형식: `- [HIGH/MED] {교훈 한 줄} — {출처: agent명/단계명}`
 - 최대 20항목 유지, 넘으면 오래된 MED부터 정리
 - 기존 항목과 중복되는 내용은 기록하지 않음

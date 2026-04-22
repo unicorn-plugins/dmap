@@ -63,7 +63,7 @@ agents/{name}/AGENT.md + agentcard.yaml + tools.yaml
 | `{name}` | 에이전트 식별자 (kebab-case) | 에이전트 디렉토리명 = `AGENT.md` frontmatter `name` |
 | `{description}` | 에이전트 설명 (한 줄) | `AGENT.md` frontmatter `description` |
 | `{model}` | 런타임별로 해결된 구체 모델명 | `gateway/runtime-mapping.yaml`의 tier→model 매핑 결과 |
-| `{plugin}` | 플러그인 이름 | `{PLUGIN_DIR}/CLAUDE.md`의 `PLUGIN_NAME` 변수 |
+| `{plugin}` | 플러그인 이름 | `{PLUGIN_DIR}/AGENTS.md`의 `PLUGIN_NAME` 변수 |
 | `{fqn}` | 정규화된 이름 | `{plugin}:{name}:{name}` 패턴으로 조합 |
 
 ---

@@ -64,20 +64,20 @@ AI가 에이전트 구성 힌트와 참고 공유 자원을 자동 분석/추천
 #### 대상 프로젝트 디렉토리 확인
 새 플러그인을 생성할 프로젝트 디렉토리를 생성하였고   
 플러그인 프로젝트 디렉토리에서 {AI_RUNTIME}을 수행하였는지 AskUserQuestion 도구로 문의함.
-- Yes: CLAUDE.md에 현재 디렉토리의 절대 경로를 {PLUGIN_DIR}로 저장 
+- Yes: AGENTS.md에 현재 디렉토리의 절대 경로를 {PLUGIN_DIR}로 저장 
 - No: 플러그인 프로젝트 디렉토리를 생성하고 그 디렉토리로 이동하여 {AI_RUNTIME}을 수행하도록 안내 
 
 #### {DMAP_PLUGIN_DIR} 변수 설정
-`{PLUGIN_DIR}/CLAUDE.md` 파일에 `{DMAP_PLUGIN_DIR}` 변수가 설정되어 있는지 확인함.  
+`{PLUGIN_DIR}/AGENTS.md` 파일에 `{DMAP_PLUGIN_DIR}` 변수가 설정되어 있는지 확인함.  
 미설정 시 아래 수행 
-사용자에게 DMAP 플러그인 디렉토리 경로를 입력받아 `{PLUGIN_DIR}/CLAUDE.md`의 `{DMAP_PLUGIN_DIR}` 변수에 설정합니다. 
+사용자에게 DMAP 플러그인 디렉토리 경로를 입력받아 `{PLUGIN_DIR}/AGENTS.md`의 `{DMAP_PLUGIN_DIR}` 변수에 설정합니다. 
 <!--ASK_USER-->
 {"title":"DMAP 플러그인 디렉토리","questions":[
   {"question":"DMAP 플러그인 디렉토리 경로를 입력해주세요.","type":"text"}
 ]}
 <!--/ASK_USER-->
 
-#### `{PLUGIN_DIR}/CLAUDE.md` 에 다음 변수를 기록하여 이후 중복 계산 방지
+#### `{PLUGIN_DIR}/AGENTS.md` 에 다음 변수를 기록하여 이후 중복 계산 방지
 
 ```
 ## 플러그인 변수 설정 
@@ -353,7 +353,7 @@ AI가 에이전트 구성 힌트와 참고 공유 자원을 자동 분석/추천
   
 ```
 
-(중요) **CLAUDE.md에 `{PLUGIN_NAME}` 변수 등록**      
+(중요) **AGENTS.md에 `{PLUGIN_NAME}` 변수 등록**      
 
 ### Step 5: 사용자 확인 및 수정 (`ulw` 활용)
 

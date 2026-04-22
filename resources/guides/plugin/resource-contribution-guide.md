@@ -143,7 +143,7 @@ resources/guides/{2차분류}/{guide-name}.md
 | Top 링크 | 각 H2 섹션 마지막에 `[Top](#제목-앵커)` |
 
 > **참고:** [부록 A](#부록-a-마크다운-작성-규칙)의 내용을 복사하여
-> 사용 중인 런타임 AI의 지시 파일(`CLAUDE.md`, `AGENTS.md` 등)에 붙여넣으면
+> 사용 중인 런타임 AI의 지시 파일(`AGENTS.md` 등)에 붙여넣으면
 > AI가 자동으로 마크다운 작성 규칙을 준수함.
 
 ### 단계 3. 카탈로그 등록
@@ -774,7 +774,7 @@ resources/plugin-resources.md 파일의 "도구 목록" 테이블에
 아래 내용을 사용 중인 런타임 AI의 지시 파일에 복사하여 붙여넣기하면
 AI가 마크다운 작성 규칙을 자동으로 준수함.
 
-- **Claude Code** → `CLAUDE.md`에 붙여넣기
+- **Claude Code** → `AGENTS.md`에 붙여넣기
 - **Codex CLI** → `AGENTS.md`에 붙여넣기
 - **Gemini CLI** → `GEMINI.md`에 붙여넣기
 

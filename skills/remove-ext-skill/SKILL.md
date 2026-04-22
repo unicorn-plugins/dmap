@@ -29,7 +29,7 @@ user-invocable: true
 
 ## 작업 환경 변수 로드
 
-CLAUDE.md에서 아래 환경변수 로드함. 없으면 `/dmap:setup`을 먼저 수행하도록 안내하고 종료.
+AGENTS.md에서 아래 환경변수 로드함. 없으면 `/dmap:setup`을 먼저 수행하도록 안내하고 종료.
 - DMAP_PLUGIN_DIR: DMAP 플러그인의 루트 절대 경로
 
 [Top](#remove-ext-skill)
