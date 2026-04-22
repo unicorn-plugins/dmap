@@ -13,6 +13,7 @@
     - [사전 요구사항](#사전-요구사항)
     - [DMAP 빌더 설치](#dmap-빌더-설치)
     - [Claude Code에서 사용](#claude-code에서-사용)
+  - [업그레이드](#업그레이드)
   - [핵심 개념](#핵심-개념)
     - [Skills = 부서장](#skills--부서장)
     - [Agents = 전문가](#agents--전문가)
@@ -211,6 +212,33 @@ Claude Code 실행 -> '/dmap:team-planner' 실행하여 팀 기획서 작성 부
 
 ---
 
+## 업그레이드
+
+```bash
+# 1. 최신 코드 Pull
+cd {dmap 클론 경로}
+git pull origin main
+
+# 2. 마켓플레이스 업데이트
+claude plugin marketplace update dmap
+
+# 3. 플러그인 재설치
+claude plugin install dmap@dmap
+```
+
+> 갱신이 반영되지 않는 경우:
+> ```bash
+> claude plugin remove dmap@dmap
+> claude plugin marketplace update dmap
+> claude plugin install dmap@dmap
+> ```
+
+> 업그레이드 후 새 도구가 추가된 경우 `/dmap:setup`을 재실행하여 누락된 도구를 설치할 것.
+
+[Top](#dmap-빌더)
+
+---
+
 ## 핵심 개념
 
 DMAP의 구조를 회사 조직에 비유하면 이해하기 쉬움.
@@ -225,7 +253,7 @@ DMAP의 구조를 회사 조직에 비유하면 이해하기 쉬움.
 |------|------|
 | 핵심 파일 | `skills/{name}/SKILL.md` |
 | 역할 | 라우팅 + 오케스트레이션 |
-| 유형 | router, setup, orchestrator, planning |
+| 유형 | router, setup, orchestrator, help |
 
 ### Agents = 전문가
 

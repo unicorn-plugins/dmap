@@ -12,8 +12,8 @@
   - [Quick Start](#quick-start)
     - [Prerequisites](#prerequisites)
     - [DMAP Builder Installation](#dmap-builder-installation)
-    - [Using on Web](#using-on-web)
     - [Using with Claude Code](#using-with-claude-code)
+  - [Upgrade](#upgrade)
   - [Core Concepts](#core-concepts)
     - [Skills = Department Heads](#skills--department-heads)
     - [Agents = Specialists](#agents--specialists)
@@ -170,32 +170,6 @@ Initial setup: Run Claude Code, then
 /dmap:setup
 ```
 
-### Using on Web
-
-Clone DMAP to your PC and run the web app to use the DMAP Builder in your browser.
-![](images/2026-02-12-18-21-46.png) 
-
-**1. Clone DMAP**
-
-```bash
-git clone https://github.com/unicorn-plugins/dmap.git
-cd dmap
-```
-
-**2. Run DMAP Web**
-
-```bash
-cd dmap-web
-npm install
-npm run dev
-```
-
-**3. Use in Browser**
-
-Open http://localhost:5173 then:
-
-Click 'Team Planner' to start plugin development
-
 ### Using with Claude Code
 
 Run '/dmap:team-planner' to start from team plan writing
@@ -226,6 +200,26 @@ Basic usage flow:
 
 ---
 
+## Upgrade
+
+```bash
+claude plugin marketplace update unicorn
+claude plugin install dmap@unicorn
+```
+
+> If changes are not reflected, remove the plugin and reinstall:
+> ```bash
+> claude plugin remove dmap@unicorn
+> claude plugin marketplace update unicorn
+> claude plugin install dmap@unicorn
+> ```
+
+> After upgrading, if new tools were added, re-run `/dmap:setup` to install missing tools.
+
+[Top](#dmap-builder)
+
+---
+
 ## Core Concepts
 
 DMAP's structure is easy to understand when compared to a company organization.
@@ -240,7 +234,7 @@ An entire workflow declared in a single `SKILL.md` file.
 |------|---------|
 | Core File | `skills/{name}/SKILL.md` |
 | Role | Routing + orchestration |
-| Types | router, setup, orchestrator, planning |
+| Types | router, setup, orchestrator, help |
 
 ### Agents = Specialists
 
