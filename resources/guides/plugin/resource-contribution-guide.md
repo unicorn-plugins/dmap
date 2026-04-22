@@ -774,11 +774,8 @@ resources/plugin-resources.md 파일의 "도구 목록" 테이블에
 아래 내용을 사용 중인 런타임 AI의 지시 파일에 복사하여 붙여넣기하면
 AI가 마크다운 작성 규칙을 자동으로 준수함.
 
-- **Claude Code** → `AGENTS.md`에 붙여넣기
-- **Codex CLI** → `AGENTS.md`에 붙여넣기
-- **Gemini CLI** → `GEMINI.md`에 붙여넣기
-
-**복사 범위:** 아래 코드블록 전체를 복사하여 사용.
+- **Claude Code / Claude Cowork / Codex / Antigravity / Cursor** → `AGENTS.md`에 붙여넣기
+- **복사 범위:** 아래 코드블록 전체를 복사하여 사용.
 
 ````markdown
 # 마크다운 작성 가이드
