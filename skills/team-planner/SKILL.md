@@ -249,6 +249,7 @@ AI가 에이전트 구성 힌트와 참고 공유 자원을 자동 분석/추천
 #### Step4-2. 공유 자원 매칭
 
 - `{DMAP_PLUGIN_DIR}/resources/plugin-resources.md` 카탈로그를 읽어 필요한 자원을 선정함.
+- `{DMAP_PLUGIN_DIR}/resources/guides/combine-prompt.md`는 반드시 추가 
 - 자원유형 파악: 가이드, 템플릿, 샘플, 도구로 구분하여 필요한 자원 유형 결정
 - 자원명 파악: 
   - 가이드: '가이드명' 컬럼
