@@ -542,6 +542,7 @@ mas-designer 플러그인의 런타임 의존성을 설치하고, Gemini API Key
 #### 에이전트 호출 규칙 작성 가이드
 
 상위 "에이전트 호출 규칙 > 작성 가이드"를 따름.
+(중요) '## 에이젼트 호출 규칙 > ### 서브 에이전트 호출' 문구 반드시 넣을것  
 
 #### 워크플로우 작성 패턴
 
@@ -602,6 +603,14 @@ user-invocable: true
 - `{DMAP_PLUGIN_DIR}/resources/guides/combine-prompt.md`에 따라 AGENT.md + agentcard.yaml + tools.yaml 합치기
 - `Agent(subagent_type=FQN, model=tier_mapping 결과, prompt=조립된 프롬프트)` 호출
 - tier → 모델 매핑은 `gateway/runtime-mapping.yaml` 참조
+
+### 서브 에이전트 호출
+워크플로우 단계에 `Agent: {agent-name}`이 명시된 경우,
+메인 에이전트는 해당 단계를 직접 수행하지 않고,
+반드시 위 프롬프트 조립 규칙에 따라 해당 에이전트를 호출하여 결과를 받아야 함.
+
+서브에이전트 호출 없이 메인 에이전트가 해당 산출물을 직접 작성하면
+스킬 미준수로 간주함.
 
 ## 워크플로우
 
