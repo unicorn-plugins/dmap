@@ -753,6 +753,40 @@ load_dotenv(env_path)
 
 ```
 
+#### Step 3. Codex 플러그인 수행 지침 추가   
+Codex Plugin에 구조에 맞게 추가 파일을 만들면 플러그인과 마켓플레이스를 이중으로 관리하게 되어 복잡도가 증가하므로,   
+Codex는 글로벌 시스템 프롬프트 파일인 `~/.codex/AGENTS.md`에 아래 지침을 추가함   
+
+```
+## 플러그인 슬래시 명령 규칙
+
+- `/{plugin}:{skill}` 형태의 슬래시 명령이 들어오면 일반 텍스트가 아니라 플러그인 수행으로 간주함
+- 이 패턴은 일반 명령 해석 및 일반 스킬 트리거 규칙보다 우선 적용함
+- 먼저 `claude plugin marketplace list`를 수행하여 `{plugin}` 이름과 일치하는 marketplace 항목을 찾음
+- marketplace 항목을 찾지 못하면 플러그인을 찾지 못한 것으로 보고 중단함
+
+### Source: Directory
+
+- marketplace 항목의 Source가 `Directory`이면 해당 디렉토리를 플러그인 루트로 사용함
+- `{directory}/skills/{skill}/SKILL.md`를 읽고 그 스킬 절차를 수행함
+- `SKILL.md`가 없으면 스킬 문서를 찾지 못한 것으로 보고 중단함
+
+### Source: Git
+
+- marketplace 항목의 Source가 `Git`이면 `claude plugin list`를 수행하여 `*@{plugin}` 형식의 설치 항목을 찾음
+- 해당 항목의 `Version` 값을 구함
+- 버전을 찾았으면 `~/.claude/plugins/cache/{plugin}/{version}/skills/{skill}/SKILL.md`를 읽고 그 스킬 절차를 수행함
+- 설치 항목 또는 Version을 찾지 못하면 설치된 플러그인 버전 확인 실패로 보고 중단함
+- `SKILL.md`가 없으면 스킬 문서를 찾지 못한 것으로 보고 중단함
+
+### 추가 규칙
+
+- `claude plugin marketplace list`의 marketplace 이름을 `{plugin}`의 기준값으로 사용함
+- `claude plugin list`에서는 `package@marketplace` 표기 중 marketplace 부분이 `{plugin}`과 일치하는 항목을 사용함
+- 플러그인 스킬 해석에 성공한 경우 해당 `SKILL.md`의 지침을 실제로 수행함
+- 플러그인 또는 스킬을 찾지 못한 경우 추측으로 대체 수행하지 않음
+```
+
 ---
 
 ### Phase 5: 검증 및 완료
