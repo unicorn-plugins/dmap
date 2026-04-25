@@ -753,9 +753,14 @@ load_dotenv(env_path)
 
 ```
 
-#### Step 3. Codex 플러그인 수행 지침 추가   
-Codex Plugin에 구조에 맞게 추가 파일을 만들면 플러그인과 마켓플레이스를 이중으로 관리하게 되어 복잡도가 증가하므로,   
-Codex는 글로벌 시스템 프롬프트 파일인 `~/.codex/AGENTS.md`에 아래 지침을 추가함   
+#### Step 3. Codex/Antigravity 시스템 프롬프트 추가   
+Codex와 Antigravity를 위한 플러그인 설정을 하려면 추가 파일들이 필요하고  
+플러그인과 마켓플레이스를 이중으로 관리하게 되어 복잡도가 증가하므로,   
+각 AI 런타임의 시스템 프롬프트 파일에 아래 내용을 추가합     
+
+아래 두 파일에 추가함.    
+Codex:  `~/.codex/AGENTS.md`에 아래 지침을 추가함   
+Antigravity: `~/.gemini/antigravity/knowledge/AGENTS.md`에 아래 지침을 추가함
 
 ```
 ## 플러그인 슬래시 명령 규칙

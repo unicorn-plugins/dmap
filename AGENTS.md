@@ -105,6 +105,8 @@
 
 # Lessons Learned
 
+- [HIGH] `gh-release` 요청은 일반 질의보다 `/{plugin}:{skill}` 플러그인 슬래시 명령으로 우선 해석하고, marketplace 확인 후 해당 `skills/{skill}/SKILL.md`를 바로 읽어 처리 — 출처: gh-release help/create-release
+
 
 # dmap 플러그인
 
