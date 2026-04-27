@@ -76,18 +76,20 @@ AskUserQuestion 도구로 다음 정보를 순차적으로 문의:
 
 2. **GitHub Username** 입력 요청
 
-3. **Personal Access Token (PAT)** 입력 요청
+3. **Private Repository 사용 여부** 입력 요청
+
+4. **Personal Access Token (PAT)** 입력 요청
    - 미보유 시: 토큰 생성 가이드 링크 제공
      `{DMAP_PLUGIN_DIR}/resources/guides/github/github-token-guide.md` 참조 안내
    - PAT 필요 권한: `repo` (전체)
 
-4. **Organization 사용 여부**
+5. **Organization 사용 여부**
    - 개인 계정 사용: username을 owner로 설정
    - Organization 사용: org 이름 입력 요청
    - Organization 미보유 시: 생성 가이드 링크 제공
      `{DMAP_PLUGIN_DIR}/resources/guides/github/github-organization-guide.md` 참조 안내
 
-5. **토큰 저장**
+6. **토큰 저장**
    - 플러그인 디렉토리에 `{PLUGIN_DIR}/.dmap/secrets/` 디렉토리 생성
    - `{PLUGIN_DIR}/.dmap/secrets/git-token-{plugin-name}.env` 파일에 저장:
      ```
@@ -109,6 +111,7 @@ AskUserQuestion 도구로 다음 정보를 순차적으로 문의:
    python {DMAP_PLUGIN_DIR}/resources/tools/customs/git/create_repo.py \
      --name {repo-name} \
      --desc "{plugin description}" \
+     --private {true/false} \
      --token {PAT} \
      --dir {plugin-directory}
    ```
